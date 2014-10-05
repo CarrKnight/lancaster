@@ -1,0 +1,4 @@
+name: lancaster
+dependencies:
+  browser: any
+  unittest: any
