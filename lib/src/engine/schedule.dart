@@ -13,7 +13,7 @@ class Schedule
 
   Queue<ScheduledStep> _tomorrow;
 
-  int currentDay = 0;
+  int _day = 0;
 
   Phase currentPhase;
 
@@ -28,6 +28,7 @@ class Schedule
       _stepsByPhase[phase]=new Queue<Step>();
      // _stepsByPhase.putIfAbsent(phase,()=>new Queue<Step>());
     }
+
   }
 
   /**
@@ -75,9 +76,14 @@ class Schedule
       _stepsByPhase[currentPhase].addAll(_tomorrow);
       _tomorrow.clear();
     }
+    //day over!
+    _day++;
   }
 
 
+
+
+  get day=> _day;
 
 }
 
