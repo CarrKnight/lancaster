@@ -101,12 +101,13 @@ class Phase
   static const DAWN = const Phase._(0);
   static const PRODUCTION = const Phase._(1);
   static const PREPARE_TO_TRADE = const Phase._(2);
-  static const TRADE = const Phase._(3);
-  static const ADJUST_PRICES = const Phase._(4);
-  static const ADJUST_PRODUCTION = const Phase._(5);
-  static const CLEANUP = const Phase._(6);
+  static const PLACE_QUOTES = const Phase._(3);
+  static const CLEAR_MARKETS = const Phase._(4);
+  static const ADJUST_PRICES = const Phase._(5);
+  static const ADJUST_PRODUCTION = const Phase._(6);
+  static const CLEANUP = const Phase._(7);
 
-  static final List<Phase> PHASE_LIST = [DAWN,PRODUCTION,PREPARE_TO_TRADE,TRADE,
+  static final List<Phase> PHASE_LIST = [DAWN,PRODUCTION,PREPARE_TO_TRADE,PLACE_QUOTES, CLEAR_MARKETS,
   ADJUST_PRICES,ADJUST_PRODUCTION,CLEANUP];
 
 

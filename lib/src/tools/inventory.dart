@@ -2,6 +2,9 @@
  * Copyright (c) 2014 to Ernesto Carrella.
  * This is open source on MIT license. Isn't this jolly?
  */
+
+library tools.inventory;
+
 /**
  * the java inventory was a very elegant hashmap with variable good-types, differentiated goods and so on.
  * Until I want to do that here, this is probably the complete opposite. it's basically three numbers hidden behind few functions

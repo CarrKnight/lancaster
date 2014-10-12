@@ -30,7 +30,7 @@ main(){
     double target = 25.0;
     double output(PIDController)=>pow(controller.manipulatedVariable,2.0);
     for(int i=0; i<1000; i++) {
-      print("${controller.manipulatedVariable} ${output(controller)} " );
+//      print("${controller.manipulatedVariable} ${output(controller)} " );
       controller.adjust(target, output(controller));
     }
     expect(controller.manipulatedVariable,
