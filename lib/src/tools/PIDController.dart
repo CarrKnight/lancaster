@@ -6,6 +6,11 @@ import 'dart:math';
  */
 class PIDController {
 
+
+  static const  double DEFAULT_PROPORTIONAL_PARAMETER = .1;
+  static const  double DEFAULT_INTEGRAL_PARAMETER = .1;
+  static const  double DEFAULT_DERIVATIVE_PARAMETER = 0.0;
+
   /**
    * the a of the discrete PID controller
    */
@@ -48,15 +53,17 @@ class PIDController {
 
   double _sumOfErrors = 0.0;
 
-  PIDController.standardPI(){
-    this.proportionalParameter = .1;
-    this.integrativeParameter = .1;
-    this.derivativeParameter = 0.0;
-  }
+  PIDController.standardPI():
+  this(PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
+      PIDController.DEFAULT_INTEGRAL_PARAMETER,
+      PIDController.DEFAULT_DERIVATIVE_PARAMETER
+  );
 
   PIDController(this.proportionalParameter, this.integrativeParameter, this.derivativeParameter);
 
-  set offset(double value)=>_offset=max(0,value);
+  set offset(double value){_offset=max(0,value);
+    _manipulatedVariable = _offset;
+  }
 
   get offset=> _offset;
 

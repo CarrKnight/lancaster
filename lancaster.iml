@@ -4,6 +4,7 @@
     <exclude-output />
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/packages/lancaster" />
+      <excludeFolder url="file://$MODULE_DIR$/test/market/packages" />
       <excludeFolder url="file://$MODULE_DIR$/test/packages" />
       <excludeFolder url="file://$MODULE_DIR$/test/tools/packages" />
       <excludeFolder url="file://$MODULE_DIR$/web/packages" />

@@ -4,6 +4,7 @@ import 'package:unittest/unittest.dart';
 import 'package:lancaster/src/market/markets.dart';
 import 'package:lancaster/src/tools/inventory.dart';
 import 'package:lancaster/src/engine/schedule.dart';
+import 'package:lancaster/src/agents/seller.dart';
 
 /*
  * Copyright (c) 2014 to Ernesto Carrella.
@@ -19,7 +20,7 @@ void main(){
     LinearDemandMarket market = new LinearDemandMarket(intercept:100,slope:-1);
     market.start(schedule);
 
-    Inventory seller = new Inventory();
+    DummySeller seller = new DummySeller();
     seller.receive(10.0); //seller has 10 units of gas it can sell
     //try to sell 10 units for 90$ (that's exactly on the slope)
     schedule.schedule(Phase.PLACE_QUOTES,(s)=>market.placeSaleQuote(seller,10.0,90.0));
@@ -38,7 +39,7 @@ void main(){
     LinearDemandMarket market = new LinearDemandMarket(intercept:100,slope:-1);
     market.start(schedule);
 
-    Inventory seller = new Inventory();
+    DummySeller seller = new DummySeller();
     seller.receive(20.0); //seller has 20 units of gas it can sell
     //try to sell 20 units for 90$ (only 10 will clear)
     schedule.schedule(Phase.PLACE_QUOTES,(s)=>market.placeSaleQuote(seller,20.0,90.0));
@@ -57,8 +58,8 @@ void main(){
     LinearDemandMarket market = new LinearDemandMarket(intercept:200,slope:-1);
     market.start(schedule);
 
-    Inventory seller1 = new Inventory();
-    Inventory seller2 = new Inventory();
+    DummySeller seller1 = new DummySeller();
+    DummySeller seller2 = new DummySeller();
     seller1.receive(10.0); //both sellers has 10 units of gas it can sell
     seller2.receive(10.0);
     //seller 2 sells at 190$, seller 1 at 191$
@@ -84,8 +85,8 @@ void main(){
     LinearDemandMarket market = new LinearDemandMarket(intercept:200,slope:-1);
     market.start(schedule);
 
-    Inventory seller1 = new Inventory();
-    Inventory seller2 = new Inventory();
+    DummySeller seller1 = new DummySeller();
+    DummySeller seller2 = new DummySeller();
     seller1.receive(5.0); //they both have 5 units
     seller2.receive(5.0);
     //they should both sell

@@ -26,16 +26,19 @@ class AgentData
   Step _updateStep;
 
 
-  AgentData(List<String> columns,Step initializer(Map<String,List<double>> dataReferences)) {
+  AgentData(List<String> columns,Step updateStepBuilder(Map<String,List<double>> dataReferences)) {
     _dataMap = new Map();
     columns.forEach((col)=>_dataMap[col]=new List()); //add column names
-    _updateStep = initializer(_dataMap);
+    _updateStep = updateStepBuilder(_dataMap);
   }
 
 
 
 
-
+  bool get  empty{
+    //there are no columns or there are no rows in the first column
+    return _dataMap.isEmpty || _dataMap.values.first.isEmpty;
+  }
 
 
   bool _started = false;
@@ -85,14 +88,3 @@ class AgentData
 }
 
 
-class Point {
-  final num x;
-  final num y;
-  final num distanceFromOrigin;
-
-  Point(x, y)
-  : x = x,
-  y = y,
-  distanceFromOrigin = sqrt(pow(x, 2) + pow(y, 2));
-
-}

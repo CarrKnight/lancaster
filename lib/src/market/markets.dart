@@ -2,6 +2,7 @@ library markets;
 
 import 'package:lancaster/src/tools/inventory.dart';
 import 'package:lancaster/src/engine/schedule.dart';
+import 'package:lancaster/src/agents/seller.dart';
 import 'dart:math';
 import 'dart:collection';
 
@@ -24,7 +25,7 @@ I am also going to change how some customers work. For fixed demand I used to ha
  */
 abstract class MarketForSellers{
 
-  placeSaleQuote(HasInventory seller,double amount,double unitPrice);
+  placeSaleQuote(Seller seller,double amount,double unitPrice);
 
 }
 
@@ -41,7 +42,7 @@ abstract class MarketForBuyers{
 class LinearDemandMarket implements MarketForSellers{
 
 
-  final List<_Quote> _quotes = new List();
+  final List<_SaleQuote> _quotes = new List();
 
 
 
@@ -139,26 +140,26 @@ class LinearDemandMarket implements MarketForSellers{
 
   }
 
-  placeSaleQuote(HasInventory seller, double amount, double unitPrice) {
-    _quotes.add(new _Quote(seller,amount,unitPrice));
+  placeSaleQuote(Seller seller, double amount, double unitPrice) {
+    _quotes.add(new _SaleQuote(seller,amount,unitPrice));
   }
 
 
 }
 
-class _Quote
+class _SaleQuote
 {
 
   double _amount;
 
   final double _pricePerUnit;
 
-  final HasInventory _owner;
+  final Seller _owner;
 
-  _Quote(this._owner, this._amount,this._pricePerUnit);
+  _SaleQuote(this._owner, this._amount,this._pricePerUnit);
 
 
-  HasInventory get owner => _owner;
+  Seller get owner => _owner;
   get pricePerunit=> _pricePerUnit;
   get amount=> _amount;
 
