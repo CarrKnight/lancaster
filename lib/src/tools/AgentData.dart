@@ -85,6 +85,8 @@ class AgentData
   }
 
 
+  Step get updateStep => _updateStep;
+
 }
 
 

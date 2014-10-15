@@ -66,9 +66,14 @@ class PIDPricing implements PricingStrategy
 
   double get price => pid.manipulatedVariable;
 
-  updatePrice(AgentData data) {
+  void updatePrice(AgentData data) {
 
-    pid.adjust(targetExtractor(data),cvExtractor(data));
+    double target = targetExtractor(data);
+    double controlledVariable = cvExtractor(data);
+    //ignore lack of data
+    if(target == null || !target.isFinite || !controlledVariable.isFinite)
+      return;
+    pid.adjust(target, controlledVariable);
   }
 
 

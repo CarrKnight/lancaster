@@ -22,9 +22,8 @@ main() {
   test("Construct and schedules fine ",(){
     Schedule schedule = new Schedule();//set up schedule
     //set up agent and its step
-    Step step = (Schedule s)=>print("a");
     AgentData data = new AgentData( ["title1","title2"], (data)=>
-    step
+        (Schedule s){print("a");}
      );
     //start the data, should schedule the stepper
     data.start(schedule);
