@@ -4,7 +4,6 @@ import 'package:lancaster/src/tools/inventory.dart';
 import 'package:lancaster/src/engine/schedule.dart';
 import 'package:lancaster/src/agents/seller.dart';
 import 'dart:math';
-import 'dart:collection';
 
 /*
  * Copyright (c) 2014 to Ernesto Carrella.
@@ -64,10 +63,11 @@ class LinearDemandMarket implements MarketForSellers{
 
 
 
-  LinearDemandMarket({intercept : 100, slope:-1}) {
-    assert(_slope <=0);
-    this._intercept = intercept;
-    this._slope = slope;
+  LinearDemandMarket({num intercept : 100.0, num slope:-1.0}) {
+    assert(slope <=0);
+    this._intercept = intercept.toDouble();
+    this._slope = slope.toDouble();
+
 
     _resetMarketStep= (schedule){
       _resetMarket(schedule);

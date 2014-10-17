@@ -26,7 +26,7 @@ main(){
 
 
   test("simple convergence ",(){
-    PIDController controller = new PIDController(.01,.01,0);
+    PIDController controller = new PIDController(.01,.01,0.0);
     double target = 25.0;
     double output(PIDController)=>pow(controller.manipulatedVariable,2.0);
     for(int i=0; i<1000; i++) {

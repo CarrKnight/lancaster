@@ -25,7 +25,7 @@ class Schedule
     _tomorrow = new Queue();
     for(Phase phase in Phase.PHASE_LIST)
     {
-      _stepsByPhase[phase]=new Queue<Step>();
+      _stepsByPhase[phase]=new Queue<ScheduledStep>();
      // _stepsByPhase.putIfAbsent(phase,()=>new Queue<Step>());
     }
 

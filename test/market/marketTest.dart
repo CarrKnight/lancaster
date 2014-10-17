@@ -2,7 +2,6 @@ library marketTest;
 
 import 'package:unittest/unittest.dart';
 import 'package:lancaster/src/market/markets.dart';
-import 'package:lancaster/src/tools/inventory.dart';
 import 'package:lancaster/src/engine/schedule.dart';
 import 'package:lancaster/src/agents/seller.dart';
 
@@ -17,7 +16,7 @@ void main(){
     Schedule schedule = new Schedule(); //the scheduler
 
     //create a q=101-p demand market
-    LinearDemandMarket market = new LinearDemandMarket(intercept:100,slope:-1);
+    LinearDemandMarket market = new LinearDemandMarket(intercept:100,slope:-1.0);
     market.start(schedule);
 
     DummySeller seller = new DummySeller();
@@ -36,7 +35,7 @@ void main(){
     Schedule schedule = new Schedule(); //the scheduler
 
     //create a q=101-p demand market
-    LinearDemandMarket market = new LinearDemandMarket(intercept:100,slope:-1);
+    LinearDemandMarket market = new LinearDemandMarket(intercept:100.0,slope:-1.0);
     market.start(schedule);
 
     DummySeller seller = new DummySeller();
@@ -55,7 +54,7 @@ void main(){
     Schedule schedule = new Schedule(); //the scheduler
 
     //create a q=200-p demand market
-    LinearDemandMarket market = new LinearDemandMarket(intercept:200,slope:-1);
+    LinearDemandMarket market = new LinearDemandMarket(intercept:200.0,slope:-1.0);
     market.start(schedule);
 
     DummySeller seller1 = new DummySeller();
@@ -82,7 +81,7 @@ void main(){
     Schedule schedule = new Schedule(); //the scheduler
 
     //create a q=200-p demand market
-    LinearDemandMarket market = new LinearDemandMarket(intercept:200,slope:-1);
+    LinearDemandMarket market = new LinearDemandMarket(intercept:200.0,slope:-1.0);
     market.start(schedule);
 
     DummySeller seller1 = new DummySeller();

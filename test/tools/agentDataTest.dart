@@ -8,7 +8,6 @@
 import 'package:unittest/unittest.dart';
 import 'package:lancaster/src/tools/AgentData.dart';
 import 'package:lancaster/src/engine/schedule.dart';
-import 'dart:math';
 
 
 main() {
@@ -39,7 +38,7 @@ main() {
     AgentData data = new AgentData(["title1","title2"], (data)=>
     (Schedule s){ //the update steps fills it with 1 and 2s
       data["title1"].add(1);
-      data["title2"].add(2);
+      data["title2"].add(2.0);
     }
     );
     //start the data, should schedule the stepper
@@ -49,8 +48,8 @@ main() {
     schedule.simulateDay();
     expect(data.getObservations("title1"),[1,1,1]);
     expect(data.getObservations("title2"),[2,2,2]);
-    expect(data.getLatestObservation("title1"),1);
-    expect(data.getLatestObservation("title2"),2);
+    expect(data.getLatestObservation("title1"),1.0);
+    expect(data.getLatestObservation("title2"),2.0);
   }
   );
 

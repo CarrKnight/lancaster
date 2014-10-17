@@ -6,7 +6,6 @@
 
 import 'package:unittest/unittest.dart';
 import 'package:lancaster/src/agents/pricing.dart';
-import 'package:lancaster/src/tools/PIDController.dart';
 import 'package:lancaster/src/tools/AgentData.dart';
 import 'package:lancaster/src/engine/schedule.dart';
 
@@ -61,8 +60,8 @@ void main(){
     var data = new AgentData(["inflow","outflow"],
         (references)=>
             (Schedule s){
-              references["inflow"].add(1);
-              references["outflow"].add(0);});
+              references["inflow"].add(1.0);
+              references["outflow"].add(0.0);});
 
     expect(pricing.price,100);
     data.updateStep(new Schedule()); //"update" inflow = 1, outflow = 0 ====> price ↑
@@ -82,8 +81,8 @@ void main(){
     var data = new AgentData(["inflow","outflow"],
         (references)=>
         (Schedule s){
-      references["inflow"].add(0);
-      references["outflow"].add(1);});
+      references["inflow"].add(0.0);
+      references["outflow"].add(1.0);});
 
     expect(pricing.price,100);
     data.updateStep(new Schedule()); //"update" inflow = 0, outflow = 1 ====> price ↓
@@ -101,7 +100,7 @@ void main(){
         (Schedule s){
           //puts garbage in
       references["inflow"].add(double.NAN);
-      references["outflow"].add(1);});
+      references["outflow"].add(1.0);});
 
     expect(pricing.price,100);
     //if i have no data, it shouldn't break it just shouldn't update
