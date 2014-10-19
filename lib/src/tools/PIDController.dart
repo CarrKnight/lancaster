@@ -61,7 +61,7 @@ class PIDController {
 
   PIDController(this.proportionalParameter, this.integrativeParameter, this.derivativeParameter);
 
-  set offset(double value){_offset=max(0,value);
+  set offset(double value){_offset=max(0.0,value);
     _manipulatedVariable = _offset;
   }
 

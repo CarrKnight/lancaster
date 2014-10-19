@@ -5,7 +5,7 @@
 import 'tools/tooltests.dart' as tools;
 import 'scheduleTest.dart' as schedule;
 import 'market/marketTest.dart' as market;
-import 'agents/pricingTest.dart' as pricing;
+import 'agents/pricing_test.dart' as pricing;
 
 
 void main(){

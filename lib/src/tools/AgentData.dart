@@ -1,6 +1,7 @@
 library tools.agentdata;
 
 import 'package:lancaster/src/engine/schedule.dart';
+import 'package:lancaster/src/agents/seller.dart';
 
 
 
@@ -31,6 +32,18 @@ class AgentData
     _updateStep = updateStepBuilder(_dataMap);
   }
 
+
+
+
+
+  AgentData.SellerDefault(Seller seller):
+     this(["outflow","inflow","closingPrice","offeredPrice","inventory"],(data)=>(s){
+       data["outflow"].add(seller.currentOutflow);
+       data["inflow"].add(seller.currentInflow);
+       data["closingPrice"].add(seller.lastClosingPrice);
+       data["offeredPrice"].add(seller.lastOfferedPrice);
+       data["inventory"].add(seller.gas);
+     });
 
 
 

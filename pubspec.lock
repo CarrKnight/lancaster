@@ -9,6 +9,13 @@ packages:
     description: matcher
     source: hosted
     version: "0.11.1"
+  mockito:
+    description:
+      ref: null
+      resolved-ref: bf672ea7a23e4262e940798e8d36b2c48ee01461
+      url: "https://github.com/fibulwinter/dart-mockito.git"
+    source: git
+    version: "0.8.1"
   path:
     description: path
     source: hosted

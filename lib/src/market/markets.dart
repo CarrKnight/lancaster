@@ -174,10 +174,11 @@ class _SaleQuote
 
 //easy functions for trading
 
-void sold(HasInventory seller, double amount, double price){
+void sold(Seller seller, double amount, double price){
 
   seller.earn(price*amount);
   seller.remove(amount);
+  seller.notifyOfTrade(amount,price);
 
 }
 
