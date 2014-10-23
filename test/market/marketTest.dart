@@ -2,9 +2,9 @@ library marketTest;
 
 import 'package:unittest/unittest.dart';
 import 'package:mockito/mockito.dart';
-import 'package:lancaster/src/market/markets.dart';
-import 'package:lancaster/src/engine/schedule.dart';
-import 'package:lancaster/src/agents/seller.dart';
+import 'package:lancaster/model/market/markets.dart';
+import 'package:lancaster/model/engine/schedule.dart';
+import 'package:lancaster/model/agents/seller.dart';
 
 /*
  * Copyright (c) 2014 to Ernesto Carrella.
@@ -25,6 +25,7 @@ void main() {
     market.start(schedule);
 
     DummySeller seller = new DummySeller();
+    market.registerSeller(seller);
     seller.receive(10.0); //seller has 10 units of gas it can sell
     //try to sell 10 units for 90$ (that's exactly on the slope)
     schedule.schedule(Phase.PLACE_QUOTES, (s) => market.placeSaleQuote(seller, 10.0, 90.0));
@@ -44,6 +45,8 @@ void main() {
     market.start(schedule);
 
     DummySeller seller = new DummySeller();
+    market.registerSeller(seller);
+
     seller.receive(20.0); //seller has 20 units of gas it can sell
     //try to sell 20 units for 90$ (only 10 will clear)
     schedule.schedule(Phase.PLACE_QUOTES, (s) => market.placeSaleQuote(seller, 20.0, 90.0));
@@ -64,6 +67,9 @@ void main() {
 
     DummySeller seller1 = new DummySeller();
     DummySeller seller2 = new DummySeller();
+    market.registerSeller(seller1);
+    market.registerSeller(seller2);
+
     seller1.receive(10.0); //both sellers has 10 units of gas it can sell
     seller2.receive(10.0);
     //seller 2 sells at 190$, seller 1 at 191$
@@ -91,6 +97,9 @@ void main() {
 
     DummySeller seller1 = new DummySeller();
     DummySeller seller2 = new DummySeller();
+    market.registerSeller(seller1);
+    market.registerSeller(seller2);
+
     seller1.receive(5.0); //they both have 5 units
     seller2.receive(5.0);
     //they should both sell
@@ -119,6 +128,8 @@ void main() {
     LinearDemandMarket market = new LinearDemandMarket(intercept:100, slope:-1.0);
     market.start(schedule);
     var seller = new MockDummySeller();
+    market.registerSeller(seller);
+
 
 
     seller.receive(10.0); //seller has 10 units of gas it can sell

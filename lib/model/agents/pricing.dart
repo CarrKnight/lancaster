@@ -3,8 +3,8 @@
  * This is open source on MIT license. Isn't this jolly?
  */
 library agents.pricing;
-import 'package:lancaster/src/tools/AgentData.dart';
-import 'package:lancaster/src/tools/PIDController.dart';
+import 'package:lancaster/model/tools/agent_data.dart';
+import 'package:lancaster/model/tools/pid_controller.dart';
 
 /**
  * a class used by traders to adapt prices

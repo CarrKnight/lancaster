@@ -1,7 +1,7 @@
 library tools.agentdata;
 
-import 'package:lancaster/src/engine/schedule.dart';
-import 'package:lancaster/src/agents/seller.dart';
+import 'package:lancaster/model/engine/schedule.dart';
+import 'package:lancaster/model/agents/seller.dart';
 
 
 

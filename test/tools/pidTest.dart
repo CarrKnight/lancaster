@@ -1,5 +1,5 @@
 import 'package:unittest/unittest.dart';
-import 'package:lancaster/src/tools/PIDController.dart';
+import 'package:lancaster/model/tools/pid_controller.dart';
 import 'dart:math';
 
 

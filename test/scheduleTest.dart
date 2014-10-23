@@ -1,5 +1,5 @@
 import 'package:unittest/unittest.dart';
-import 'package:lancaster/src/engine/schedule.dart';
+import 'package:lancaster/model/engine/schedule.dart';
 import 'dart:collection';
 
 

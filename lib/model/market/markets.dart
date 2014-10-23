@@ -1,9 +1,10 @@
 library markets;
 
-import 'package:lancaster/src/tools/inventory.dart';
-import 'package:lancaster/src/engine/schedule.dart';
-import 'package:lancaster/src/agents/seller.dart';
+import 'package:lancaster/model/tools/inventory.dart';
+import 'package:lancaster/model/engine/schedule.dart';
+import 'package:lancaster/model/agents/seller.dart';
 import 'dart:math';
+import 'dart:collection';
 
 /*
  * Copyright (c) 2014 to Ernesto Carrella.
@@ -22,9 +23,26 @@ I am also going to change how some customers work. For fixed demand I used to ha
 /**
  * interface for markets that allow sales quotes
  */
+
+
+abstract class Market{
+
+  double get closingPrice;
+
+  double get closingQuantity;
+
+
+}
+
 abstract class MarketForSellers{
 
+
   placeSaleQuote(Seller seller,double amount,double unitPrice);
+
+  bool registerSeller(Seller seller);
+
+
+  Iterable<Seller> get registeredSellers;
 
 }
 
@@ -38,7 +56,9 @@ abstract class MarketForBuyers{
 /**
  * a market where the buying is "done" by a fixed linear demand while the sellers are normal agents
  */
-class LinearDemandMarket implements MarketForSellers{
+  class LinearDemandMarket implements MarketForSellers{
+
+    Set<Seller> _sellers = new LinkedHashSet();
 
 
   final List<_SaleQuote> _quotes = new List();
@@ -141,9 +161,17 @@ class LinearDemandMarket implements MarketForSellers{
   }
 
   placeSaleQuote(Seller seller, double amount, double unitPrice) {
+    assert(_sellers.contains(seller));
     _quotes.add(new _SaleQuote(seller,amount,unitPrice));
   }
 
+
+
+    bool registerSeller(Seller seller)=>
+    _sellers.add(seller);
+
+
+    Iterable<Seller> get registeredSellers => _sellers;
 
 }
 

@@ -4,11 +4,11 @@
  */
 library agents.seller;
 
-import 'package:lancaster/src/tools/inventory.dart';
-import 'package:lancaster/src/market/markets.dart';
-import 'package:lancaster/src/engine/schedule.dart';
-import 'package:lancaster/src/agents/pricing.dart';
-import 'package:lancaster/src/tools/AgentData.dart';
+import 'package:lancaster/model/tools/inventory.dart';
+import 'package:lancaster/model/market/markets.dart';
+import 'package:lancaster/model/engine/schedule.dart';
+import 'package:lancaster/model/agents/pricing.dart';
+import 'package:lancaster/model/tools/agent_data.dart';
 
 /**
  * this is an interface of somebody who has inventory and can be notified of sales (which is a pre-requisite to trade)
@@ -200,6 +200,8 @@ class FixedInflowSeller implements Seller
 
 
   void start(Schedule schedule){
+    //register yourself
+    market.registerSeller(this);
     //start the data as well
     _data.start(schedule);
 

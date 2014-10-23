@@ -6,8 +6,8 @@
 
 
 import 'package:unittest/unittest.dart';
-import 'package:lancaster/src/tools/AgentData.dart';
-import 'package:lancaster/src/engine/schedule.dart';
+import 'package:lancaster/model/tools/agent_data.dart';
+import 'package:lancaster/model/engine/schedule.dart';
 
 
 main() {
