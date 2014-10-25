@@ -12,7 +12,7 @@ class Schedule
 
   Queue<ScheduledStep> _tomorrow;
 
-  int _day = 0;
+  int _day = 1;
 
   Phase currentPhase;
 

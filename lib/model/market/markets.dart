@@ -203,6 +203,14 @@ class _SaleQuote
 
 }
 
+abstract class MarketForSellersListener
+{
+
+  void tradeEvent(){}
+
+
+}
+
 
 //easy functions for trading
 
@@ -222,7 +230,122 @@ void bought(HasInventory buyer, double amount, double price){
 
 }
 
-void tradeBetweenTwoAgents(HasInventory buyer, HasInventory seller, double amount, double price ){
+void tradeBetweenTwoAgents(HasInventory buyer, Seller seller, double amount, double price ){
   sold(seller,amount,price);
   bought(buyer,amount,price);
+}
+
+/**
+ * a loggable event: a trade occurred
+ */
+class TradeEvent{
+
+  final Seller seller;
+
+  final HasInventory buyer;
+
+  final double amount;
+
+  final double unitPrice;
+
+  final int day;
+
+  TradeEvent(this.seller, this.buyer, this.amount, this.unitPrice, this.day);
+
+
+}
+
+/**
+ * a loggable event: a quote was placed
+ */
+class SalesQuoteEvent{
+
+  final Seller seller;
+
+  final double amount;
+
+  final double unitPrice;
+
+  final int day;
+
+  SalesQuoteEvent(this.seller, this.amount, this.unitPrice,
+                  this.day);
+
+
+}
+
+/**
+ * basically a bunch of streams of  market "events" that loggers and views can
+ * listen to
+ */
+class StreamsForSellerMarkets{
+
+  /**
+   * this boolean is useful to ignore events unless you have listeners
+   */
+  bool recordQuotes = false;
+
+  /**
+   * this boolean is useful to ignore events unless you have listeners
+   */
+  bool recordTrades = false;
+
+  /**
+   * before start gets called nothing gets logged
+   */
+  bool started = false;
+
+  /**
+   * needed only to store days
+   */
+  Schedule _schedule;
+
+  StreamController<TradeEvent> _trades;
+
+  StreamController<SalesQuoteEvent> _quotes;
+
+
+
+  /**
+   * grab the schedule s to log days
+   */
+
+  StreamsForSellerMarkets() {
+    _trades = new StreamController.broadcast(
+        onListen: ()=>recordTrades=true,
+        onCancel: ()=>recordTrades=false
+    );
+    _quotes = new StreamController.broadcast(
+        onListen: ()=>recordQuotes=true,
+        onCancel: ()=>recordQuotes=false
+    );
+  }
+
+  void start(Schedule s){
+    assert(!started);
+    started = true;
+    this._schedule = s;
+  }
+
+
+  void logTrade(Seller seller,HasInventory buyer,double amount,
+                double unitPrice){
+    if(started && recordTrades) //if you can log, do log
+      _trades.add(new TradeEvent(seller,buyer,amount,unitPrice,_schedule.day));
+
+
+  }
+
+  void logQuote(Seller seller,double amount, double unitPrice ){
+    if(started && recordQuotes) //if you can log, do log
+      _quotes.add(new SalesQuoteEvent(seller,amount,unitPrice,_schedule.day));
+
+  }
+
+  Stream<TradeEvent> get tradeStream => _trades.stream;
+  Stream<SalesQuoteEvent> get quoteStream => _quotes.stream;
+
+
+
+
 }
