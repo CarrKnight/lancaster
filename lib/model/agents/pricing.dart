@@ -2,9 +2,7 @@
  * Copyright (c) 2014 to Ernesto Carrella.
  * This is open source on MIT license. Isn't this jolly?
  */
-library agents.pricing;
-import 'package:lancaster/model/tools/agent_data.dart';
-import 'package:lancaster/model/tools/pid_controller.dart';
+part of lancaster.model;
 
 /**
  * a class used by traders to adapt prices
@@ -15,7 +13,7 @@ abstract class PricingStrategy
   /**
    * to call by the user, probably every day.
    */
-  updatePrice(AgentData data);
+  updatePrice(Data data);
 
   /**
    * the price per unit to charge for this strategy
@@ -25,7 +23,7 @@ abstract class PricingStrategy
 
 }
 
-typedef double Extractor(AgentData data);
+typedef double Extractor(Data data);
 
 /**
  * A PID pricer that simply tries to put inflow=outflow. In reality unless stockouts are counted it can only work when decreasing prices
@@ -69,13 +67,13 @@ class PIDPricing implements PricingStrategy
                            double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER
                            }) : //target: -inflows,
   // controlled variable = -outflow the minuses to adapt the right way
-  this((AgentData data)=> -data.getLatestObservation("inflow"),
-      (AgentData data)=> -data.getLatestObservation("outflow"),
+  this((Data data)=> -data.getLatestObservation("inflow"),
+      (Data data)=> -data.getLatestObservation("outflow"),
   offset:initialPrice, p:p,i:i,d:d);
 
   double get price => pid.manipulatedVariable;
 
-  void updatePrice(AgentData data) {
+  void updatePrice(Data data) {
 
     double target = targetExtractor(data);
     double controlledVariable = cvExtractor(data);
@@ -104,7 +102,7 @@ class BufferInventoryPricing implements PricingStrategy
    */
   static final Extractor defaultTargetWhenStockingUp = (data)=>0.0;
 
-  static final Extractor defaultInventoryExtractor = (AgentData data)=>
+  static final Extractor defaultInventoryExtractor = (Data data)=>
   data.getLatestObservation("inventory");
 
   Extractor targetExtractingStockingUp;
@@ -163,7 +161,7 @@ class BufferInventoryPricing implements PricingStrategy
       criticalInventory:criticalInventory);
 
 
-  void _updateStockingFlag(AgentData data)
+  void _updateStockingFlag(Data data)
   {
     var inventory = inventoryExtractor(data);
 
@@ -188,7 +186,7 @@ class BufferInventoryPricing implements PricingStrategy
   }
 
 
-  updatePrice(AgentData data)
+  updatePrice(Data data)
   {
     _updateStockingFlag(data);
     if(_stockingUp)

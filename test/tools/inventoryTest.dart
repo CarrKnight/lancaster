@@ -4,7 +4,7 @@
  */
 
 import 'package:unittest/unittest.dart';
-import 'package:lancaster/model/tools/inventory.dart';
+import 'package:lancaster/model/lancaster_model.dart';
 
 main(){
 

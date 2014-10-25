@@ -5,9 +5,7 @@
 
 import 'package:mockito/mockito.dart';
 import 'package:unittest/unittest.dart';
-import 'package:lancaster/model/agents/pricing.dart';
-import 'package:lancaster/model/tools/agent_data.dart';
-import 'package:lancaster/model/engine/schedule.dart';
+import 'package:lancaster/model/lancaster_model.dart';
 
 
 
@@ -20,7 +18,7 @@ void main(){
 }
 
 
-class MockAgentData extends Mock implements AgentData{}
+class MockAgentData extends Mock implements Data{}
 
 
 void bufferTests(){
@@ -140,7 +138,7 @@ void PIDFlows() {
     PIDPricing pricing = new PIDPricing((data) => 1.0, (data) => 1.0, offset:100.0);
     expect(pricing.price, 100);
     for (int i = 0; i < 100; i++) {
-      pricing.updatePrice(new AgentData(["a"], (references) => (s) {
+      pricing.updatePrice(new Data(["a"], (references) => (s) {
       }));
       expect(pricing.price, 100);
     }
@@ -155,7 +153,7 @@ void PIDFlows() {
     PIDPricing pricing = new PIDPricing((data) => 1.0, (data) => 0.0, offset:100.0);
     expect(pricing.price, 100);
     for (int i = 0; i < 100; i++) {
-      pricing.updatePrice(new AgentData(["a"], (references) => (s) {
+      pricing.updatePrice(new Data(["a"], (references) => (s) {
       }));
       expect(pricing.price > 100, true);
     }
@@ -169,7 +167,7 @@ void PIDFlows() {
     PIDPricing pricing = new PIDPricing((data) => -10.0, (data) => 0.0, offset:100.0);
     expect(pricing.price, 100);
     for (int i = 0; i < 100; i++) {
-      pricing.updatePrice(new AgentData(["a"], (references) => (s) {
+      pricing.updatePrice(new Data(["a"], (references) => (s) {
       }));
       expect(pricing.price < 100 && pricing.price >= 0, true);
     }
@@ -181,7 +179,7 @@ void PIDFlows() {
     //the seller: when inflow > outflow price should go down
     PIDPricing pricing = new PIDPricing.DefaultSeller(initialPrice:100.0);
     //default seller takes "inflow" and "outflow" columns
-    var data = new AgentData(["inflow", "outflow"], (references) => (Schedule s) {
+    var data = new Data(["inflow", "outflow"], (references) => (Schedule s) {
       references["inflow"].add(1.0);
       references["outflow"].add(0.0);
     });
@@ -199,7 +197,7 @@ void PIDFlows() {
     //the seller:  when inflow < outflow price go up
     PIDPricing pricing = new PIDPricing.DefaultSeller(initialPrice:100.0);
     //default seller takes "inflow" and "outflow" columns
-    var data = new AgentData(["inflow", "outflow"], (references) => (Schedule s) {
+    var data = new Data(["inflow", "outflow"], (references) => (Schedule s) {
       references["inflow"].add(0.0);
       references["outflow"].add(1.0);
     });
@@ -215,7 +213,7 @@ void PIDFlows() {
   test("ignore NAs and lack of data", () {
 
     PIDPricing pricing = new PIDPricing.DefaultSeller(initialPrice:100.0);
-    var data = new AgentData(["inflow", "outflow"], (references) => (Schedule s) {
+    var data = new Data(["inflow", "outflow"], (references) => (Schedule s) {
       //puts garbage in
       references["inflow"].add(double.NAN);
       references["outflow"].add(1.0);

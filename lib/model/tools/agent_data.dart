@@ -1,8 +1,4 @@
-library tools.agentdata;
-
-import 'package:lancaster/model/engine/schedule.dart';
-import 'package:lancaster/model/agents/seller.dart';
-
+part of lancaster.model;
 
 
 /*
@@ -14,7 +10,7 @@ import 'package:lancaster/model/agents/seller.dart';
  * This is a port of the DataStorage.java
  * Basically a map String--->num storing end of the day observations + a step to update itself
  */
-class AgentData
+class Data
 {
 
   //for each name a list of observations
@@ -26,7 +22,7 @@ class AgentData
   Step _updateStep;
 
 
-  AgentData(List<String> columns,Step updateStepBuilder(Map<String,List<num>> dataReferences)) {
+  Data(List<String> columns,Step updateStepBuilder(Map<String,List<num>> dataReferences)) {
     _dataMap = new Map();
     columns.forEach((col)=>_dataMap[col]=new List()); //add column names
     _updateStep = updateStepBuilder(_dataMap);
@@ -36,7 +32,7 @@ class AgentData
 
 
 
-  AgentData.SellerDefault(Seller seller):
+  Data.SellerDefault(Seller seller):
      this(["outflow","inflow","closingPrice","offeredPrice","inventory"],(data)=>(s){
        data["outflow"].add(seller.currentOutflow);
        data["inflow"].add(seller.currentInflow);

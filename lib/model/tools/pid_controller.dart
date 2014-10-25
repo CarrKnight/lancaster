@@ -1,5 +1,4 @@
-library tools.pid;
-import 'dart:math';
+part of lancaster.model;
 
 /**
  * A simple PID controller, never lets MV go negative, doesn't allow negative parameters, has windup-stop enabled

@@ -7,6 +7,10 @@ description: >
 author: Ernesto Carrella <ernesto.carrella@gmail.com>
 dependencies:
   browser: any
+  angular: 0.13.0
+  perf_api: 0.0.9
+transformers:
+- angular
 dev_dependencies:
   unittest: any
   mockito:

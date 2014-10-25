@@ -4,10 +4,8 @@
  */
 
 import 'package:unittest/unittest.dart';
-import 'package:lancaster/model/agents/seller.dart';
-import 'package:lancaster/model/market/markets.dart';
-import 'package:lancaster/model/engine/schedule.dart';
-import 'package:lancaster/model/agents/pricing.dart';
+import 'package:lancaster/model/lancaster_model.dart';
+
 
 //If I start you at price=100 you should be able to find the correct price
 

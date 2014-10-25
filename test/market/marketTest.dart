@@ -2,9 +2,8 @@ library marketTest;
 
 import 'package:unittest/unittest.dart';
 import 'package:mockito/mockito.dart';
-import 'package:lancaster/model/market/markets.dart';
-import 'package:lancaster/model/engine/schedule.dart';
-import 'package:lancaster/model/agents/seller.dart';
+import 'package:lancaster/model/lancaster_model.dart';
+
 
 /*
  * Copyright (c) 2014 to Ernesto Carrella.
@@ -35,6 +34,9 @@ void main() {
 
     expect(seller.gas, 0);
     expect(seller.money, 900);
+
+    expect(market.quantitySold,10.0);
+    expect(market.averageClosingPrice,90.0);
   });
 
   test("Clears partial quote", () {
@@ -56,6 +58,8 @@ void main() {
 
     expect(seller.gas, 10);
     expect(seller.money, 900);
+    expect(market.quantitySold,10.0);
+    expect(market.averageClosingPrice,90.0);
   });
 
   test("Best Offer wins", () {
@@ -85,6 +89,9 @@ void main() {
     //seller 2 sold everything
     expect(seller2.gas, 0);
     expect(seller2.money, 1900);
+    //market results
+    expect(market.quantitySold,10.0);
+    expect(market.averageClosingPrice,190.0);
   });
 
 
@@ -109,12 +116,16 @@ void main() {
     //execute day
     schedule.simulateDay();
 
-    //seller 1 sold nothing
+    //seller 1 sold everthing
     expect(seller1.gas, 0);
     expect(seller1.money, 190 * 5.0);
     //seller 2 sold everything
     expect(seller2.gas, 0);
     expect(seller2.money, 190 * 5.0);
+
+    //market results
+    expect(market.quantitySold,10.0);
+    expect(market.averageClosingPrice,190.0);
   });
 
 

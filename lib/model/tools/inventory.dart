@@ -3,7 +3,7 @@
  * This is open source on MIT license. Isn't this jolly?
  */
 
-library tools.inventory;
+part of lancaster.model;
 
 /**
  * the java inventory was a very elegant hashmap with variable good-types, differentiated goods and so on.

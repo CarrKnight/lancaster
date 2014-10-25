@@ -2,13 +2,9 @@
  * Copyright (c) 2014 to Ernesto Carrella.
  * This is open source on MIT license. Isn't this jolly?
  */
-library agents.seller;
+part of lancaster.model;
 
-import 'package:lancaster/model/tools/inventory.dart';
-import 'package:lancaster/model/market/markets.dart';
-import 'package:lancaster/model/engine/schedule.dart';
-import 'package:lancaster/model/agents/pricing.dart';
-import 'package:lancaster/model/tools/agent_data.dart';
+
 
 /**
  * this is an interface of somebody who has inventory and can be notified of sales (which is a pre-requisite to trade)
@@ -116,7 +112,7 @@ class FixedInflowSeller implements Seller
 {
   final Inventory _inventory = new Inventory();
 
-  AgentData _data;
+  Data _data;
 
   double dailyInflow;
 
@@ -173,7 +169,7 @@ class FixedInflowSeller implements Seller
 
     };
 
-    _data = new AgentData.SellerDefault(this);
+    _data = new Data.SellerDefault(this);
   }
 
   /**

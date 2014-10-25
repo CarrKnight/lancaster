@@ -1,10 +1,4 @@
-library markets;
-
-import 'package:lancaster/model/tools/inventory.dart';
-import 'package:lancaster/model/engine/schedule.dart';
-import 'package:lancaster/model/agents/seller.dart';
-import 'dart:math';
-import 'dart:collection';
+part of lancaster.model;
 
 /*
  * Copyright (c) 2014 to Ernesto Carrella.
@@ -27,14 +21,14 @@ I am also going to change how some customers work. For fixed demand I used to ha
 
 abstract class Market{
 
-  double get closingPrice;
+  double get averageClosingPrice;
 
-  double get closingQuantity;
+  double get quantitySold;
 
 
 }
 
-abstract class MarketForSellers{
+abstract class MarketForSellers implements Market{
 
 
   placeSaleQuote(Seller seller,double amount,double unitPrice);
@@ -56,9 +50,9 @@ abstract class MarketForBuyers{
 /**
  * a market where the buying is "done" by a fixed linear demand while the sellers are normal agents
  */
-  class LinearDemandMarket implements MarketForSellers{
+class LinearDemandMarket implements MarketForSellers{
 
-    Set<Seller> _sellers = new LinkedHashSet();
+  Set<Seller> _sellers = new LinkedHashSet();
 
 
   final List<_SaleQuote> _quotes = new List();
@@ -70,6 +64,8 @@ abstract class MarketForBuyers{
   double _slope;
 
   double _soldToday = 0.0;
+
+  double _moneyExchanged = 0.0;
 
   /**
    * reset market means clearing up the quote and reset the already sold counter
@@ -109,6 +105,7 @@ abstract class MarketForBuyers{
   void _resetMarket(Schedule s){
     _quotes.clear();
     _soldToday = 0.0;
+    _moneyExchanged = 0.0;
 
   }
 
@@ -131,6 +128,7 @@ abstract class MarketForBuyers{
       //trade!
       sold(best.owner,amountTraded,best.pricePerunit);
       _soldToday +=amountTraded;
+      _moneyExchanged +=amountTraded * best.pricePerunit;
 
       //if we filled the quote
       if(amountTraded == best.amount) {
@@ -167,11 +165,17 @@ abstract class MarketForBuyers{
 
 
 
-    bool registerSeller(Seller seller)=>
-    _sellers.add(seller);
+  bool registerSeller(Seller seller)=>
+  _sellers.add(seller);
 
 
-    Iterable<Seller> get registeredSellers => _sellers;
+  Iterable<Seller> get registeredSellers => _sellers;
+
+  double get averageClosingPrice => _soldToday == 0 ? double.NAN :
+  _moneyExchanged/_soldToday;
+
+  double get quantitySold=> _soldToday;
+
 
 }
 

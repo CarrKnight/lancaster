@@ -6,8 +6,8 @@
 
 
 import 'package:unittest/unittest.dart';
-import 'package:lancaster/model/tools/agent_data.dart';
-import 'package:lancaster/model/engine/schedule.dart';
+import 'package:lancaster/model/lancaster_model.dart';
+
 
 
 main() {
@@ -21,7 +21,7 @@ main() {
   test("Construct and schedules fine ",(){
     Schedule schedule = new Schedule();//set up schedule
     //set up agent and its step
-    AgentData data = new AgentData( ["title1","title2"], (data)=>
+    Data data = new Data( ["title1","title2"], (data)=>
         (Schedule s){print("a");}
      );
     //start the data, should schedule the stepper
@@ -35,7 +35,7 @@ main() {
 
   test("Adds data correctly and can retrieve it just fine ",(){
     Schedule schedule = new Schedule();//set up schedule
-    AgentData data = new AgentData(["title1","title2"], (data)=>
+    Data data = new Data(["title1","title2"], (data)=>
     (Schedule s){ //the update steps fills it with 1 and 2s
       data["title1"].add(1);
       data["title2"].add(2.0);
@@ -56,7 +56,7 @@ main() {
   test("Latest is latest ",(){
     int i=1;
     Schedule schedule = new Schedule();//set up schedule
-    AgentData data = new AgentData(["title1"], (data)=>
+    Data data = new Data(["title1"], (data)=>
         (Schedule s){ //the update steps fills it with 1 and 2s
       data["title1"].add(i);
       i++;

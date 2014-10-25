@@ -1,5 +1,4 @@
-library engine.schedule;
-import 'dart:collection';
+part of lancaster.model;
 
 /**
  * A simple schedule, going through each phase and not even bothering randomizing itself
@@ -106,9 +105,10 @@ class Phase
   static const ADJUST_PRICES = const Phase._(5);
   static const ADJUST_PRODUCTION = const Phase._(6);
   static const CLEANUP = const Phase._(7);
+  static const GUI = const Phase._(8);
 
   static final List<Phase> PHASE_LIST = [DAWN,PRODUCTION,PREPARE_TO_TRADE,PLACE_QUOTES, CLEAR_MARKETS,
-  ADJUST_PRICES,ADJUST_PRODUCTION,CLEANUP];
+  ADJUST_PRICES,ADJUST_PRODUCTION,CLEANUP, GUI];
 
 
 }
