@@ -4,7 +4,7 @@
  */
 import 'tools/tooltests.dart' as tools;
 import 'engine/engine_test.dart' as engine;
-import 'market/seller_market_test.dart' as market;
+import 'market/market_tests.dart' as market;
 import 'agents/pricing_test.dart' as pricing;
 
 

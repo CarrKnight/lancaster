@@ -46,16 +46,49 @@ main(){
     s.simulateDay(); //day 4
     streams.logTrade(null,null,10.0,1.0);
 
+  });
+
+  test("listen to streams straight from markets",()
+  {
+
+    //expect one trade
+    Function tradeListener = (TradeEvent e){
+      print("trade happened!");
+    };
+    tradeListener = expectAsync(tradeListener,count:1); //i want this to be called once
+
+    //expect two quotes
+    Function quotesListener = (SalesQuoteEvent e){
+      print("quotes happened!");
+    };
+    quotesListener = expectAsync(quotesListener,count:2); //i want this to be called twice
 
 
+    //setup copy pasted from: "Best Offer wins"
+    Schedule schedule = new Schedule();
+    LinearDemandMarket market = new LinearDemandMarket(intercept:200.0, slope:-1.0);
+    market.start(schedule);
+    market.tradeStream.listen(tradeListener);
+    market.saleQuotesStream.listen(quotesListener);
 
+    DummySeller seller1 = new DummySeller();
+    DummySeller seller2 = new DummySeller();
+    market.registerSeller(seller1);
+    market.registerSeller(seller2);
 
+    seller1.receive(10.0); //both sellers has 10 units of gas it can sell
+    seller2.receive(10.0);
+    //seller 2 sells at 190$, seller 1 at 191$
+    schedule.schedule(Phase.PLACE_QUOTES, (s) => market.placeSaleQuote(seller2, 10.0, 190.0));
+    schedule.schedule(Phase.PLACE_QUOTES, (s) => market.placeSaleQuote(seller1, 10.0, 191.0));
 
-
-
-
+    //execute day
+    schedule.simulateDay();
 
   });
+
+
+
 
 
 }

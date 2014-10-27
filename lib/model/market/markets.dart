@@ -25,15 +25,25 @@ abstract class Market{
 
   double get quantitySold;
 
+  /**
+   * a stream narrating the trades that have occurred
+   */
+  Stream<TradeEvent> get tradeStream;
+
 
 }
 
-abstract class MarketForSellers implements Market{
+abstract class MarketForSellers extends Market{
 
 
   placeSaleQuote(Seller seller,double amount,double unitPrice);
 
   bool registerSeller(Seller seller);
+
+  /**
+   * a stream narrating the quotes that have been placed
+   */
+  Stream<SalesQuoteEvent> get saleQuotesStream;
 
 
   Iterable<Seller> get registeredSellers;
@@ -78,11 +88,16 @@ class LinearDemandMarket implements MarketForSellers{
   Step _marketClearStep;
 
 
+  final StreamsForSellerMarkets _streams = new StreamsForSellerMarkets();
 
-  LinearDemandMarket({num intercept : 100.0, num slope:-1.0}) {
+
+
+  LinearDemandMarket({num intercept : 100.0, num slope:-1.0})
+  {
     assert(slope <=0);
     this._intercept = intercept.toDouble();
     this._slope = slope.toDouble();
+
 
 
     _resetMarketStep= (schedule){
@@ -97,8 +112,8 @@ class LinearDemandMarket implements MarketForSellers{
   }
 
   void start(Schedule s){
+    _streams.start(s);
     s.scheduleRepeating(Phase.DAWN,_resetMarket);
-
     s.scheduleRepeating(Phase.CLEAR_MARKETS,_clearMarket);
   }
 
@@ -129,6 +144,8 @@ class LinearDemandMarket implements MarketForSellers{
       sold(best.owner,amountTraded,best.pricePerunit);
       _soldToday +=amountTraded;
       _moneyExchanged +=amountTraded * best.pricePerunit;
+      //log
+      _streams.logTrade(best.owner,null,amountTraded,price);
 
       //if we filled the quote
       if(amountTraded == best.amount) {
@@ -161,8 +178,13 @@ class LinearDemandMarket implements MarketForSellers{
   placeSaleQuote(Seller seller, double amount, double unitPrice) {
     assert(_sellers.contains(seller));
     _quotes.add(new _SaleQuote(seller,amount,unitPrice));
+    //log it
+    _streams.logQuote(seller,amount,unitPrice);
+
   }
 
+  Stream<SalesQuoteEvent> get saleQuotesStream => _streams.saleQuotesStream;
+  Stream<TradeEvent> get tradeStream => _streams.tradeStream;
 
 
   bool registerSeller(Seller seller)=>
@@ -176,6 +198,8 @@ class LinearDemandMarket implements MarketForSellers{
 
   double get quantitySold=> _soldToday;
 
+  
+  
 
 }
 
@@ -343,7 +367,7 @@ class StreamsForSellerMarkets{
   }
 
   Stream<TradeEvent> get tradeStream => _trades.stream;
-  Stream<SalesQuoteEvent> get quoteStream => _quotes.stream;
+  Stream<SalesQuoteEvent> get saleQuotesStream => _quotes.stream;
 
 
 
