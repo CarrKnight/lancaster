@@ -7,7 +7,7 @@ description: >
 author: Ernesto Carrella <ernesto.carrella@gmail.com>
 dependencies:
   browser: any
-  angular: 0.13.0
+  angular: any
   perf_api: 0.0.9
 transformers:
 - angular
