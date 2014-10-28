@@ -33,6 +33,10 @@ packages:
     description: di
     source: hosted
     version: "2.0.2"
+  highcharts4dart:
+    description: highcharts4dart
+    source: hosted
+    version: "0.1.0+6"
   html5lib:
     description: html5lib
     source: hosted
@@ -41,6 +45,10 @@ packages:
     description: intl
     source: hosted
     version: "0.8.10+4"
+  js:
+    description: js
+    source: hosted
+    version: "0.2.2"
   logging:
     description: logging
     source: hosted
@@ -60,6 +68,10 @@ packages:
       url: "https://github.com/fibulwinter/dart-mockito.git"
     source: git
     version: "0.8.1"
+  observe:
+    description: observe
+    source: hosted
+    version: "0.11.0+5"
   path:
     description: path
     source: hosted
@@ -76,6 +88,10 @@ packages:
     description: route_hierarchical
     source: hosted
     version: "0.4.22"
+  smoke:
+    description: smoke
+    source: hosted
+    version: "0.2.1+1"
   source_maps:
     description: source_maps
     source: hosted

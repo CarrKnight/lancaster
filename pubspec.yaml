@@ -9,6 +9,8 @@ dependencies:
   browser: any
   angular: any
   perf_api: 0.0.9
+  highcharts4dart: any
+  observe: any
 transformers:
 - angular
 dev_dependencies:

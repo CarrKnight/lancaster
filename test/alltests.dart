@@ -6,6 +6,7 @@ import 'model/tools/tooltests.dart' as tools;
 import 'model/engine/engine_test.dart' as engine;
 import 'model/market/market_tests.dart' as market;
 import 'model/agents/pricing_test.dart' as pricing;
+import 'presentation/presentation_test.dart' as presentation;
 
 
 void main(){
@@ -13,4 +14,5 @@ void main(){
   engine.main();
   market.main();
   pricing.main();
+  presentation.main();
 }

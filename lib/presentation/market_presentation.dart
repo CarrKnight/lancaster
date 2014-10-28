@@ -21,6 +21,8 @@ class SimpleMarketPresentation{
 
   StreamController<MarketEvent> _marketStream;
 
+
+
   final Market _market;
 
   SimpleMarketPresentation(this._market) {
@@ -46,6 +48,7 @@ class SimpleMarketPresentation{
     if(listenedTo)
       _marketStream.add(new MarketEvent(_market.averageClosingPrice,
                                         _market.quantitySold));
+
   }
 
 
