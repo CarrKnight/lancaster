@@ -4,7 +4,6 @@
  */
 part of lancaster.view;
 
-//todo make this into a simple component with a button to press to pass time
 @Component(
     selector: 'controlbar',
     templateUrl: 'packages/lancaster/view/controlbar/controlbar.html',
