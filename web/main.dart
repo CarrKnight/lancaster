@@ -11,6 +11,7 @@ class LancasterModule extends Module{
   LancasterModule() {
     bind(ModelGUI);
     bind(ControlBar);
+    bind(MarketView);
   }
 }
 

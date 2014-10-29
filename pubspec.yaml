@@ -1,19 +1,15 @@
 name: lancaster
 version: 0.0.1
-description: >
-  A monopolistic competition model that would hopefully
-  run straight into the paper. Supposedly inspired by
-  the Lancaster models of competition.
 author: Ernesto Carrella <ernesto.carrella@gmail.com>
+description: A monopolistic competition model that would hopefully run straight into the paper. Supposedly inspired by the Lancaster models of competition.
 dependencies:
-  browser: any
   angular: any
-  perf_api: 0.0.9
-  highcharts4dart: any
+  browser: any
   observe: any
+  perf_api: 0.0.9
+dev_dependencies:
+  mockito:
+    git: https://github.com/fibulwinter/dart-mockito.git
+  unittest: any
 transformers:
 - angular
-dev_dependencies:
-  unittest: any
-  mockito:
-      git: https://github.com/fibulwinter/dart-mockito.git

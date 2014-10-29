@@ -15,6 +15,7 @@ class ModelGUI {
 
   final ModelPresentation presentation;
 
+
   ModelGUI() :
     presentation = new ModelPresentation(
         new Model(
@@ -22,7 +23,10 @@ class ModelGUI {
   {
     print("gui created");
   }
-  
+
+
+  SimpleMarketPresentation get market => presentation.gasPresentation;
+
 
 
 }

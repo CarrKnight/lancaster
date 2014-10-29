@@ -10,16 +10,23 @@
     <title>Model Control Bar!</title>
     <script src="packages/web_components/platform.js"></script>
     <script src="packages/web_components/dart_support.js"></script>
+    <script src="packages/highcharts4dart/standalone-framework.src.js"></script>
 </head>
 <body>
 
 <div model-gui>
     <h3> Control bar</h3>
     <controlbar model-presentation="gui.presentation"></controlbar>
+    <p>
+    <h3> Market</h3>
+    <marketview presentation="gui.market"></marketview>
 </div>
 
 </body>
 
+
 <script type="application/dart" src="main.dart"></script>
 <script type="text/javascript" src="packages/browser/dart.js"></script>
+  <script src="packages/highcharts4dart/highcharts.src.js"></script>
+
 </html>

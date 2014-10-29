@@ -37,16 +37,17 @@ class SimpleMarketPresentation{
    * start streaming prices and quantities to the view
    */
   start(Schedule schedule){
-    schedule.scheduleRepeating(Phase.GUI,(schedule)=>_broadcastMarketStatus());
+    schedule.scheduleRepeating(Phase.GUI,(schedule)=>_broadcastMarketStatus(schedule));
   }
 
 
   /**
    * stream only if it is listened to
    */
-  _broadcastMarketStatus(){
+  _broadcastMarketStatus(Schedule schedule){
     if(listenedTo)
-      _marketStream.add(new MarketEvent(_market.averageClosingPrice,
+      _marketStream.add(new MarketEvent( schedule.day,
+                                        _market.averageClosingPrice,
                                         _market.quantitySold));
 
   }
@@ -61,9 +62,11 @@ class MarketEvent{
 
   final double price;
 
+  final int day;
+
   final double quantity;
 
-  MarketEvent(this.price, this.quantity);
+  MarketEvent(this.day, this.price, this.quantity);
 
 
 }
