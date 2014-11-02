@@ -6,7 +6,6 @@
 library presentationtests;
 
 import 'package:unittest/unittest.dart';
-import 'package:mockito/mockito.dart';
 import 'package:lancaster/model/lancaster_model.dart';
 import 'package:lancaster/presentation/lancaster_presentation.dart';
 

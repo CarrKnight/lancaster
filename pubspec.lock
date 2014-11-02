@@ -4,11 +4,11 @@ packages:
   analyzer:
     description: analyzer
     source: hosted
-    version: "0.18.0"
+    version: "0.15.7"
   angular:
     description: angular
     source: hosted
-    version: "0.13.0"
+    version: "1.0.0"
   args:
     description: args
     source: hosted
@@ -21,6 +21,10 @@ packages:
     description: browser
     source: hosted
     version: "0.10.0+2"
+  charted:
+    description: charted
+    source: hosted
+    version: "0.0.7"
   code_transformers:
     description: code_transformers
     source: hosted
@@ -29,10 +33,14 @@ packages:
     description: collection
     source: hosted
     version: "0.9.4"
+  csslib:
+    description: csslib
+    source: hosted
+    version: "0.11.0+2"
   di:
     description: di
     source: hosted
-    version: "2.0.2"
+    version: "3.3.2"
   html5lib:
     description: html5lib
     source: hosted
@@ -40,7 +48,7 @@ packages:
   intl:
     description: intl
     source: hosted
-    version: "0.8.10+4"
+    version: "0.11.9"
   logging:
     description: logging
     source: hosted
@@ -49,10 +57,6 @@ packages:
     description: matcher
     source: hosted
     version: "0.11.1"
-  meta:
-    description: meta
-    source: hosted
-    version: "0.8.8"
   mockito:
     description:
       ref: null
@@ -63,7 +67,7 @@ packages:
   observe:
     description: observe
     source: hosted
-    version: "0.11.0+5"
+    version: "0.10.1+2"
   path:
     description: path
     source: hosted
@@ -72,6 +76,10 @@ packages:
     description: perf_api
     source: hosted
     version: "0.0.9"
+  petitparser:
+    description: petitparser
+    source: hosted
+    version: "1.2.2"
   pool:
     description: pool
     source: hosted
@@ -79,11 +87,11 @@ packages:
   route_hierarchical:
     description: route_hierarchical
     source: hosted
-    version: "0.4.22"
+    version: "0.5.0"
   smoke:
     description: smoke
     source: hosted
-    version: "0.2.1+1"
+    version: "0.1.0+1"
   source_maps:
     description: source_maps
     source: hosted
@@ -96,10 +104,6 @@ packages:
     description: stack_trace
     source: hosted
     version: "1.0.2"
-  typed_mock:
-    description: typed_mock
-    source: hosted
-    version: "0.0.4"
   unittest:
     description: unittest
     source: hosted
@@ -108,7 +112,3 @@ packages:
     description: utf
     source: hosted
     version: "0.9.0+1"
-  web_components:
-    description: web_components
-    source: hosted
-    version: "0.3.5+1"

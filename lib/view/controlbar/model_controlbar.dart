@@ -21,7 +21,7 @@ class ControlBar
 
 
 
-  @NgOneWay('model-presentation')
+  @NgOneWayOneTime('model-presentation')
   set presentation(ModelPresentation presentation)
   {
     _presentation = presentation;

@@ -13,8 +13,7 @@ part of lancaster.view;
     templateUrl: 'packages/lancaster/view/marketview/marketview.html',
     publishAs: 'market'
 )
-class MarketView
-{
+class MarketView implements ShadowRootAware{
 
   /**
    * the presentation object which is our interface to the model itself
@@ -23,16 +22,37 @@ class MarketView
 
 
 
+  /**
+   * in a perfect world this chart would be in the presentation folder. 
+   * Unfortunately as soon as there is a dependency on html the tests don't run
+   * so there is no benefit in putting this in the presentation layer
+   */
+  ChartSeries priceSeries;
+  ChartData data;
+  ChartConfig config;
+  ChartArea area;
+  ObservableList<List<num>> observationRows = toObservable([[0,0]]);
 
-
-  List<String> reports = new List();
-
-
+  Element chartLocation;
+  
+  
+ 
  
 
 
   void _buildChart(){
+    priceSeries = new ChartSeries("price", [1], new LineChartRenderer());
+    data = new ChartData([new ChartColumnSpec(label:'Day',
+                                        type:ChartColumnSpec.TYPE_NUMBER),
+                                        new ChartColumnSpec(label:'Price',
+                                            type:ChartColumnSpec.TYPE_NUMBER,
+                                            formatter:(x)=>"$x\$")], 
+                                            observationRows);
+    config = new ChartConfig([priceSeries], [0]);
+    
+    _drawChart();
 
+    
   }
 
 
@@ -44,6 +64,8 @@ class MarketView
     _presentation.marketStream.listen((event){
       price = event.price;
       quantity = event.quantity;
+      double price1 = event.price.isNaN ? 0: event.price; 
+      observationRows.add([event.day,  price1]);
     });
   }
 
@@ -54,5 +76,21 @@ class MarketView
     _buildChart();
     _listenToModel();
   }
+
+  void onShadowRoot(ShadowRoot shadowRoot){
+    chartLocation=shadowRoot.querySelector('.price-chart');
+    _drawChart();
+  }
+  
+  void _drawChart(){
+    //draw it only once
+    if(area != null || chartLocation == null || priceSeries == null)
+      return;
+    area = new ChartArea(chartLocation,
+                 data, config, autoUpdate:true, dimensionAxesCount:1);
+         area.draw();
+  }
+
+
 
 }

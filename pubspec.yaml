@@ -3,9 +3,10 @@ version: 0.0.1
 author: Ernesto Carrella <ernesto.carrella@gmail.com>
 description: A monopolistic competition model that would hopefully run straight into the paper. Supposedly inspired by the Lancaster models of competition.
 dependencies:
-  angular: any
+  angular: 1.0.0
   browser: any
   observe: any
+  charted: any
   perf_api: 0.0.9
 dev_dependencies:
   mockito:

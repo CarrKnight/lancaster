@@ -8,13 +8,16 @@ part of lancaster.view;
  * the gui root and therefore a controller. Has the presentation object which
  * in turn deals with the model itself
  */
-@Controller(
-    selector: '[model-gui]',
-    publishAs: 'gui')
+@Component(
+    selector: 'model-gui',
+    templateUrl: 'packages/lancaster/view/modelgui.html',
+    publishAs: 'gui'
+      )
 class ModelGUI {
 
   final ModelPresentation presentation;
 
+  final String comma = "ahahah";
 
   ModelGUI() :
     presentation = new ModelPresentation(
@@ -26,6 +29,7 @@ class ModelGUI {
 
 
   SimpleMarketPresentation get market => presentation.gasPresentation;
+  
 
 
 
