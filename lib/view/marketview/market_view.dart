@@ -11,9 +11,10 @@ part of lancaster.view;
 @Component(
     selector: 'marketview',
     templateUrl: 'packages/lancaster/view/marketview/marketview.html',
-    publishAs: 'market'
+    publishAs: 'market',
+    useShadowDom: false
 )
-class MarketView implements ShadowRootAware{
+class MarketView implements ShadowRootAware{ //AttachAware
 
   /**
    * the presentation object which is our interface to the model itself
@@ -31,7 +32,7 @@ class MarketView implements ShadowRootAware{
   ChartData data;
   ChartConfig config;
   ChartArea area;
-  ObservableList<List<num>> observationRows = toObservable([[0,0]]);
+  ObservableList<List<num>> observationRows = toObservable([[0,0.0]]);
 
   Element chartLocation;
   
@@ -49,7 +50,7 @@ class MarketView implements ShadowRootAware{
                                             formatter:(x)=>"$x\$")], 
                                             observationRows);
     config = new ChartConfig([priceSeries], [0]);
-    
+    chartLocation = querySelector('.price-chart');
     _drawChart();
 
     
@@ -64,7 +65,10 @@ class MarketView implements ShadowRootAware{
     _presentation.marketStream.listen((event){
       price = event.price;
       quantity = event.quantity;
-      double price1 = event.price.isNaN ? 0: event.price; 
+      double price1 = event.price; 
+      if(!price1.isFinite)
+        price1=0.0;
+      print([event.day,  price1]);
       observationRows.add([event.day,  price1]);
     });
   }
@@ -78,7 +82,7 @@ class MarketView implements ShadowRootAware{
   }
 
   void onShadowRoot(ShadowRoot shadowRoot){
-    chartLocation=shadowRoot.querySelector('.price-chart');
+    chartLocation=querySelector('.price-chart');
     _drawChart();
   }
   

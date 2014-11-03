@@ -7,7 +7,8 @@ part of lancaster.view;
 @Component(
     selector: 'controlbar',
     templateUrl: 'packages/lancaster/view/controlbar/controlbar.html',
-    publishAs: 'bar'
+    publishAs: 'bar',
+    useShadowDom: false
 )
 class ControlBar
 {
