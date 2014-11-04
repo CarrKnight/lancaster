@@ -76,6 +76,9 @@ abstract class AsksOrderBook{
 
 }
 
+abstract class SellerMarket extends Market with AsksOrderBook{}
+
+
 abstract class BidsOrderBook{
 
   final Set<Trader> buyers = new LinkedHashSet();
@@ -101,7 +104,7 @@ abstract class BidsOrderBook{
 /**
  * a market where the buying is "done" by a fixed linear demand while the sellers are normal agents
  */
-class LinearDemandMarket extends Market with AsksOrderBook{
+class LinearDemandMarket extends SellerMarket{
 
 
   final String goodType;
@@ -348,8 +351,7 @@ class _AsksStream{
 }
 
 
-class QuoteStream{
-
+abstract class TimestampedStreamBase<T>{
   bool listenedTo = false;
 
   bool started = false;
@@ -357,9 +359,9 @@ class QuoteStream{
   Schedule _schedule;
 
 
-  StreamController<QuoteEvent> _controller;
+  StreamController<T> _controller;
 
-  QuoteStream() {
+  TimestampedStreamBase() {
     _controller = new StreamController.broadcast(
         onListen: ()=>listenedTo=true,
         onCancel: ()=>listenedTo=false
@@ -371,6 +373,16 @@ class QuoteStream{
     started = true;
     this._schedule = s;
   }
+
+
+  Stream<T> get stream=>  _controller.stream;
+
+}
+
+
+class QuoteStream extends TimestampedStreamBase<QuoteEvent>{
+
+
 
   void log(Trader trader,double amount, double unitPrice){
     if(started && listenedTo) //if you can log, do log
@@ -378,34 +390,10 @@ class QuoteStream{
   }
 
 
-  Stream<QuoteEvent> get stream=>  _controller.stream;
-
 }
 
 
-class TradeStream{
-
-  bool listenedTo = false;
-
-  bool started = false;
-
-  Schedule _schedule;
-
-
-  StreamController<TradeEvent> _controller;
-
-  TradeStream() {
-    _controller = new StreamController.broadcast(
-        onListen: ()=>listenedTo=true,
-        onCancel: ()=>listenedTo=false
-    );
-  }
-
-  void start(Schedule s){
-    assert(!started);
-    started = true;
-    this._schedule = s;
-  }
+class TradeStream extends TimestampedStreamBase<TradeEvent>{
 
   void log(Trader seller,Trader buyer,double amount, double unitPrice){
     if(started && listenedTo) //if you can log, do log
@@ -415,7 +403,6 @@ class TradeStream{
   }
 
 
-  Stream<TradeEvent> get stream=>  _controller.stream;
 
 }
 

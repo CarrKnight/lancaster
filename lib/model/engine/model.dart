@@ -19,7 +19,7 @@ class Model {
 
   Random _random;
 
-  final List<HasInventory> agents = new List();
+  final List<Object> agents = new List();
 
   //this can be set at any time, but usually it is set by the scenario
   Market gasMarket;

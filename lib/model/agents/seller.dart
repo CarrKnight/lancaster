@@ -142,7 +142,7 @@ class FixedInflowSeller implements Trader
    */
   Step placeQuote;
 
-  FixedInflowSeller(this.dailyInflow,AsksOrderBook market,this.pricing,
+  FixedInflowSeller(this.dailyInflow,SellerMarket market,this.pricing,
                     [double this.depreciationRate=0.0]):
   this.market = market,
   _inventory = new InventoryCrossSection(new Inventory(),market.goodType)
