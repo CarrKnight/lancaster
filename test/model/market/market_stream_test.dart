@@ -9,14 +9,29 @@ import 'package:lancaster/model/lancaster_model.dart';
 
 main(){
 
-  test("events aren't logged before start",()
+  test("events aren't logged before start 1",()
   {
-    StreamsForSellerMarkets streams = new StreamsForSellerMarkets();
+    TradeStream tradeStream = new TradeStream();
     List events = new List();
 
     //whenever a new trade occurs, put it in the list
-    streams.tradeStream.listen((e)=>events.add(e));
-    streams.logTrade(null,null,1.0,1.0);
+    tradeStream.stream.listen((e)=>events.add(e));
+    tradeStream.log(null,null,1.0,1.0);
+    expect(events.length,0);
+
+
+
+
+  });
+
+  test("events aren't logged before start 2",()
+  {
+    QuoteStream tradeStream = new QuoteStream();
+    List events = new List();
+
+    //whenever a new trade occurs, put it in the list
+    tradeStream.stream.listen((e)=>events.add(e));
+    tradeStream.log(null,1.0,1.0);
     expect(events.length,0);
 
 
@@ -26,7 +41,7 @@ main(){
 
   test("listen to stream",()
   {
-    StreamsForSellerMarkets streams = new StreamsForSellerMarkets();
+    TradeStream tradeStream = new TradeStream();
     List<TradeEvent> events = new List();
 
     //whenever a new trade occurs, put it in the list
@@ -36,15 +51,15 @@ main(){
     };
     listener = expectAsync(listener,count:2); //i want this to be called
     // twice!
-    streams.tradeStream.listen(listener);
+    tradeStream.stream.listen(listener);
     Schedule s = new Schedule();
     s.simulateDay(); s.simulateDay(); //so we are at day 3
-    streams.start(s);
+    tradeStream.start(s);
 
     //log and it will work
-    streams.logTrade(null,null,10.0,1.0);
+    tradeStream.log(null,null,10.0,1.0);
     s.simulateDay(); //day 4
-    streams.logTrade(null,null,10.0,1.0);
+    tradeStream.log(null,null,10.0,1.0);
 
   });
 
@@ -58,7 +73,7 @@ main(){
     tradeListener = expectAsync(tradeListener,count:1); //i want this to be called once
 
     //expect two quotes
-    Function quotesListener = (SalesQuoteEvent e){
+    Function quotesListener = (QuoteEvent e){
       print("quotes happened!");
     };
     quotesListener = expectAsync(quotesListener,count:2); //i want this to be called twice
@@ -69,12 +84,12 @@ main(){
     LinearDemandMarket market = new LinearDemandMarket(intercept:200.0, slope:-1.0);
     market.start(schedule);
     market.tradeStream.listen(tradeListener);
-    market.saleQuotesStream.listen(quotesListener);
+    market.asksStream.listen(quotesListener);
 
     DummySeller seller1 = new DummySeller();
     DummySeller seller2 = new DummySeller();
-    market.registerSeller(seller1);
-    market.registerSeller(seller2);
+    market.sellers.add(seller1);
+    market.sellers.add(seller2);
 
     seller1.receive(10.0); //both sellers has 10 units of gas it can sell
     seller2.receive(10.0);

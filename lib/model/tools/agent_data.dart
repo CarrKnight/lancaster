@@ -32,7 +32,7 @@ class Data
 
 
 
-  Data.SellerDefault(Seller seller):
+  Data.SellerDefault(Trader seller):
      this(["outflow","inflow","closingPrice","offeredPrice","inventory"],(data)=>(s){
        data["outflow"].add(seller.currentOutflow);
        data["inflow"].add(seller.currentInflow);

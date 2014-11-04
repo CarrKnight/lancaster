@@ -21,6 +21,14 @@ I am also going to change how some customers work. For fixed demand I used to ha
 
 abstract class Market{
 
+
+  final TradeStream _tradeStreamer = new TradeStream();
+
+
+  void start(Schedule s){
+    _tradeStreamer.start(s);
+  }
+
   double get averageClosingPrice;
 
   double get quantitySold;
@@ -30,31 +38,62 @@ abstract class Market{
   /**
    * a stream narrating the trades that have occurred
    */
-  Stream<TradeEvent> get tradeStream;
+  Stream<TradeEvent> get tradeStream=>_tradeStreamer.stream;
 
 
 }
 
-abstract class MarketForSellers extends Market{
+abstract class AsksOrderBook{
+
+  final Set<Trader> sellers = new LinkedHashSet();
+
+  final List<_TradeQuote> _asks = new List();
+
+  final QuoteStream _askStreamer = new QuoteStream();
+
+  void startAsks(Schedule s){
+    _askStreamer.start(s);
+  }
 
 
-  placeSaleQuote(Seller seller,double amount,double unitPrice);
+  placeSaleQuote(Trader seller, double amount, double unitPrice) {
+    assert(sellers.contains(seller));
+    _asks.add(new _TradeQuote(seller,amount,unitPrice));
+    //log it
+    _askStreamer.log(seller,amount,unitPrice);
 
-  bool registerSeller(Seller seller);
+  }
+
+
+
 
   /**
    * a stream narrating the quotes that have been placed
    */
-  Stream<SalesQuoteEvent> get saleQuotesStream;
+  Stream<QuoteEvent> get asksStream => _askStreamer.stream;
 
 
-  Iterable<Seller> get registeredSellers;
 
 }
 
-abstract class MarketForBuyers{
+abstract class BidsOrderBook{
 
-  placeBuyerQuote(HasInventory buyer,double amount,double unitPrice);
+  final Set<Trader> buyers = new LinkedHashSet();
+
+  final List<_TradeQuote> _bids = new List();
+
+  placeBuyerQuote(Trader buyer,double amount,double unitPrice){
+    assert(buyers.contains(buyer));
+    _bids.add(new _TradeQuote(buyer,amount,unitPrice) );
+  }
+
+  bool registerBuyer(Trader buyer);
+  /**
+   * a stream narrating the quotes that have been placed
+   */
+  Stream<QuoteEvent> get bidStream;
+
+
 
 }
 
@@ -62,14 +101,13 @@ abstract class MarketForBuyers{
 /**
  * a market where the buying is "done" by a fixed linear demand while the sellers are normal agents
  */
-class LinearDemandMarket implements MarketForSellers{
+class LinearDemandMarket extends Market with AsksOrderBook{
 
-  Set<Seller> _sellers = new LinkedHashSet();
 
   final String goodType;
 
 
-  final List<_SaleQuote> _quotes = new List();
+
 
 
 
@@ -92,7 +130,6 @@ class LinearDemandMarket implements MarketForSellers{
   Step _marketClearStep;
 
 
-  final StreamsForSellerMarkets _streams = new StreamsForSellerMarkets();
 
 
 
@@ -118,13 +155,14 @@ class LinearDemandMarket implements MarketForSellers{
   }
 
   void start(Schedule s){
-    _streams.start(s);
+    super.start(s);
+    startAsks(s);
     s.scheduleRepeating(Phase.DAWN,_resetMarket);
     s.scheduleRepeating(Phase.CLEAR_MARKETS,_clearMarket);
   }
 
   void _resetMarket(Schedule s){
-    _quotes.clear();
+    _asks.clear();
     _soldToday = 0.0;
     _moneyExchanged = 0.0;
 
@@ -132,13 +170,13 @@ class LinearDemandMarket implements MarketForSellers{
 
   void _clearMarket(Schedule s){
     //sort quotes (last will be the best since last is faster to remove, I think)
-    _quotes.shuffle(); //shuffle it to avoid first agent to always go first/last
-    _quotes.sort((q1,q2)=>(-q1.pricePerunit.compareTo(q2.pricePerunit)));
+    _asks.shuffle(); //shuffle it to avoid first agent to always go first/last
+    _asks.sort((q1,q2)=>(-q1.pricePerunit.compareTo(q2.pricePerunit)));
 
     //as long as there are quotes
-    while(_quotes.isNotEmpty){
+    while(_asks.isNotEmpty){
 
-      var best = _quotes.last;
+      var best = _asks.last;
       var price = best._pricePerUnit;
       var maxDemandForThisPrice = (intercept + slope * price)-_soldToday; //demand minus what has been already sold today!
 
@@ -151,11 +189,11 @@ class LinearDemandMarket implements MarketForSellers{
       _soldToday +=amountTraded;
       _moneyExchanged +=amountTraded * best.pricePerunit;
       //log
-      _streams.logTrade(best.owner,null,amountTraded,price);
+      _tradeStreamer.log(best.owner,null,amountTraded,price);
 
       //if we filled the quote
       if(amountTraded == best.amount) {
-        var removed = _quotes.removeLast();
+        var removed = _asks.removeLast();
         assert(removed == best);
       }
       else{
@@ -181,47 +219,35 @@ class LinearDemandMarket implements MarketForSellers{
 
   }
 
-  placeSaleQuote(Seller seller, double amount, double unitPrice) {
-    assert(_sellers.contains(seller));
-    _quotes.add(new _SaleQuote(seller,amount,unitPrice));
-    //log it
-    _streams.logQuote(seller,amount,unitPrice);
-
-  }
-
-  Stream<SalesQuoteEvent> get saleQuotesStream => _streams.saleQuotesStream;
-  Stream<TradeEvent> get tradeStream => _streams.tradeStream;
 
 
-  bool registerSeller(Seller seller)=>
-  _sellers.add(seller);
 
 
-  Iterable<Seller> get registeredSellers => _sellers;
+
 
   double get averageClosingPrice => _soldToday == 0 ? double.NAN :
   _moneyExchanged/_soldToday;
 
   double get quantitySold=> _soldToday;
 
-  
-  
+
+
 
 }
 
-class _SaleQuote
+class _TradeQuote
 {
 
   double _amount;
 
   final double _pricePerUnit;
 
-  final Seller _owner;
+  final Trader _owner;
 
-  _SaleQuote(this._owner, this._amount,this._pricePerUnit);
+  _TradeQuote(this._owner, this._amount,this._pricePerUnit);
 
 
-  Seller get owner => _owner;
+  Trader get owner => _owner;
   get pricePerunit=> _pricePerUnit;
   get amount=> _amount;
 
@@ -233,18 +259,10 @@ class _SaleQuote
 
 }
 
-abstract class MarketForSellersListener
-{
-
-  void tradeEvent(){}
-
-
-}
-
 
 //easy functions for trading
 
-void sold(Seller seller, double amount, double price){
+void sold(Trader seller, double amount, double price){
 
   seller.earn(price*amount);
   seller.remove(amount);
@@ -252,7 +270,7 @@ void sold(Seller seller, double amount, double price){
 
 }
 
-void bought(HasInventory buyer, double amount, double price){
+void bought(Trader buyer, double amount, double price){
 
   buyer.spend(price*amount);
   buyer.receive(amount);
@@ -260,7 +278,8 @@ void bought(HasInventory buyer, double amount, double price){
 
 }
 
-void tradeBetweenTwoAgents(HasInventory buyer, Seller seller, double amount, double price ){
+void tradeBetweenTwoAgents(Trader buyer, Trader seller, double amount,
+                           double price ){
   sold(seller,amount,price);
   bought(buyer,amount,price);
 }
@@ -270,9 +289,9 @@ void tradeBetweenTwoAgents(HasInventory buyer, Seller seller, double amount, dou
  */
 class TradeEvent{
 
-  final Seller seller;
+  final Trader seller;
 
-  final HasInventory buyer;
+  final Trader buyer;
 
   final double amount;
 
@@ -288,9 +307,9 @@ class TradeEvent{
 /**
  * a loggable event: a quote was placed
  */
-class SalesQuoteEvent{
+class QuoteEvent{
 
-  final Seller seller;
+  final Trader seller;
 
   final double amount;
 
@@ -298,9 +317,105 @@ class SalesQuoteEvent{
 
   final int day;
 
-  SalesQuoteEvent(this.seller, this.amount, this.unitPrice,
-                  this.day);
+  QuoteEvent(this.seller, this.amount, this.unitPrice,
+             this.day);
 
+
+}
+
+class _AsksStream{
+
+  /**
+   * this boolean is useful to ignore events unless you have listeners
+   */
+  bool recordAsks = false;
+
+  /**
+   * before start gets called nothing gets logged
+   */
+  bool started = false;
+
+
+  StreamController<QuoteEvent> _asks;
+
+  StreamsForMarkets() {
+    _asks = new StreamController.broadcast(
+        onListen: ()=>recordAsks=true,
+        onCancel: ()=>recordAsks=false
+    );
+  }
+
+}
+
+
+class QuoteStream{
+
+  bool listenedTo = false;
+
+  bool started = false;
+
+  Schedule _schedule;
+
+
+  StreamController<QuoteEvent> _controller;
+
+  QuoteStream() {
+    _controller = new StreamController.broadcast(
+        onListen: ()=>listenedTo=true,
+        onCancel: ()=>listenedTo=false
+    );
+  }
+
+  void start(Schedule s){
+    assert(!started);
+    started = true;
+    this._schedule = s;
+  }
+
+  void log(Trader trader,double amount, double unitPrice){
+    if(started && listenedTo) //if you can log, do log
+      _controller.add(new QuoteEvent(trader,amount,unitPrice,_schedule.day));
+  }
+
+
+  Stream<QuoteEvent> get stream=>  _controller.stream;
+
+}
+
+
+class TradeStream{
+
+  bool listenedTo = false;
+
+  bool started = false;
+
+  Schedule _schedule;
+
+
+  StreamController<TradeEvent> _controller;
+
+  TradeStream() {
+    _controller = new StreamController.broadcast(
+        onListen: ()=>listenedTo=true,
+        onCancel: ()=>listenedTo=false
+    );
+  }
+
+  void start(Schedule s){
+    assert(!started);
+    started = true;
+    this._schedule = s;
+  }
+
+  void log(Trader seller,Trader buyer,double amount, double unitPrice){
+    if(started && listenedTo) //if you can log, do log
+      _controller.add(
+          new TradeEvent(seller,buyer,amount,unitPrice,
+          _schedule.day));
+  }
+
+
+  Stream<TradeEvent> get stream=>  _controller.stream;
 
 }
 
@@ -308,17 +423,22 @@ class SalesQuoteEvent{
  * basically a bunch of streams of  market "events" that loggers and views can
  * listen to
  */
-class StreamsForSellerMarkets{
+class StreamsForMarkets{
 
   /**
    * this boolean is useful to ignore events unless you have listeners
    */
-  bool recordQuotes = false;
+  bool recordAsks = false;
 
   /**
    * this boolean is useful to ignore events unless you have listeners
    */
   bool recordTrades = false;
+
+  /**
+   * this boolean is useful to ignore events unless you have listeners
+   */
+  bool recordBids = false;
 
   /**
    * before start gets called nothing gets logged
@@ -332,48 +452,13 @@ class StreamsForSellerMarkets{
 
   StreamController<TradeEvent> _trades;
 
-  StreamController<SalesQuoteEvent> _quotes;
+  StreamController<QuoteEvent> _asks;
+
+  StreamController<QuoteEvent> _bids;
 
 
 
-  /**
-   * grab the schedule s to log days
-   */
 
-  StreamsForSellerMarkets() {
-    _trades = new StreamController.broadcast(
-        onListen: ()=>recordTrades=true,
-        onCancel: ()=>recordTrades=false
-    );
-    _quotes = new StreamController.broadcast(
-        onListen: ()=>recordQuotes=true,
-        onCancel: ()=>recordQuotes=false
-    );
-  }
-
-  void start(Schedule s){
-    assert(!started);
-    started = true;
-    this._schedule = s;
-  }
-
-
-  void logTrade(Seller seller,HasInventory buyer,double amount,
-                double unitPrice){
-    if(started && recordTrades) //if you can log, do log
-      _trades.add(new TradeEvent(seller,buyer,amount,unitPrice,_schedule.day));
-
-
-  }
-
-  void logQuote(Seller seller,double amount, double unitPrice ){
-    if(started && recordQuotes) //if you can log, do log
-      _quotes.add(new SalesQuoteEvent(seller,amount,unitPrice,_schedule.day));
-
-  }
-
-  Stream<TradeEvent> get tradeStream => _trades.stream;
-  Stream<SalesQuoteEvent> get saleQuotesStream => _quotes.stream;
 
 
 

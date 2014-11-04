@@ -14,7 +14,7 @@ main(){
     model.start();
 
 
-    Seller seller = model.agents.first as Seller;
+    Trader seller = model.agents.first as Trader;
 
     for(int i=0; i<200; i++)
     {

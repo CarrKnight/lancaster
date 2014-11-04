@@ -7,9 +7,10 @@ part of lancaster.model;
 
 
 /**
- * this is an interface of somebody who has inventory and can be notified of sales (which is a pre-requisite to trade)
+ * this is an interface of somebody who has inventory and can be told when
+ * trades happen (which is a pre-requisite to trade)
  */
-abstract class Seller implements OneGoodInventory
+abstract class Trader implements OneGoodInventory
 {
 
   /**
@@ -43,7 +44,7 @@ abstract class Seller implements OneGoodInventory
 /**
  * a simple inventory that records information about last closing price. This is useful only for testing, really
  */
-class DummySeller implements Seller
+class DummySeller implements Trader
 {
 
   final InventoryCrossSection _inventory;
@@ -102,9 +103,9 @@ class DummySeller implements Seller
 
 
 /**
- * a simple seller with fixed daily inflow and a pid pricer
+ * a simple trader with fixed daily inflow and a pid pricer
  */
-class FixedInflowSeller implements Seller
+class FixedInflowSeller implements Trader
 {
   final InventoryCrossSection _inventory;
 
@@ -117,7 +118,7 @@ class FixedInflowSeller implements Seller
   /**
    * market to trade in
    */
-  final MarketForSellers market;
+  final AsksOrderBook market;
 
   //stats:
   double _lastClosingPrice = double.NAN;
@@ -141,7 +142,7 @@ class FixedInflowSeller implements Seller
    */
   Step placeQuote;
 
-  FixedInflowSeller(this.dailyInflow,MarketForSellers market,this.pricing,
+  FixedInflowSeller(this.dailyInflow,AsksOrderBook market,this.pricing,
                     [double this.depreciationRate=0.0]):
   this.market = market,
   _inventory = new InventoryCrossSection(new Inventory(),market.goodType)
@@ -172,12 +173,12 @@ class FixedInflowSeller implements Seller
   /**
    * a simple PID seller
    */
-  FixedInflowSeller.flowsTarget(double dailyInflow,MarketForSellers market,
+  FixedInflowSeller.flowsTarget(double dailyInflow,AsksOrderBook market,
                                 {double depreciationRate:0.0,double initialPrice:100.0}):
   this(dailyInflow,market,new PIDPricing.DefaultSeller(initialPrice:initialPrice),depreciationRate);
 
 
-  FixedInflowSeller.bufferInventory(double dailyInflow,MarketForSellers market,
+  FixedInflowSeller.bufferInventory(double dailyInflow,AsksOrderBook market,
                                 {double depreciationRate:0.0,
                                 double initialPrice:100.0,
                                 double optimalInventory:100.0,
@@ -194,7 +195,7 @@ class FixedInflowSeller implements Seller
 
   void start(Schedule schedule){
     //register yourself
-    market.registerSeller(this);
+    market.sellers.add(this);
     //start the data as well
     _data.start(schedule);
 
