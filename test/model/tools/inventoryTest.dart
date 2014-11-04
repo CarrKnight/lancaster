@@ -12,15 +12,15 @@ main(){
 
     HasInventory tested = new Inventory();
 
-    tested.receive(100.0);
-    tested.hire(4);
-    tested.earn(200.0);
-    tested.fire(1);
-    tested.spend(50.0);
-    tested.remove(50.0);
-    expect(tested.gas,50.0);
-    expect(tested.money,150.0);
-    expect(tested.labor,3);
+    tested.receive("gas",100.0);
+    tested.receive("workers",4.0);
+    tested.receive("money",200.0);
+    tested.remove("workers",1.0);
+    tested.remove("money",50.0);
+    tested.remove("gas",50.0);
+    expect(tested.hasHowMuch("gas"),50.0);
+    expect(tested.hasHowMuch("money"),150.0);
+    expect(tested.hasHowMuch("workers"),3);
 
   });
 

@@ -9,7 +9,7 @@ part of lancaster.model;
 /**
  * this is an interface of somebody who has inventory and can be notified of sales (which is a pre-requisite to trade)
  */
-abstract class Seller implements HasInventory
+abstract class Seller implements OneGoodInventory
 {
 
   /**
@@ -46,9 +46,16 @@ abstract class Seller implements HasInventory
 class DummySeller implements Seller
 {
 
-  final Inventory _inventory = new Inventory();
+  final InventoryCrossSection _inventory;
 
   double _lastClosingPrice = double.NAN;
+
+
+  DummySeller([String goodType= "gas"]):
+    _inventory=new InventoryCrossSection(new Inventory(),goodType);
+
+  DummySeller.fromMarket(Market market):
+    this(market.goodType);
 
 
   void notifyOfTrade(double quantity, double price) {
@@ -73,21 +80,8 @@ class DummySeller implements Seller
 
   }
 
-  hire(int people) {
-    _inventory.hire(people);
 
-  }
-
-  fire(int people) {
-    _inventory.fire(people);
-  }
-
-  get gas =>  _inventory.gas;
-
-
-  get labor =>
-  _inventory.labor;
-
+  get good =>  _inventory.good;
 
 
   get money =>
@@ -101,6 +95,8 @@ class DummySeller implements Seller
 
   double get currentInflow => double.NAN;
 
+  String get goodType =>_inventory.goodType;
+
 
 }
 
@@ -110,7 +106,7 @@ class DummySeller implements Seller
  */
 class FixedInflowSeller implements Seller
 {
-  final Inventory _inventory = new Inventory();
+  final InventoryCrossSection _inventory;
 
   Data _data;
 
@@ -122,7 +118,6 @@ class FixedInflowSeller implements Seller
    * market to trade in
    */
   final MarketForSellers market;
-
 
   //stats:
   double _lastClosingPrice = double.NAN;
@@ -146,13 +141,15 @@ class FixedInflowSeller implements Seller
    */
   Step placeQuote;
 
-  FixedInflowSeller(this.dailyInflow,this.market,this.pricing,
-                    [double this.depreciationRate=0.0])
+  FixedInflowSeller(this.dailyInflow,MarketForSellers market,this.pricing,
+                    [double this.depreciationRate=0.0]):
+  this.market = market,
+  _inventory = new InventoryCrossSection(new Inventory(),market.goodType)
   {
     dawn = (s){
       //depreciate
       assert(depreciationRate >=0 && depreciationRate <=1);
-      remove(gas * depreciationRate);
+      remove(good * depreciationRate);
       //daily inflow
       receive(dailyInflow);
       _currentInflow = dailyInflow;
@@ -163,8 +160,8 @@ class FixedInflowSeller implements Seller
 
     placeQuote = (s){
       pricing.updatePrice(_data);
-      if(gas > 0) //if you have anything to sell
-        market.placeSaleQuote(this,gas,pricing.price);
+      if(good > 0) //if you have anything to sell
+        market.placeSaleQuote(this,good,pricing.price);
       _lastOfferedPrice = pricing.price;
 
     };
@@ -232,13 +229,10 @@ class FixedInflowSeller implements Seller
 
 
   remove(double amount) =>_inventory.remove(amount);
-  hire(int people)=>_inventory.hire(people);
-  fire(int people)=>_inventory.fire(people);
 
 
 
-  get gas =>_inventory.gas;
-  get labor=>_inventory.labor;
+  get good =>_inventory.good;
   get money => _inventory.money;
 
   double get lastOfferedPrice=>_lastOfferedPrice;
@@ -248,6 +242,8 @@ class FixedInflowSeller implements Seller
   double get currentOutflow =>_currentOutflow;
 
   double get currentInflow=> _currentInflow;
+
+  String get goodType => _inventory.goodType;
 
 
 }

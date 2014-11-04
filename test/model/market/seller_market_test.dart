@@ -32,7 +32,7 @@ void main() {
     //execute day
     schedule.simulateDay();
 
-    expect(seller.gas, 0);
+    expect(seller.good, 0);
     expect(seller.money, 900);
 
     expect(market.quantitySold,10.0);
@@ -56,7 +56,7 @@ void main() {
     //execute day
     schedule.simulateDay();
 
-    expect(seller.gas, 10);
+    expect(seller.good, 10);
     expect(seller.money, 900);
     expect(market.quantitySold,10.0);
     expect(market.averageClosingPrice,90.0);
@@ -84,10 +84,10 @@ void main() {
     schedule.simulateDay();
 
     //seller 1 sold nothing
-    expect(seller1.gas, 10);
+    expect(seller1.good, 10);
     expect(seller1.money, 0);
     //seller 2 sold everything
-    expect(seller2.gas, 0);
+    expect(seller2.good, 0);
     expect(seller2.money, 1900);
     //market results
     expect(market.quantitySold,10.0);
@@ -117,10 +117,10 @@ void main() {
     schedule.simulateDay();
 
     //seller 1 sold everthing
-    expect(seller1.gas, 0);
+    expect(seller1.good, 0);
     expect(seller1.money, 190 * 5.0);
     //seller 2 sold everything
-    expect(seller2.gas, 0);
+    expect(seller2.good, 0);
     expect(seller2.money, 190 * 5.0);
 
     //market results

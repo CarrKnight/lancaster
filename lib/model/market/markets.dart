@@ -25,6 +25,8 @@ abstract class Market{
 
   double get quantitySold;
 
+  String get goodType;
+
   /**
    * a stream narrating the trades that have occurred
    */
@@ -64,6 +66,8 @@ class LinearDemandMarket implements MarketForSellers{
 
   Set<Seller> _sellers = new LinkedHashSet();
 
+  final String goodType;
+
 
   final List<_SaleQuote> _quotes = new List();
 
@@ -92,7 +96,9 @@ class LinearDemandMarket implements MarketForSellers{
 
 
 
-  LinearDemandMarket({num intercept : 100.0, num slope:-1.0})
+  LinearDemandMarket({num intercept : 100.0, num slope:-1.0,
+                     String goodType : "gas" }):
+  this.goodType = goodType
   {
     assert(slope <=0);
     this._intercept = intercept.toDouble();

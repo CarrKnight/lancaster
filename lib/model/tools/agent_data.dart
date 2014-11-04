@@ -38,7 +38,7 @@ class Data
        data["inflow"].add(seller.currentInflow);
        data["closingPrice"].add(seller.lastClosingPrice);
        data["offeredPrice"].add(seller.lastOfferedPrice);
-       data["inventory"].add(seller.gas);
+       data["inventory"].add(seller.good);
      });
 
 

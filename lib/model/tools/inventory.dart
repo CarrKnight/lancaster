@@ -6,54 +6,69 @@
 part of lancaster.model;
 
 /**
- * the java inventory was a very elegant hashmap with variable good-types, differentiated goods and so on.
- * Until I want to do that here, this is probably the complete opposite. it's basically three numbers hidden behind few functions
+ * A hashmap of "inventorySection" which is just a variable double. Users
+ * that only deal with a few goods are encouraged to grab the inventory
+ * section and work directly with it.
  */
 class Inventory implements HasInventory{
 
-
-  double _money=0.0;
-
-  double _gas =0.0;
-
-  int _labor =0;
+  /**
+   * the inventory is a
+   */
+  final Map<String,InventoryGood> inventory = new HashMap();
 
 
-  earn(double amount){
-    _money += amount;
+
+
+
+  /**
+   * get the inventory section for this good or create one if it doesn't exist.
+   * Usable from the outside
+   */
+  InventoryGood getInventoryOfGood(String goodType){
+    return inventory.putIfAbsent(goodType,()=>new InventoryGood());
   }
 
-  spend(double amount){
-    _money -= amount;
-    assert(_money >=0);
-  }
 
-  receive(double amount){
-    _gas+=amount;
-  }
 
-  remove(double amount){
-    _gas-=amount;
-    assert(_gas >=0);
-  }
+  receive(String goodType, double amount)=>
+    getInventoryOfGood(goodType).amount+=amount;
 
-  hire(int people){
-    _labor += people;
-  }
 
-  fire(int people){
-    _labor -=people;
-    assert(_labor >=0);
+  remove(String goodType, double amount)=>
+    getInventoryOfGood(goodType).amount-=amount;
 
-  }
 
-  get gas => _gas;
-  get labor => _labor;
-  get money => _money;
+  double hasHowMuch(String goodType)=>getInventoryOfGood(goodType).amount;
+
+
 
 }
 
 abstract class HasInventory{
+
+
+  double receive(String goodType, double amount);
+  double remove(String goodType,double amount);
+
+  double hasHowMuch(String goodType);
+
+}
+
+
+/**
+ * Nothing more than a variable double to place within a map
+ */
+class InventoryGood
+{
+  double amount=0.0;
+}
+
+/**
+ * any class that only has access to one good in the inventory + money
+ */
+abstract class OneGoodInventory{
+
 
   earn(double amount);
   spend(double amount);
@@ -61,13 +76,37 @@ abstract class HasInventory{
   receive(double amount);
   remove(double amount);
 
-  hire(int people);
-  fire(int people);
+  double get good;
+  double get money;
 
-  get gas;
-  get labor;
-  get money;
-
-
+  String get goodType;
 }
 
+
+/**
+ * A subset of the inventory focusing only on one good and money. It should
+ * be faster as it doesn't keep accessing the map.
+ */
+class InventoryCrossSection implements OneGoodInventory
+{
+
+  final InventoryGood _good;
+
+  final InventoryGood _money;
+
+  final String goodType;
+
+  InventoryCrossSection(Inventory fullInventory, String goodType) :
+    _good = fullInventory.getInventoryOfGood(goodType),
+    _money = fullInventory.getInventoryOfGood("money"),
+  this.goodType = goodType;
+
+  earn(double amount){_money.amount+=amount;}
+  spend(double amount){_money.amount-=amount;}
+
+  receive(double amount){_good.amount+=amount;}
+  remove(double amount){_good.amount-=amount;}
+
+  double get good => _good.amount;
+  double get money => _money.amount;
+}
