@@ -23,10 +23,38 @@ abstract class PricingStrategy
 
 }
 
+/**
+ * a function that takes data and returns a single double,
+ * usually a target or a controlled variable
+ */
 typedef double Extractor(Data data);
 
 /**
- * A PID pricer that simply tries to put inflow=outflow. In reality unless stockouts are counted it can only work when decreasing prices
+ * a simple fixed extractor
+ */
+Extractor FixedExtractor(double i){
+  return (data)=>i;
+}
+
+abstract class HasExtractor{
+  Extractor get extractor;
+}
+
+/**
+ * like an extractor, but settable from outside.
+ */
+class VariableExtractor implements HasExtractor{
+  double out;
+
+  VariableExtractor(this.out);
+
+  Extractor get extractor=>(data)=>out;
+}
+
+
+/**
+ * A PID pricer that simply tries to put inflow=outflow. In reality unless
+ * stockouts are counted it can only work when decreasing prices
  * rather than increasing them, which is why we need inventory buffers
  */
 class PIDPricing implements PricingStrategy
@@ -71,6 +99,27 @@ class PIDPricing implements PricingStrategy
       (Data data)=> -data.getLatestObservation("outflow"),
   offset:initialPrice, p:p,i:i,d:d);
 
+  PIDPricing.FixedInflowBuyer({double flowTarget:1.0, double initialPrice: 0.0,
+                           double p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
+                           double i: PIDController.DEFAULT_INTEGRAL_PARAMETER,
+                           double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER
+                           }) :
+  // controlled variable = -outflow the minuses to adapt the right way
+  this(FixedExtractor(flowTarget),
+      (Data data)=> data.getLatestObservation("inflow"),
+  offset:initialPrice, p:p,i:i,d:d);
+
+  PIDPricing.FixedInventoryBuyer({double inventoryTarget:1.0, double initialPrice: 0.0,
+                              double p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
+                              double i: PIDController.DEFAULT_INTEGRAL_PARAMETER,
+                              double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER
+                              }) :
+  // controlled variable = -outflow the minuses to adapt the right way
+  this(FixedExtractor(inventoryTarget),
+      (Data data)=> data.getLatestObservation("inventory"),
+  offset:initialPrice, p:p,i:i,d:d);
+
+
   double get price => pid.manipulatedVariable;
 
   void updatePrice(Data data) {
@@ -88,9 +137,11 @@ class PIDPricing implements PricingStrategy
 
 /**
  * The behavior depends on the [_stockingUp] flag.
- * When [stockingUp] is true, then [_stockingUpExtractor] is used to get the target.
+ * When [stockingUp] is true, then [_stockingUpExtractor] is used to get the
+ * target.
  * Otherwise [targetExtractor] from the delegate is used.
- * It starts stockingUp and switch to normal only when inventory above [optimalInventory]. It switches back from normal to stockingup
+ * It starts stockingUp and switch to normal only when inventory above
+ * [optimalInventory]. It switches back from normal to stockingup
  * if inventory goes below [criticalInventory].
  */
 class BufferInventoryPricing implements PricingStrategy
@@ -100,7 +151,7 @@ class BufferInventoryPricing implements PricingStrategy
   /**
    * by default just target 0
    */
-  static final Extractor defaultTargetWhenStockingUp = (data)=>0.0;
+  static final Extractor defaultTargetWhenStockingUp = FixedExtractor(0.0);
 
   static final Extractor defaultInventoryExtractor = (Data data)=>
   data.getLatestObservation("inventory");
@@ -242,3 +293,6 @@ class BufferInventoryPricing implements PricingStrategy
 
 
 }
+
+
+

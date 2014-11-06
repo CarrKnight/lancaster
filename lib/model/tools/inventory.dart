@@ -110,3 +110,20 @@ class InventoryCrossSection implements OneGoodInventory
   double get good => _good.amount;
   double get money => _money.amount;
 }
+
+/**
+ * inventory cross section that also counts inflow and outflow
+ */
+class CountedCrossSection extends InventoryCrossSection
+{
+  CountedCrossSection(Inventory fullInventory, String goodType):
+    super(fullInventory,goodType);
+
+  double inflow=0.0;
+  double outflow=0.0;
+
+  receive(double amount){super.receive(amount); inflow+=amount;}
+  remove(double amount){super.remove(amount); outflow+=amount;}
+
+  resetCount(){ inflow=0.0; outflow =0.0;}
+}

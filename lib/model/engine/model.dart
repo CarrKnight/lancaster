@@ -72,7 +72,7 @@ class Scenario{
                                                        slope:slope);
     model.gasMarket = market;
     //initial price 0
-    FixedInflowSeller seller = new FixedInflowSeller.bufferInventory(dailyFlow,
+    ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader.PIDBufferSellerFixedInflow(dailyFlow,
     market,initialPrice:initialPrice);
     model.agents.add(seller);
 

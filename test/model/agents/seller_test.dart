@@ -14,7 +14,7 @@ main(){
   test("works from above!",(){
     LinearDemandMarket market = new LinearDemandMarket(intercept:100.0,slope:-1.0);
     //initial price 100
-    FixedInflowSeller seller = new FixedInflowSeller.bufferInventory(40.0,
+    ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader.PIDBufferSellerFixedInflow(40.0,
     market,initialPrice:100.0);
 
 
@@ -39,7 +39,7 @@ main(){
   test("works from below!",(){
     LinearDemandMarket market = new LinearDemandMarket(intercept:100.0,slope:-1.0);
     //initial price 0
-    FixedInflowSeller seller = new FixedInflowSeller.bufferInventory(40.0,
+    ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader.PIDBufferSellerFixedInflow(40.0,
     market,initialPrice:0.0);
 
 

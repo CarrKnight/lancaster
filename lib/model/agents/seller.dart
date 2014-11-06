@@ -22,7 +22,7 @@ abstract class Trader implements OneGoodInventory
   /**
    * the last offered price
    */
-  double get  lastOfferedPrice;
+  double lastOfferedPrice;
 
   /**
    * the last closing price
@@ -53,10 +53,10 @@ class DummySeller implements Trader
 
 
   DummySeller([String goodType= "gas"]):
-    _inventory=new InventoryCrossSection(new Inventory(),goodType);
+  _inventory=new InventoryCrossSection(new Inventory(),goodType);
 
   DummySeller.fromMarket(Market market):
-    this(market.goodType);
+  this(market.goodType);
 
 
   void notifyOfTrade(double quantity, double price) {
@@ -91,6 +91,7 @@ class DummySeller implements Trader
   double get lastClosingPrice => _lastClosingPrice;
 
   double get lastOfferedPrice => double.NAN;
+  double set lastOfferedPrice(double d) => double.NAN;
 
   double get currentOutflow => double.NAN;
 
@@ -102,12 +103,9 @@ class DummySeller implements Trader
 }
 
 
-/**
- * a simple trader with fixed daily inflow and a pid pricer
- */
-class FixedInflowSeller implements Trader
+class ZeroKnowledgeTrader implements Trader
 {
-  final InventoryCrossSection _inventory;
+  final CountedCrossSection _inventory;
 
   Data _data;
 
@@ -115,10 +113,12 @@ class FixedInflowSeller implements Trader
 
   PricingStrategy pricing;
 
+  TradingStrategy tradingStrategy;
+
   /**
    * market to trade in
    */
-  final AsksOrderBook market;
+  final Market market;
 
   //stats:
   double _lastClosingPrice = double.NAN;
@@ -127,85 +127,24 @@ class FixedInflowSeller implements Trader
 
   double _currentInflow =0.0;
 
-  double _lastOfferedPrice = double.NAN;
+  double lastOfferedPrice = double.NAN;
 
-  double depreciationRate;
+  final List<DawnEvent> dawnEvents = new List();
 
-
-  /**
-   * at dawn reset the counters, depreciates old inventory and receive new stuff .
-   */
-  Step dawn;
-
-  /**
-   * update PID prices and then use them to place an order
-   */
-  Step placeQuote;
-
-  FixedInflowSeller(this.dailyInflow,SellerMarket market,this.pricing,
-                    [double this.depreciationRate=0.0]):
-  this.market = market,
-  _inventory = new InventoryCrossSection(new Inventory(),market.goodType)
-  {
-    dawn = (s){
-      //depreciate
-      assert(depreciationRate >=0 && depreciationRate <=1);
-      remove(good * depreciationRate);
-      //daily inflow
-      receive(dailyInflow);
-      _currentInflow = dailyInflow;
-      //reset the rest
-      _currentOutflow = 0.0;
-      _lastOfferedPrice = 0.0;
-    };
-
-    placeQuote = (s){
-      pricing.updatePrice(_data);
-      if(good > 0) //if you have anything to sell
-        market.placeSaleQuote(this,good,pricing.price);
-      _lastOfferedPrice = pricing.price;
-
-    };
-
+  ZeroKnowledgeTrader(Market market,this.pricing,this.tradingStrategy,
+                      Inventory totalInventory):
+  _inventory = new CountedCrossSection(totalInventory, market.goodType),
+  this.market = market{
     _data = new Data.SellerDefault(this);
   }
 
-  /**
-   * a simple PID seller
-   */
-  FixedInflowSeller.flowsTarget(double dailyInflow,AsksOrderBook market,
-                                {double depreciationRate:0.0,double initialPrice:100.0}):
-  this(dailyInflow,market,new PIDPricing.DefaultSeller(initialPrice:initialPrice),depreciationRate);
 
 
-  FixedInflowSeller.bufferInventory(double dailyInflow,AsksOrderBook market,
-                                {double depreciationRate:0.0,
-                                double initialPrice:100.0,
-                                double optimalInventory:100.0,
-                                double criticalInventory:10.0}):
-  this
-  (
-      dailyInflow,market,
-      new BufferInventoryPricing.simpleSeller(
-          optimalInventory:optimalInventory,
-          criticalInventory:criticalInventory,
-          initialPrice:initialPrice)
-  );
-
-
-  void start(Schedule schedule){
-    //register yourself
-    market.sellers.add(this);
-    //start the data as well
-    _data.start(schedule);
-
-
-
-
-    schedule.scheduleRepeating(Phase.DAWN,dawn);
-    schedule.scheduleRepeating(Phase.PLACE_QUOTES,placeQuote);
-
-
+  void dawn(Schedule s)
+  {
+    _inventory.resetCount();
+    for(DawnEvent e in dawnEvents)
+      e(this);
 
   }
 
@@ -213,38 +152,205 @@ class FixedInflowSeller implements Trader
    * store the trade results
    */
   void notifyOfTrade(double quantity, double price) {
-    _currentOutflow+=quantity;
     _lastClosingPrice=price;
   }
 
 
-  earn(double amount)=>_inventory.earn(amount);
+  void trade(Schedule s)
+  {
+    tradingStrategy.step(this,market,_data,pricing);
+  }
+
+  /**
+   * start data and strategies and schedule yourself
+   */
+  void start(Schedule schedule)
+  {
+    //start the datal
+    _data.start(schedule);
+    //register yourself
+    tradingStrategy.start(schedule,this,market,_data,pricing);
+
+    schedule.scheduleRepeating(Phase.DAWN,dawn);
+    schedule.scheduleRepeating(Phase.PLACE_QUOTES,trade);
+
+  }
+
+  earn(double amount) =>  _inventory.earn(amount);
 
 
-  spend(double amount)=>_inventory.spend(amount);
+  spend(double amount) => _inventory.spend(amount);
 
 
-
-  receive(double amount)=> _inventory.receive(amount);
-
+  receive(double amount) =>_inventory.receive(amount);
 
 
   remove(double amount) =>_inventory.remove(amount);
 
 
+  String get goodType  => _inventory.goodType;
 
-  get good =>_inventory.good;
-  get money => _inventory.money;
 
-  double get lastOfferedPrice=>_lastOfferedPrice;
+  double get money => _inventory.money;
+
+
+  double get good => _inventory.good;
 
   double get lastClosingPrice=>_lastClosingPrice;
 
-  double get currentOutflow =>_currentOutflow;
+  double get currentOutflow =>_inventory.outflow;
 
-  double get currentInflow=> _currentInflow;
+  double get currentInflow=> _inventory.inflow;
 
-  String get goodType => _inventory.goodType;
+  /**
+   * seller or sales-department targeting inflow=outflow
+   */
+  factory ZeroKnowledgeTrader.PIDSeller(SellerMarket market,
+                                        {double initialPrice:100.0,
+                                        Inventory totalInventory : null})
+  {
+    //if no total inventory given, this is an independent trader
+    if(totalInventory == null)
+      totalInventory = new Inventory();
+
+    ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader(market,
+    new PIDPricing.DefaultSeller(initialPrice:initialPrice),
+    new SimpleSellerTrading(), totalInventory);
+
+    return seller;
+  }
+
+  /**
+   * seller or sales-department targeting inflow=outflow with buffer inventory
+   */
+  factory ZeroKnowledgeTrader.PIDBufferSeller(SellerMarket market,
+                                              {double depreciationRate:0.0,
+                                              double initialPrice:100.0,
+                                              double optimalInventory:100.0,
+                                              double criticalInventory:10.0,
+                                              Inventory totalInventory:null})
+  {
+    //if no total inventory given, this is an independent trader
+    if(totalInventory == null)
+      totalInventory = new Inventory();
+
+    ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader(market,
+    new BufferInventoryPricing.simpleSeller(optimalInventory:optimalInventory,
+    criticalInventory:criticalInventory,initialPrice:initialPrice),
+    new SimpleSellerTrading(), totalInventory);
+
+    return seller;
+  }
+
+//utility for factories
+  static addDailyInflowAndDepreciation(ZeroKnowledgeTrader seller,
+                                       double dailyInflow, double depreciationRate) {
+    seller.dawnEvents.add(FixedInflowEvent(dailyInflow));
+    if (depreciationRate > 0.0) {
+      assert(depreciationRate <= 1.0);
+      seller.dawnEvents.add(DepreciationEvent(depreciationRate));
+    }
+  }
+
+  /**
+   * PIDSeller with exogenous fixed inflow
+   */
+  factory ZeroKnowledgeTrader.PIDSellerFixedInflow(double dailyInflow,
+                                                  SellerMarket market,
+                                                  {double depreciationRate:0.0,
+                                                  double initialPrice:100.0,
+                                                  Inventory totalInventory : null})
+  {
+    ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader.PIDSeller(market,
+    initialPrice:initialPrice,totalInventory:totalInventory);
+    //add events
+    addDailyInflowAndDepreciation(seller, dailyInflow, depreciationRate);
+    return seller;
+  }
+  /**
+   * PIDSeller with exogenous fixed inflow
+   */
+  factory ZeroKnowledgeTrader.PIDBufferSellerFixedInflow(double dailyInflow,
+                                                  SellerMarket market,
+                                                  {double depreciationRate:0.0,
+                                                  double initialPrice:100.0,
+                                                  double optimalInventory:100.0,
+                                                  double criticalInventory:10.0,
+                                                  Inventory totalInventory : null})
+  {
+    ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader.PIDBufferSeller(market,
+    initialPrice:initialPrice,totalInventory:totalInventory,
+    optimalInventory:optimalInventory, criticalInventory:criticalInventory);
+    //add events
+    addDailyInflowAndDepreciation(seller, dailyInflow, depreciationRate);
+    return seller;
+  }
 
 
 }
+
+
+
+
+/**
+ * trading strategy is whatever mechanism the trader needs to actually place
+ * quotes in the market.
+ * It's the user responsibility to call step(...) at trade. The strategy may
+ * schedule more stuff after start(...) is called.
+ * The generic is there if this strategy only works for a subset of markets
+ * (geographicals or for buyers or whatever)
+ */
+abstract class TradingStrategy<T extends Market>{
+
+  /**
+   * mostly this exists to register the trader as buyer/seller/whatever in
+   * the market. There is no need to schedule yourself to step,
+   * that is the user responsibility.
+   */
+  void start(Schedule s, Trader trader, T market, Data data,
+             PricingStrategy strategy);
+
+  /**
+   * [[strategy]] ought to be updated within this step
+   */
+  void step(Trader trader, T market, Data data, PricingStrategy pricing);
+}
+
+/**
+ * standard zero-knowledge seller. Updates the price,
+ * puts everything on sale all the time.
+ */
+class SimpleSellerTrading extends TradingStrategy<SellerMarket>
+{
+
+  /**
+   * register trader as seller on the market. Nothing more
+   */
+  void start(Schedule s, Trader trader, SellerMarket market, Data data,
+             PricingStrategy strategy) {
+    market.sellers.add(trader);
+
+  }
+
+  void step(Trader trader, SellerMarket market, Data data,
+            PricingStrategy pricing) {
+    pricing.updatePrice(data);
+    if(trader.good > 0) //if you have anything to sell
+      market.placeSaleQuote(trader,trader.good,pricing.price);
+    trader.lastOfferedPrice = pricing.price;
+  }
+
+
+}
+
+/**
+ * any additional thing to happen to a trader at dawn (fixed inflows,
+ * outflows, cash gains, stuff like that)
+ */
+typedef void DawnEvent(Trader trader);
+
+DawnEvent FixedInflowEvent(double inflow)=>(Trader trader)=>
+trader.receive(inflow);
+
+DawnEvent DepreciationEvent(double depreciationRate)=>(Trader trader)=>
+trader.remove(depreciationRate*trader.good);

@@ -14,7 +14,8 @@ void main(){
 
   bufferTests();
   PIDFlows();
-
+  buyerPIDFlows();
+  extractorTests();
 
 }
 
@@ -234,3 +235,141 @@ void PIDFlows() {
   });
 }
 
+
+void buyerPIDFlows(){
+  test("buyer flows stay still", () {
+
+
+    //if I set the initial price to 100 and target always equal cv, the price should stay at 100
+    PIDPricing pricing = new PIDPricing.FixedInflowBuyer(
+        flowTarget:20.0, initialPrice:100.0);
+    expect(pricing.price, 100);
+    for (int i = 0; i < 100; i++) {
+      var data = new Data(["inflow"], (references) => (Schedule s) {
+        references["inflow"].add(20.0);
+      });
+      data.updateStep(new Schedule()); //"update" data
+      pricing.updatePrice(data);
+      expect(pricing.price, 100);
+    }
+
+  });
+
+
+  test("buyer increase prices when flow too low", () {
+
+
+    //if I set the initial price to 100 and target>cv, the price should increase
+    PIDPricing pricing = new PIDPricing.FixedInflowBuyer(
+        flowTarget:20.0, initialPrice:100.0);
+    expect(pricing.price, 100);
+    for (int i = 0; i < 100; i++) {
+      var data = new Data(["inflow"], (references) => (Schedule s) {
+        references["inflow"].add(10.0); //wants 20, only get 10, raise price
+      });
+      data.updateStep(new Schedule()); //"update" data
+      pricing.updatePrice(data);
+      expect(pricing.price > 100, true);
+    }
+
+  });
+
+  test("buyer lowers price when buying too much", () {
+
+
+    //if I set the initial price to 100 and target<cv, the price should decrease
+    PIDPricing pricing = new PIDPricing.FixedInflowBuyer(
+        flowTarget:20.0, initialPrice:100.0);
+    expect(pricing.price, 100);
+    for (int i = 0; i < 100; i++) {
+      var data = new Data(["inflow"], (references) => (Schedule s) {
+        references["inflow"].add(30.0); //buying too much
+      });
+      data.updateStep(new Schedule()); //"update" data
+      pricing.updatePrice(data);
+      expect(pricing.price < 100 && pricing.price >= 0, true);
+    }
+
+  });
+
+
+  test("buyer inventory stay still", () {
+
+
+    //if I set the initial price to 100 and target always equal cv, the price should stay at 100
+    PIDPricing pricing = new PIDPricing.FixedInventoryBuyer(
+        inventoryTarget:20.0, initialPrice:100.0);
+    expect(pricing.price, 100);
+    for (int i = 0; i < 100; i++) {
+      var data = new Data(["inventory"], (references) => (Schedule s) {
+        references["inventory"].add(20.0);
+      });
+      data.updateStep(new Schedule()); //"update" data
+      pricing.updatePrice(data);
+      expect(pricing.price, 100);
+    }
+
+  });
+
+
+  test("buyer increase prices when flow too low", () {
+
+
+    //if I set the initial price to 100 and target>cv, the price should increase
+    PIDPricing pricing = new PIDPricing.FixedInventoryBuyer(
+        inventoryTarget:20.0, initialPrice:100.0);
+    expect(pricing.price, 100);
+    for (int i = 0; i < 100; i++) {
+      var data = new Data(["inventory"], (references) => (Schedule s) {
+        references["inventory"].add(10.0); //wants 20, only get 10, raise price
+      });
+      data.updateStep(new Schedule()); //"update" data
+      pricing.updatePrice(data);
+      expect(pricing.price > 100, true);
+    }
+
+  });
+
+  test("buyer lowers price when buying too much", () {
+
+
+    //if I set the initial price to 100 and target<cv, the price should decrease
+    PIDPricing pricing = new PIDPricing.FixedInventoryBuyer(
+        inventoryTarget:20.0, initialPrice:100.0);
+    expect(pricing.price, 100);
+    for (int i = 0; i < 100; i++) {
+      var data = new Data(["inventory"], (references) => (Schedule s) {
+        references["inventory"].add(30.0); //buying too much
+      });
+      data.updateStep(new Schedule()); //"update" data
+      pricing.updatePrice(data);
+      expect(pricing.price < 100 && pricing.price >= 0, true);
+    }
+
+  });
+
+}
+
+
+void extractorTests(){
+
+   test("Fixed Extractor is not variable",(){
+     double target = 100.0;
+     Extractor fix = FixedExtractor(target);
+     expect(100.0,fix(null));
+     target = 1.0;
+     expect(100.0,fix(null)); //not 1!
+
+
+   });
+
+   test("Variable Extractor is variable",(){
+     VariableExtractor ve = new VariableExtractor(100.0);
+     var extractor = ve.extractor;
+     expect(100.0, extractor(null));
+     ve.out = 1.0;
+     expect(1.0,extractor(null)); //not 1!
+
+
+   });
+}
