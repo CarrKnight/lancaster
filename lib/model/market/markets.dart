@@ -31,7 +31,7 @@ abstract class Market{
 
   double get averageClosingPrice;
 
-  double get quantitySold;
+  double get quantityTraded;
 
   String get goodType;
 
@@ -65,7 +65,14 @@ abstract class AsksOrderBook{
   }
 
 
-
+  /**
+   * after this is called the last element in the list is the best
+   */
+  void sortAsks(){
+    //sort quotes (last will be the best since last is faster to remove, I think)
+    _asks.shuffle(); //shuffle it to avoid first agent to always go first/last
+    _asks.sort((q1,q2)=>(-q1.pricePerunit.compareTo(q2.pricePerunit)));
+  }
 
   /**
    * a stream narrating the quotes that have been placed
@@ -78,23 +85,47 @@ abstract class AsksOrderBook{
 
 abstract class SellerMarket extends Market with AsksOrderBook{}
 
+abstract class BuyerMarket extends Market with BidsOrderBook{}
 
-abstract class BidsOrderBook{
+
+class BidsOrderBook{
 
   final Set<Trader> buyers = new LinkedHashSet();
 
   final List<_TradeQuote> _bids = new List();
 
+  final QuoteStream _bidStreamer = new QuoteStream();
+
+  void startBids(Schedule s){
+    _bidStreamer.start(s);
+  }
+
+  void sortAsks(){
+    //sort quotes (last will be the best since last is faster to remove, I think)
+    _bids.shuffle(); //shuffle it to avoid first agent to always go first/last
+    _bids.sort((q1,q2)=>(q1.pricePerunit.compareTo(q2.pricePerunit)));
+  }
+
   placeBuyerQuote(Trader buyer,double amount,double unitPrice){
     assert(buyers.contains(buyer));
     _bids.add(new _TradeQuote(buyer,amount,unitPrice) );
+
+    _bidStreamer.log(buyer,amount,unitPrice);
   }
 
-  bool registerBuyer(Trader buyer);
   /**
    * a stream narrating the quotes that have been placed
    */
-  Stream<QuoteEvent> get bidStream;
+  Stream<QuoteEvent> get bidStream=>_bidStreamer.stream;
+
+  /**
+   * after this is called the last element in the list is the best
+   */
+  void sortBids(){
+    //sort quotes (last will be the best since last is faster to remove, I think)
+    _bids.shuffle(); //shuffle it to avoid first agent to always go first/last
+    _bids.sort((q1,q2)=>(q1.pricePerunit.compareTo(q2.pricePerunit)));
+  }
 
 
 
@@ -102,60 +133,34 @@ abstract class BidsOrderBook{
 
 
 /**
- * a market where the buying is "done" by a fixed linear demand while the sellers are normal agents
+ * a market where the buying is "done" by a fixed demand curve while the
+ * sellers are normal agents
  */
-class LinearDemandMarket extends SellerMarket{
+class ExogenousSellerMarket extends SellerMarket{
 
 
   final String goodType;
 
+  /**
+   * routine to recursively clear markets
+   */
+  final OneSideMarketClearer clearer = new OneSideMarketClearer();
 
 
+  final ExogenousCurve demand;
 
-
-
-  double _intercept;
-
-  double _slope;
-
-  double _soldToday = 0.0;
 
   double _moneyExchanged = 0.0;
 
-  /**
-   * reset market means clearing up the quote and reset the already sold counter
-   */
-  Step _resetMarketStep;
-
-  /**
-   * trade--> market clears
-   */
-  Step _marketClearStep;
+  ExogenousSellerMarket.linear( {double intercept : 100.0,
+                             double slope:-1.0,
+                             String goodType : "gas" }):
+  this(new LinearCurve(intercept,slope),goodType:goodType);
 
 
 
-
-
-  LinearDemandMarket({num intercept : 100.0, num slope:-1.0,
-                     String goodType : "gas" }):
-  this.goodType = goodType
-  {
-    assert(slope <=0);
-    this._intercept = intercept.toDouble();
-    this._slope = slope.toDouble();
-
-
-
-    _resetMarketStep= (schedule){
-      _resetMarket(schedule);
-    };
-
-    _marketClearStep = (schedule){
-      _clearMarket(schedule);
-    };
-
-
-  }
+  ExogenousSellerMarket(ExogenousCurve this.demand, {String goodType : "gas" }):
+  this.goodType = goodType;
 
   void start(Schedule s){
     super.start(s);
@@ -166,77 +171,87 @@ class LinearDemandMarket extends SellerMarket{
 
   void _resetMarket(Schedule s){
     _asks.clear();
-    _soldToday = 0.0;
+    demand.reset();
     _moneyExchanged = 0.0;
 
   }
 
   void _clearMarket(Schedule s){
-    //sort quotes (last will be the best since last is faster to remove, I think)
-    _asks.shuffle(); //shuffle it to avoid first agent to always go first/last
-    _asks.sort((q1,q2)=>(-q1.pricePerunit.compareTo(q2.pricePerunit)));
-
-    //as long as there are quotes
-    while(_asks.isNotEmpty){
-
-      var best = _asks.last;
-      var price = best._pricePerUnit;
-      var maxDemandForThisPrice = (intercept + slope * price)-_soldToday; //demand minus what has been already sold today!
-
-      if(maxDemandForThisPrice <= 0) //if the best price gets no sales, we are done
-        break;
-
-      var amountTraded = min(maxDemandForThisPrice,best.amount);
-      //trade!
-      sold(best.owner,amountTraded,best.pricePerunit);
-      _soldToday +=amountTraded;
-      _moneyExchanged +=amountTraded * best.pricePerunit;
-      //log
-      _tradeStreamer.log(best.owner,null,amountTraded,price);
-
-      //if we filled the quote
-      if(amountTraded == best.amount) {
-        var removed = _asks.removeLast();
-        assert(removed == best);
-      }
-      else{
-        assert(amountTraded < best.amount); //you must have traded less than the quote, it can never be more!
-        best.amount -= amountTraded; //change the quote, even though it's pointless
-        break; //bye bye
-      }
-    }
-  }
-
-  double get slope => _slope;
-
-  set slope(double value){
-    _slope = value;
-    assert(_slope <=0);
-  }
-
-  double get intercept => _intercept;
-
-  set intercept(double value){
-    _intercept = value;
-    assert(intercept>=0);
-
+    sortAsks();
+    _moneyExchanged = clearer.clearMarket(demand,_asks,_tradeStreamer,true);
   }
 
 
+  double get averageClosingPrice => demand.quantityTraded == 0 ? double.NAN :
+  _moneyExchanged/demand.quantityTraded;
 
-
-
-
-
-  double get averageClosingPrice => _soldToday == 0 ? double.NAN :
-  _moneyExchanged/_soldToday;
-
-  double get quantitySold=> _soldToday;
+  double get quantityTraded=> demand.quantityTraded;
 
 
 
 
 }
+
+/**
+ * a market where the buying is "done" by a fixed demand curve while the
+ * sellers are normal agents
+ */
+class ExogenousBuyerMarket extends BuyerMarket{
+
+
+  final String goodType;
+
+  /**
+   * routine to recursively clear markets
+   */
+  final OneSideMarketClearer clearer = new OneSideMarketClearer();
+
+
+  final ExogenousCurve supply;
+
+
+  double _moneyExchanged = 0.0;
+
+  ExogenousBuyerMarket.linear( {double intercept : 0.0,
+                                double slope:1.0,
+                                String goodType : "gas" }):
+  this(new LinearCurve(intercept,slope),goodType:goodType);
+
+
+
+  ExogenousBuyerMarket(ExogenousCurve this.supply, {String goodType : "gas" }):
+  this.goodType = goodType;
+
+  void start(Schedule s){
+    super.start(s);
+    startBids(s);
+    s.scheduleRepeating(Phase.DAWN,_resetMarket);
+    s.scheduleRepeating(Phase.CLEAR_MARKETS,_clearMarket);
+  }
+
+  void _resetMarket(Schedule s){
+    _bids.clear();
+    supply.reset();
+    _moneyExchanged = 0.0;
+
+  }
+
+  void _clearMarket(Schedule s){
+    sortAsks();
+    _moneyExchanged = clearer.clearMarket(supply,_bids,_tradeStreamer,false);
+  }
+
+
+  double get averageClosingPrice => supply.quantityTraded == 0 ? double.NAN :
+  _moneyExchanged/supply.quantityTraded;
+
+  double get quantityTraded=> supply.quantityTraded;
+
+
+
+
+}
+
 
 class _TradeQuote
 {
@@ -277,6 +292,7 @@ void bought(Trader buyer, double amount, double price){
 
   buyer.spend(price*amount);
   buyer.receive(amount);
+  buyer.notifyOfTrade(amount,price);
 
 
 }
@@ -404,50 +420,59 @@ class TradeStream extends TimestampedStreamBase<TradeEvent>{
 
 
 
+
 }
 
 /**
- * basically a bunch of streams of  market "events" that loggers and views can
- * listen to
+ * recursive clears a market where there is an orderbook against an exogenous
+ * curve
  */
-class StreamsForMarkets{
+class OneSideMarketClearer{
 
   /**
-   * this boolean is useful to ignore events unless you have listeners
+   * expects [book] to be already sorted where last is beset.
+   * Returns the total amount of money that was exchanged
    */
-  bool recordAsks = false;
+  double clearMarket(ExogenousCurve curve, List<_TradeQuote> book,
+                     TradeStream tradeStreamer,bool bookIsForSales) {
 
-  /**
-   * this boolean is useful to ignore events unless you have listeners
-   */
-  bool recordTrades = false;
+    double moneyExchanged = 0.0;
+//as long as there are quotes
+    while (book.isNotEmpty) {
 
-  /**
-   * this boolean is useful to ignore events unless you have listeners
-   */
-  bool recordBids = false;
+      var best = book.last;
+      var price = best._pricePerUnit;
+      var maxDemandForThisPrice = curve.quantityAtThisPrice(price); //demand
+      // minus what has been already sold today!
 
-  /**
-   * before start gets called nothing gets logged
-   */
-  bool started = false;
+      if (maxDemandForThisPrice <= 0) //if the best price gets no sales, we are done
+        break;
 
-  /**
-   * needed only to store days
-   */
-  Schedule _schedule;
+      var amountTraded = min(maxDemandForThisPrice, best.amount);
+      //trade!
+      if(bookIsForSales)
+        sold(best.owner, amountTraded, best.pricePerunit);
+      else
+        bought(best.owner,amountTraded,best.pricePerunit);
+      curve.recordTrade(amountTraded);
+      moneyExchanged += amountTraded * best.pricePerunit;
+      //log
+      tradeStreamer.log(best.owner, null, amountTraded, price);
 
-  StreamController<TradeEvent> _trades;
-
-  StreamController<QuoteEvent> _asks;
-
-  StreamController<QuoteEvent> _bids;
-
-
-
-
-
-
-
+      //if we filled the quote
+      if (amountTraded == best.amount) {
+        var removed = book.removeLast();
+        assert(removed == best);
+      }
+      else {
+        assert(amountTraded < best.amount); //you must have traded less than the quote, it can never be more!
+        best.amount -= amountTraded; //change the quote, even though it's pointless
+        break;
+        //bye bye
+      }
+    }
+    return moneyExchanged;
+  }
 
 }
+

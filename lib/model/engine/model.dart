@@ -68,7 +68,7 @@ class Scenario{
   Scenario.simpleSeller({initialPrice : 100.0, dailyFlow : 40.0,
                         intercept:100.0,slope:-1.0}):
   this((Model model){
-    LinearDemandMarket market = new LinearDemandMarket(intercept:intercept,
+    ExogenousSellerMarket market = new ExogenousSellerMarket.linear(intercept:intercept,
                                                        slope:slope);
     model.gasMarket = market;
     //initial price 0

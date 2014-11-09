@@ -81,13 +81,13 @@ main(){
 
     //setup copy pasted from: "Best Offer wins"
     Schedule schedule = new Schedule();
-    LinearDemandMarket market = new LinearDemandMarket(intercept:200.0, slope:-1.0);
+    ExogenousSellerMarket market = new ExogenousSellerMarket.linear(intercept:200.0, slope:-1.0);
     market.start(schedule);
     market.tradeStream.listen(tradeListener);
     market.asksStream.listen(quotesListener);
 
-    DummySeller seller1 = new DummySeller();
-    DummySeller seller2 = new DummySeller();
+    DummyTrader seller1 = new DummyTrader();
+    DummyTrader seller2 = new DummyTrader();
     market.sellers.add(seller1);
     market.sellers.add(seller2);
 

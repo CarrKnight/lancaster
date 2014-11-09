@@ -44,7 +44,7 @@ abstract class Trader implements OneGoodInventory
 /**
  * a simple inventory that records information about last closing price. This is useful only for testing, really
  */
-class DummySeller implements Trader
+class DummyTrader implements Trader
 {
 
   final InventoryCrossSection _inventory;
@@ -52,10 +52,10 @@ class DummySeller implements Trader
   double _lastClosingPrice = double.NAN;
 
 
-  DummySeller([String goodType= "gas"]):
+  DummyTrader([String goodType= "gas"]):
   _inventory=new InventoryCrossSection(new Inventory(),goodType);
 
-  DummySeller.fromMarket(Market market):
+  DummyTrader.fromMarket(Market market):
   this(market.goodType);
 
 

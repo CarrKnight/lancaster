@@ -38,6 +38,7 @@ part 'agents/seller.dart';
  *    \_)(_/\_/\_/(__\_)(__\_)(____) (__) (____/
  */
 part 'market/markets.dart';
+part 'market/linear.dart';
 
 /***
  *     ____  __    __   __    ____

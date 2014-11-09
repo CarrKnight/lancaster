@@ -11,19 +11,165 @@ import 'package:lancaster/model/lancaster_model.dart';
  */
 
 
-class MockDummySeller extends Mock implements DummySeller{}
+class MockDummyTrader extends Mock implements DummyTrader {
+}
 
 
-void main() {
+buyerTests(){
 
   test("Clears one quote", () {
     Schedule schedule = new Schedule(); //the scheduler
 
-    //create a q=101-p demand market
-    LinearDemandMarket market = new LinearDemandMarket(intercept:100, slope:-1.0);
+    //create a q=p supply market
+    ExogenousBuyerMarket market = new ExogenousBuyerMarket.linear
+    (intercept:0.0, slope:1.0);
     market.start(schedule);
 
-    DummySeller seller = new DummySeller();
+    DummyTrader buyer = new DummyTrader();
+    market.buyers.add(buyer);
+
+    //try to buy 10 units for 10$ (that's exactly on the slope)
+    schedule.schedule(Phase.PLACE_QUOTES, (s) => market.placeBuyerQuote(buyer, 10.0,
+    10.0));
+
+    //execute day
+    schedule.simulateDay();
+
+    expect(buyer.good, 10.0);
+    expect(buyer.money, -100);
+
+    expect(market.quantityTraded, 10.0);
+    expect(market.averageClosingPrice, 10.0);
+  });
+
+
+  test("Clears partial quote", () {
+    Schedule schedule = new Schedule(); //the scheduler
+
+    //create a q=p supply market
+    ExogenousBuyerMarket market = new ExogenousBuyerMarket.linear
+    (intercept:0.0, slope:1.0);
+    market.start(schedule);
+
+    DummyTrader buyer = new DummyTrader();
+    market.buyers.add(buyer);
+
+    //try to buy 20 units for 10$ (only 10 will clear)
+    schedule.schedule(Phase.PLACE_QUOTES, (s) => market.placeBuyerQuote(buyer,
+                                                                    20.0,10.0));
+
+    //execute day
+    schedule.simulateDay();
+
+    expect(buyer.good, 10.0);
+    expect(buyer.money, -100);
+
+    expect(market.quantityTraded, 10.0);
+    expect(market.averageClosingPrice, 10.0);
+  });
+
+  test("best quote wins", () {
+    Schedule schedule = new Schedule(); //the scheduler
+
+    //create a q=p supply market
+    ExogenousBuyerMarket market = new ExogenousBuyerMarket.linear
+    (intercept:0.0, slope:1.0);
+    market.start(schedule);
+
+    DummyTrader buyer1 = new DummyTrader();
+    DummyTrader buyer2 = new DummyTrader();
+    market.buyers.add(buyer1);
+    market.buyers.add(buyer2);
+
+    //both want 10, first guy pays 90$ second guy pays 10$. Only the first
+    // one gets something
+    schedule.schedule(Phase.PLACE_QUOTES, (s) => market.placeBuyerQuote
+    (buyer1,10.0,90.0));
+    schedule.schedule(Phase.PLACE_QUOTES, (s) => market.placeBuyerQuote
+    (buyer2,10.0,10.0));
+
+    //execute day
+    schedule.simulateDay();
+
+    expect(buyer1.good, 10.0);
+    expect(buyer2.good, 0.0);
+    expect(buyer1.money, -900);
+    expect(buyer2.money, 0);
+
+    expect(market.quantityTraded, 10.0);
+    expect(market.averageClosingPrice, 90.0);
+  });
+
+
+  test("two buyers share", () {
+    Schedule schedule = new Schedule(); //the scheduler
+
+    //create a q=p supply market
+    ExogenousBuyerMarket market = new ExogenousBuyerMarket.linear
+    (intercept:0.0, slope:1.0);
+    market.start(schedule);
+
+    DummyTrader buyer1 = new DummyTrader();
+    DummyTrader buyer2 = new DummyTrader();
+    market.buyers.add(buyer1);
+    market.buyers.add(buyer2);
+
+    //both want 5, both get it. Second buyer gets it for less
+    schedule.schedule(Phase.PLACE_QUOTES, (s) => market.placeBuyerQuote
+    (buyer1,5.0,15.0));
+    schedule.schedule(Phase.PLACE_QUOTES, (s) => market.placeBuyerQuote
+    (buyer2,5.0,10.0));
+
+    //execute day
+    schedule.simulateDay();
+
+    expect(buyer1.good, 5.0);
+    expect(buyer2.good, 5.0);
+    expect(buyer1.money, -75.0);
+    expect(buyer2.money, -50.0);
+
+    expect(market.quantityTraded, 10.0);
+    expect(market.averageClosingPrice, 12.5);
+  });
+
+
+  test("Buyer gets notified", () {
+    bool called = false;
+
+
+    Schedule schedule = new Schedule(); //the scheduler
+
+    //create a q=101-p demand market
+    ExogenousBuyerMarket market = new ExogenousBuyerMarket.linear(intercept:100.0,
+    slope:-1.0);
+    market.start(schedule);
+    var buyer = new MockDummyTrader();
+    market.buyers.add(buyer);
+
+
+    //try to buy 10 units for 10$
+    schedule.schedule(Phase.PLACE_QUOTES, (s) => market.placeBuyerQuote(buyer, 10.0,
+    10.0));
+    //execute day
+    schedule.simulateDay();
+
+    //make sure you were notified
+    verify(buyer.notifyOfTrade(any, any));
+  });
+
+}
+
+
+sellerTests() {
+  test("Clears one quote", () {
+    Schedule schedule = new Schedule(); //the scheduler
+
+    //create a q=101-p demand market
+    ExogenousSellerMarket market = new ExogenousSellerMarket.linear(intercept:100.0,
+    slope:-1.0);
+    market.start(schedule);
+
+    DummyTrader seller = new DummyTrader();
     market.sellers.add(seller);
     seller.receive(10.0); //seller has 10 units of gas it can sell
     //try to sell 10 units for 90$ (that's exactly on the slope)
@@ -35,18 +181,18 @@ void main() {
     expect(seller.good, 0);
     expect(seller.money, 900);
 
-    expect(market.quantitySold,10.0);
-    expect(market.averageClosingPrice,90.0);
+    expect(market.quantityTraded, 10.0);
+    expect(market.averageClosingPrice, 90.0);
   });
 
   test("Clears partial quote", () {
     Schedule schedule = new Schedule(); //the scheduler
 
     //create a q=101-p demand market
-    LinearDemandMarket market = new LinearDemandMarket(intercept:100.0, slope:-1.0);
+    ExogenousSellerMarket market = new ExogenousSellerMarket.linear(intercept:100.0, slope:-1.0);
     market.start(schedule);
 
-    DummySeller seller = new DummySeller();
+    DummyTrader seller = new DummyTrader();
     market.sellers.add(seller);
 
     seller.receive(20.0); //seller has 20 units of gas it can sell
@@ -58,19 +204,19 @@ void main() {
 
     expect(seller.good, 10);
     expect(seller.money, 900);
-    expect(market.quantitySold,10.0);
-    expect(market.averageClosingPrice,90.0);
+    expect(market.quantityTraded, 10.0);
+    expect(market.averageClosingPrice, 90.0);
   });
 
   test("Best Offer wins", () {
     Schedule schedule = new Schedule(); //the scheduler
 
     //create a q=200-p demand market
-    LinearDemandMarket market = new LinearDemandMarket(intercept:200.0, slope:-1.0);
+    ExogenousSellerMarket market = new ExogenousSellerMarket.linear(intercept:200.0, slope:-1.0);
     market.start(schedule);
 
-    DummySeller seller1 = new DummySeller();
-    DummySeller seller2 = new DummySeller();
+    DummyTrader seller1 = new DummyTrader();
+    DummyTrader seller2 = new DummyTrader();
     market.sellers.add(seller1);
     market.sellers.add(seller2);
 
@@ -90,8 +236,8 @@ void main() {
     expect(seller2.good, 0);
     expect(seller2.money, 1900);
     //market results
-    expect(market.quantitySold,10.0);
-    expect(market.averageClosingPrice,190.0);
+    expect(market.quantityTraded, 10.0);
+    expect(market.averageClosingPrice, 190.0);
   });
 
 
@@ -99,11 +245,11 @@ void main() {
     Schedule schedule = new Schedule(); //the scheduler
 
     //create a q=200-p demand market
-    LinearDemandMarket market = new LinearDemandMarket(intercept:200.0, slope:-1.0);
+    ExogenousSellerMarket market = new ExogenousSellerMarket.linear(intercept:200.0, slope:-1.0);
     market.start(schedule);
 
-    DummySeller seller1 = new DummySeller();
-    DummySeller seller2 = new DummySeller();
+    DummyTrader seller1 = new DummyTrader();
+    DummyTrader seller2 = new DummyTrader();
     market.sellers.add(seller1);
     market.sellers.add(seller2);
 
@@ -124,8 +270,8 @@ void main() {
     expect(seller2.money, 190 * 5.0);
 
     //market results
-    expect(market.quantitySold,10.0);
-    expect(market.averageClosingPrice,190.0);
+    expect(market.quantityTraded, 10.0);
+    expect(market.averageClosingPrice, 190.0);
   });
 
 
@@ -136,11 +282,11 @@ void main() {
     Schedule schedule = new Schedule(); //the scheduler
 
     //create a q=101-p demand market
-    LinearDemandMarket market = new LinearDemandMarket(intercept:100, slope:-1.0);
+    ExogenousSellerMarket market = new ExogenousSellerMarket.linear(intercept:100.0,
+    slope:-1.0);
     market.start(schedule);
-    var seller = new MockDummySeller();
+    var seller = new MockDummyTrader();
     market.sellers.add(seller);
-
 
 
     seller.receive(10.0); //seller has 10 units of gas it can sell
@@ -150,7 +296,12 @@ void main() {
     schedule.simulateDay();
 
     //make sure you were notified
-    verify(seller.notifyOfTrade(any,any));
+    verify(seller.notifyOfTrade(any, any));
   });
+}
+
+void main() {
+  buyerTests();
+  sellerTests();
 
 }

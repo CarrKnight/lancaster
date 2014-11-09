@@ -48,7 +48,7 @@ class SimpleMarketPresentation{
     if(listenedTo)
       _marketStream.add(new MarketEvent( schedule.day,
                                         _market.averageClosingPrice,
-                                        _market.quantitySold));
+                                        _market.quantityTraded));
 
   }
 

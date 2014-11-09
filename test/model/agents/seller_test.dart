@@ -12,7 +12,7 @@ import 'package:lancaster/model/lancaster_model.dart';
 main(){
   //demand 100-q, daily inflow = 40===> price 60
   test("works from above!",(){
-    LinearDemandMarket market = new LinearDemandMarket(intercept:100.0,slope:-1.0);
+    ExogenousSellerMarket market = new ExogenousSellerMarket.linear(intercept:100.0,slope:-1.0);
     //initial price 100
     ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader.PIDBufferSellerFixedInflow(40.0,
     market,initialPrice:100.0);
@@ -37,7 +37,7 @@ main(){
 
 
   test("works from below!",(){
-    LinearDemandMarket market = new LinearDemandMarket(intercept:100.0,slope:-1.0);
+    ExogenousSellerMarket market = new ExogenousSellerMarket.linear(intercept:100.0,slope:-1.0);
     //initial price 0
     ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader.PIDBufferSellerFixedInflow(40.0,
     market,initialPrice:0.0);

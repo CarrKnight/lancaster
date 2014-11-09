@@ -27,7 +27,7 @@ main(){
     //should be correct by now
     expect(40,seller.currentOutflow);
     expect(60,seller.lastOfferedPrice);
-    expect(model.gasMarket.quantitySold,40);
+    expect(model.gasMarket.quantityTraded,40);
     expect(model.gasMarket.averageClosingPrice,60);
   });
 
