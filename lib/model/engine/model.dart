@@ -85,4 +85,24 @@ class Scenario{
   });
 
 
+  Scenario.simpleBuyer({initialPrice : 100.0, dailyTarget : 40.0,
+                        intercept:0.0,slope:1.0}):
+  this((Model model){
+    ExogenousBuyerMarket market = new ExogenousBuyerMarket.linear(intercept:intercept,
+    slope:slope);
+    model.gasMarket = market;
+    //initial price 0
+    ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader.PIDBuyer(market,
+    flowTarget:dailyTarget);
+    model.agents.add(seller);
+
+
+
+    market.start(model.schedule);
+    seller.start(model.schedule);
+
+
+  });
+
+
 }

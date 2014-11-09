@@ -32,4 +32,29 @@ main(){
   });
 
 
+
+  test("simple buyer scenario",(){
+
+    Model model = new Model(0,new Scenario.simpleBuyer());
+    model.start();
+
+
+    Trader buyer = model.agents.first as Trader;
+
+    for(int i=0; i<200; i++)
+    {
+      model.schedule.simulateDay();
+
+    }
+    print(
+        "price ${buyer.lastOfferedPrice} and quantity ${buyer.currentOutflow}"
+    );
+    //should be correct by now
+    expect(40,buyer.currentInflow);
+    expect(40,buyer.lastOfferedPrice);
+    expect(model.gasMarket.quantityTraded,40);
+    expect(model.gasMarket.averageClosingPrice,40);
+  });
+
+
 }

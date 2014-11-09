@@ -220,6 +220,22 @@ class ZeroKnowledgeTrader implements Trader
     return seller;
   }
 
+  factory ZeroKnowledgeTrader.PIDBuyer(BuyerMarket market,
+                                       {double flowTarget:10.0,
+                                       double initialPrice:0.0,
+                                       Inventory totalInventory : null})
+  {
+    //if no total inventory given, this is an independent trader
+    if(totalInventory == null)
+      totalInventory = new Inventory();
+
+    ZeroKnowledgeTrader buyer = new ZeroKnowledgeTrader(market,
+    new PIDPricing.FixedInflowBuyer(flowTarget:flowTarget,
+    initialPrice:initialPrice), new SimpleBuyerTrading(),totalInventory);
+
+    return buyer;
+  }
+
   /**
    * seller or sales-department targeting inflow=outflow with buffer inventory
    */
@@ -287,6 +303,7 @@ class ZeroKnowledgeTrader implements Trader
   }
 
 
+
 }
 
 
@@ -337,6 +354,35 @@ class SimpleSellerTrading extends TradingStrategy<SellerMarket>
     pricing.updatePrice(data);
     if(trader.good > 0) //if you have anything to sell
       market.placeSaleQuote(trader,trader.good,pricing.price);
+    trader.lastOfferedPrice = pricing.price;
+  }
+
+
+}
+
+
+/**
+ * standard zero-knowledge buyer. Updates the price,
+ * buys [maxOrder] every day
+ */
+class SimpleBuyerTrading extends TradingStrategy<BuyerMarket>
+{
+
+  double maxOrder = 1000.0;
+
+  /**
+   * register trader as seller on the market. Nothing more
+   */
+  void start(Schedule s, Trader trader, BuyerMarket market, Data data,
+             PricingStrategy strategy) {
+    market.buyers.add(trader);
+
+  }
+
+  void step(Trader trader, BuyerMarket market, Data data,
+            PricingStrategy pricing) {
+    pricing.updatePrice(data);
+    market.placeBuyerQuote(trader,maxOrder,pricing.price);
     trader.lastOfferedPrice = pricing.price;
   }
 

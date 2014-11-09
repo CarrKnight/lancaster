@@ -109,6 +109,8 @@ class PIDPricing implements PricingStrategy
       (Data data)=> data.getLatestObservation("inflow"),
   offset:initialPrice, p:p,i:i,d:d);
 
+
+
   PIDPricing.FixedInventoryBuyer({double inventoryTarget:1.0, double initialPrice: 0.0,
                               double p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
                               double i: PIDController.DEFAULT_INTEGRAL_PARAMETER,
