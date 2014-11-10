@@ -37,7 +37,7 @@ main() {
     Schedule schedule = new Schedule();//set up schedule
     Data data = new Data(["title1","title2"], (data)=>
     (Schedule s){ //the update steps fills it with 1 and 2s
-      data["title1"].add(1);
+      data["title1"].add(1.0);
       data["title2"].add(2.0);
     }
     );
@@ -54,7 +54,7 @@ main() {
   );
 
   test("Latest is latest ",(){
-    int i=1;
+    double i=1.0;
     Schedule schedule = new Schedule();//set up schedule
     Data data = new Data(["title1"], (data)=>
         (Schedule s){ //the update steps fills it with 1 and 2s
@@ -67,7 +67,7 @@ main() {
     schedule.simulateDay();
     schedule.simulateDay();
     schedule.simulateDay();
-    expect(data.getObservations("title1"),[1,2,3]);
+    expect(data.getObservations("title1"),[1.0,2.0,3.0]);
     expect(data.getLatestObservation("title1"),3);
   }
   );

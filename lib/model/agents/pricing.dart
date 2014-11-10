@@ -23,11 +23,7 @@ abstract class PricingStrategy
 
 }
 
-/**
- * a function that takes data and returns a single double,
- * usually a target or a controlled variable
- */
-typedef double Extractor(Data data);
+
 
 /**
  * a simple fixed extractor
@@ -95,8 +91,8 @@ class PIDPricing implements PricingStrategy
                            double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER
                            }) : //target: -inflows,
   // controlled variable = -outflow the minuses to adapt the right way
-  this((Data data)=> -data.getLatestObservation("inflow"),
-      (Data data)=> -data.getLatestObservation("outflow"),
+  this((new SimpleExtractor("inflow",(x)=>-x)).extractor,
+  (new SimpleExtractor("outflow",(x)=>-x)).extractor,
   offset:initialPrice, p:p,i:i,d:d);
 
   PIDPricing.FixedInflowBuyer({double flowTarget:1.0, double initialPrice: 0.0,
@@ -106,7 +102,7 @@ class PIDPricing implements PricingStrategy
                            }) :
   // controlled variable = -outflow the minuses to adapt the right way
   this(FixedExtractor(flowTarget),
-      (Data data)=> data.getLatestObservation("inflow"),
+  (new SimpleExtractor("inflow")).extractor,
   offset:initialPrice, p:p,i:i,d:d);
 
 
@@ -118,7 +114,7 @@ class PIDPricing implements PricingStrategy
                               }) :
   // controlled variable = -outflow the minuses to adapt the right way
   this(FixedExtractor(inventoryTarget),
-      (Data data)=> data.getLatestObservation("inventory"),
+  (new SimpleExtractor("inventory")).extractor,
   offset:initialPrice, p:p,i:i,d:d);
 
 
@@ -155,8 +151,7 @@ class BufferInventoryPricing implements PricingStrategy
    */
   static final Extractor defaultTargetWhenStockingUp = FixedExtractor(0.0);
 
-  static final Extractor defaultInventoryExtractor = (Data data)=>
-  data.getLatestObservation("inventory");
+
 
   Extractor targetExtractingStockingUp;
 
@@ -208,7 +203,8 @@ class BufferInventoryPricing implements PricingStrategy
                                       double d:
                                       PIDController.DEFAULT_DERIVATIVE_PARAMETER}):
   this(
-      defaultTargetWhenStockingUp,defaultInventoryExtractor,
+      defaultTargetWhenStockingUp,  (new SimpleExtractor("inventory"))
+      .extractor,
       new PIDPricing.DefaultSeller(p:p,i:i,d:d, initialPrice:initialPrice),
       optimalInventory:optimalInventory,
       criticalInventory:criticalInventory);

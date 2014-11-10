@@ -8,13 +8,13 @@ part of lancaster.model;
 
 /**
  * This is a port of the DataStorage.java
- * Basically a map String--->num storing end of the day observations + a step to update itself
+ * Basically a map String--->double storing end of the day observations + a step to update itself
  */
 class Data
 {
 
   //for each name a list of observations
-  Map<String,List<num>> _dataMap;
+  Map<String,List<double>> _dataMap;
 
   /**
    * the update step
@@ -22,7 +22,7 @@ class Data
   Step _updateStep;
 
 
-  Data(List<String> columns,Step updateStepBuilder(Map<String,List<num>> dataReferences)) {
+  Data(List<String> columns,Step updateStepBuilder(Map<String,List<double>> dataReferences)) {
     _dataMap = new Map();
     columns.forEach((col)=>_dataMap[col]=new List()); //add column names
     _updateStep = updateStepBuilder(_dataMap);
@@ -63,11 +63,11 @@ class Data
 
 
   /**
-   * makes sure all the variables have the same number of observations
+   * makes sure all the variables have the same doubleber of observations
    */
   bool _consistency(){
     int i =-1;
-    for(List<num> observations in _dataMap.values)
+    for(List<double> observations in _dataMap.values)
     {
       if(i==-1)
         i=observations.length;
@@ -82,18 +82,60 @@ class Data
   /**
    * returns latest observation or NaN if there is no other observation
    */
-  num getLatestObservation(String key){
+  double getLatestObservation(String key){
     assert( _consistency());
-    return _dataMap[key].length > 0.0 ? _dataMap[key].last : double.NAN;
+    return _dataMap[key].length > 0 ? _dataMap[key].last : double.NAN;
   }
 
-  List<num> getObservations(String key){
+  List<double> getObservations(String key){
     assert( _consistency());
     return _dataMap[key];
   }
 
 
   Step get updateStep => _updateStep;
+
+
+
+
+}
+
+
+/**
+ * a function that takes data and returns a single double,
+ * usually a target or a controlled variable
+ */
+typedef double Extractor(Data data);
+
+typedef double Transformer(double input);
+
+/**
+ * a simple "optimized" extractor. It stores a link to the observation list
+ */
+class SimpleExtractor
+{
+
+
+  final String columnName;
+
+  List<double> column = null;
+
+  Transformer transformer;
+
+
+
+  SimpleExtractor(this.columnName,[this.transformer=null]){
+    if(transformer==null)
+      transformer= (x)=>x;
+  }
+
+  Extractor get extractor => (Data data) {
+    if(column == null) //if needed grab the column
+      column = data.getObservations(columnName);
+
+    //never poll the map once you have a reference to the list
+    return column.length > 0 ? transformer(column.last) : double.NAN;
+  };
 
 }
 

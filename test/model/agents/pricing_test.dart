@@ -32,6 +32,7 @@ void bufferTests(){
     //setup:
     var data = new MockAgentData();
     when(data.getLatestObservation(any)).thenReturn(0.0);
+    when(data.getObservations(any)).thenReturn([0.0]);
     double inventory = 0.0;
     Extractor inventoryExtractor = (data) => inventory;
 
@@ -79,10 +80,11 @@ void bufferTests(){
 
     //setup:
     var data = new MockAgentData();
-    when(data.getLatestObservation("inflow")).thenReturn(100.0);
+    when(data.getObservations("inflow")).thenReturn([100.0]);
+
     //the outflow is very low, but if we are stocking up it doesn't matter
-    when(data.getLatestObservation("outflow")).thenReturn(1.0);
-    when(data.getLatestObservation("inventory")).thenReturn(0.0);
+    when(data.getObservations("outflow")).thenReturn([1.0]);
+    when(data.getObservations("inventory")).thenReturn([0.0]);
 
     BufferInventoryPricing pricing = new BufferInventoryPricing.simpleSeller
       (
@@ -106,11 +108,11 @@ void bufferTests(){
 
     //setup:
     var data = new MockAgentData();
-    when(data.getLatestObservation("inflow")).thenReturn(100.0);
+    when(data.getObservations("inflow")).thenReturn([100.0]);
     //not selling enough, need to lower prices!
-    when(data.getLatestObservation("outflow")).thenReturn(1.0);
+    when(data.getObservations("outflow")).thenReturn([1.0]);
     //enough inventory
-    when(data.getLatestObservation("inventory")).thenReturn(50000.0);
+    when(data.getObservations("inventory")).thenReturn([50000.0]);
 
     BufferInventoryPricing pricing = new BufferInventoryPricing.simpleSeller
     (
