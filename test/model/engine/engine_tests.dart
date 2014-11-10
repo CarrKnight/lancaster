@@ -6,10 +6,11 @@ library engine_test;
  * This is open source on MIT license. Isn't this jolly?
  */
 import 'schedule_test.dart' as schedule;
+import 'model_test.dart' as model;
 
 
 
 main(){
-
+  model.main();
   schedule.main();
 }

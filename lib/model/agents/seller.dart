@@ -223,15 +223,18 @@ class ZeroKnowledgeTrader implements Trader
   factory ZeroKnowledgeTrader.PIDBuyer(BuyerMarket market,
                                        {double flowTarget:10.0,
                                        double initialPrice:0.0,
+                                       double p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
+                                       double i: PIDController.DEFAULT_INTEGRAL_PARAMETER,
+                                       double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER,
                                        Inventory totalInventory : null})
   {
     //if no total inventory given, this is an independent trader
     if(totalInventory == null)
       totalInventory = new Inventory();
-
     ZeroKnowledgeTrader buyer = new ZeroKnowledgeTrader(market,
     new PIDPricing.FixedInflowBuyer(flowTarget:flowTarget,
-    initialPrice:initialPrice), new SimpleBuyerTrading(),totalInventory);
+    initialPrice:initialPrice,p:p,i:i,d:d), new SimpleBuyerTrading(),
+    totalInventory);
 
     return buyer;
   }
@@ -244,6 +247,12 @@ class ZeroKnowledgeTrader implements Trader
                                               double initialPrice:100.0,
                                               double optimalInventory:100.0,
                                               double criticalInventory:10.0,
+                                              double p:
+                                              PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
+                                              double i:
+                                              PIDController.DEFAULT_INTEGRAL_PARAMETER,
+                                              double d:
+                                              PIDController.DEFAULT_DERIVATIVE_PARAMETER,
                                               Inventory totalInventory:null})
   {
     //if no total inventory given, this is an independent trader
@@ -252,7 +261,7 @@ class ZeroKnowledgeTrader implements Trader
 
     ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader(market,
     new BufferInventoryPricing.simpleSeller(optimalInventory:optimalInventory,
-    criticalInventory:criticalInventory,initialPrice:initialPrice),
+    criticalInventory:criticalInventory,initialPrice:initialPrice,p:p,d:d,i:i),
     new SimpleSellerTrading(), totalInventory);
 
     return seller;
@@ -292,11 +301,18 @@ class ZeroKnowledgeTrader implements Trader
                                                   double initialPrice:100.0,
                                                   double optimalInventory:100.0,
                                                   double criticalInventory:10.0,
+                                                  double p:
+                                                  PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
+                                                  double i:
+                                                  PIDController.DEFAULT_INTEGRAL_PARAMETER,
+                                                  double d:
+                                                  PIDController.DEFAULT_DERIVATIVE_PARAMETER,
                                                   Inventory totalInventory : null})
   {
     ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader.PIDBufferSeller(market,
     initialPrice:initialPrice,totalInventory:totalInventory,
-    optimalInventory:optimalInventory, criticalInventory:criticalInventory);
+    optimalInventory:optimalInventory, criticalInventory:criticalInventory,
+    d:d,i:i,p:p);
     //add events
     addDailyInflowAndDepreciation(seller, dailyInflow, depreciationRate);
     return seller;

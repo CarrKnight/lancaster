@@ -65,41 +65,62 @@ class Scenario{
 
   void start(Model model)=>scenario(model);
 
-  Scenario.simpleSeller({initialPrice : 100.0, dailyFlow : 40.0,
-                        intercept:100.0,slope:-1.0}):
+  Scenario.simpleSeller({minInitialPrice : 100.0,
+                        maxInitialPrice:100, dailyFlow : 40.0,
+                        intercept:100.0,slope:-1.0,minP:0.05,maxP:.5,minI:0.05,
+                        maxI:.5,int seed:1,int competitors:1}):
   this((Model model){
     ExogenousSellerMarket market = new ExogenousSellerMarket.linear(intercept:intercept,
-                                                       slope:slope);
+    slope:slope);
+    market.start(model.schedule);
+
+    Random random = new Random(seed);
     model.gasMarket = market;
     //initial price 0
-    ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader.PIDBufferSellerFixedInflow(dailyFlow,
-    market,initialPrice:initialPrice);
-    model.agents.add(seller);
+    for(int i=0; i< competitors; i++) {
+      double p = random.nextDouble() * (maxP - minP) + minP;
+      double i = random.nextDouble() * (maxI - minI) + minI;
+      double initialPrice = random.nextDouble() *
+      (maxInitialPrice - minInitialPrice) + minInitialPrice;
+      ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader.PIDBufferSellerFixedInflow(dailyFlow,
+      market, initialPrice:initialPrice, p:p, i:i);
+      model.agents.add(seller);
+      seller.start(model.schedule);
+    }
 
 
-
-    market.start(model.schedule);
-    seller.start(model.schedule);
 
 
   });
 
 
-  Scenario.simpleBuyer({initialPrice : 100.0, dailyTarget : 40.0,
-                        intercept:0.0,slope:1.0}):
+  Scenario.simpleBuyer({minInitialPrice : 100.0,
+                       maxInitialPrice:100, dailyTarget : 40.0,
+                       intercept:0.0,slope:1.0,minP:0.05,maxP:.5,minI:0.05,
+                       maxI:.5,int seed:1,int competitors:1}):
   this((Model model){
     ExogenousBuyerMarket market = new ExogenousBuyerMarket.linear(intercept:intercept,
     slope:slope);
+    market.start(model.schedule);
     model.gasMarket = market;
     //initial price 0
-    ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader.PIDBuyer(market,
-    flowTarget:dailyTarget);
-    model.agents.add(seller);
+    Random random = new Random(seed);
+    for(int i=0; i< competitors; i++) {
+      double p = random.nextDouble() * (maxP - minP) + minP;
+      double i = random.nextDouble() * (maxI - minI) + minI;
+      double initialPrice = random.nextDouble() *
+      (maxInitialPrice - minInitialPrice) + minInitialPrice;
+
+      ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader.PIDBuyer(market,
+      flowTarget:dailyTarget,initialPrice:initialPrice,p:p,i:i);
+      model.agents.add(seller);
+      seller.start(model.schedule);
+
+    }
 
 
 
-    market.start(model.schedule);
-    seller.start(model.schedule);
+
 
 
   });

@@ -2,8 +2,10 @@
  * Copyright (c) 2014 to Ernesto Carrella.
  * This is open source on MIT license. Isn't this jolly?
  */
+library model.test;
 import 'package:unittest/unittest.dart';
 import 'package:lancaster/model/lancaster_model.dart';
+import 'dart:math';
 
 
 main(){
@@ -33,6 +35,39 @@ main(){
 
 
 
+  for(int j=0; j<5; j++)
+    test("4 competitors seller",(){
+
+      var seed = (new Random()).nextInt((1 << 32) - 1);
+      Model model = new Model(0,new Scenario.simpleSeller(minInitialPrice: 0.0,
+      maxInitialPrice : 100.0,competitors:4,dailyFlow:10.0,
+      seed: seed));
+      model.start();
+
+
+
+      print("seed: $seed");
+      for(int i=0; i<200; i++)
+      {
+        model.schedule.simulateDay();
+        List<double> offers = [];
+        for(Object a in model.agents)
+          offers.add((a as Trader).lastOfferedPrice);
+        print(offers);
+
+      }
+      print(
+          "price ${model.gasMarket.averageClosingPrice} and quantity ${model
+          .gasMarket.quantityTraded}"
+      );
+
+      //should be correct by now
+      expect(model.gasMarket.quantityTraded,closeTo(40,1));
+      expect(model.gasMarket.averageClosingPrice,closeTo(60,1));
+    });
+
+
+
   test("simple buyer scenario",(){
 
     Model model = new Model(0,new Scenario.simpleBuyer());
@@ -56,5 +91,33 @@ main(){
     expect(model.gasMarket.averageClosingPrice,40);
   });
 
+  for(int j=0; j<5; j++)
+
+    test("4 competitors buyers",(){
+      var seed = (new Random()).nextInt((1 << 32) - 1);
+
+      Model model = new Model(0,new Scenario.simpleBuyer(minInitialPrice: 0.0,
+      maxInitialPrice : 100.0,competitors:4,dailyTarget:10.0,
+      seed: seed));
+      model.start();
+
+
+      for(int i=0; i<200; i++)
+      {
+        model.schedule.simulateDay();
+        List<double> offers = [];
+        for(Object a in model.agents)
+          offers.add((a as Trader).lastOfferedPrice);
+        print(offers);
+
+      }
+      print(
+          "price ${model.gasMarket.averageClosingPrice} and quantity ${model
+          .gasMarket.quantityTraded}"
+      );
+      //should be correct by now
+      expect(model.gasMarket.quantityTraded,closeTo(40,1));
+      expect(model.gasMarket.averageClosingPrice,closeTo(40,1));
+    });
 
 }
