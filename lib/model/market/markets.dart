@@ -33,7 +33,15 @@ abstract class Market{
 
   double get quantityTraded;
 
+  /**
+   * what is the good exchanged here?
+   */
   String get goodType;
+
+  /**
+   * what is that good exchanged for
+   */
+  String get moneyType;
 
   /**
    * a stream narrating the trades that have occurred
@@ -140,6 +148,7 @@ class ExogenousSellerMarket extends SellerMarket{
 
 
   final String goodType;
+  final String moneyType;
 
   /**
    * routine to recursively clear markets
@@ -154,13 +163,15 @@ class ExogenousSellerMarket extends SellerMarket{
 
   ExogenousSellerMarket.linear( {double intercept : 100.0,
                              double slope:-1.0,
-                             String goodType : "gas" }):
-  this(new LinearCurve(intercept,slope),goodType:goodType);
+                             String goodType : "gas",
+                             String moneyType: "money"}):
+  this(new LinearCurve(intercept,slope),goodType:goodType,moneyType:moneyType);
 
 
 
-  ExogenousSellerMarket(ExogenousCurve this.demand, {String goodType : "gas" }):
-  this.goodType = goodType;
+  ExogenousSellerMarket(ExogenousCurve this.demand, {String goodType : "gas"
+  , String moneyType: "money"}):
+  this.goodType = goodType, this.moneyType = moneyType;
 
   void start(Schedule s){
     super.start(s);
@@ -201,6 +212,8 @@ class ExogenousBuyerMarket extends BuyerMarket{
 
   final String goodType;
 
+  final String moneyType;
+
   /**
    * routine to recursively clear markets
    */
@@ -214,13 +227,16 @@ class ExogenousBuyerMarket extends BuyerMarket{
 
   ExogenousBuyerMarket.linear( {double intercept : 0.0,
                                 double slope:1.0,
-                                String goodType : "gas" }):
-  this(new LinearCurve(intercept,slope),goodType:goodType);
+                                String goodType : "gas",
+                               String moneyType: "money" }):
+  this(new LinearCurve(intercept,slope),goodType:goodType,moneyType:moneyType);
 
 
 
-  ExogenousBuyerMarket(ExogenousCurve this.supply, {String goodType : "gas" }):
-  this.goodType = goodType;
+  ExogenousBuyerMarket(ExogenousCurve this.supply, {String goodType : "gas",
+  String moneyType: "money"}):
+  this.goodType = goodType,
+  this.moneyType = moneyType;
 
   void start(Schedule s){
     super.start(s);

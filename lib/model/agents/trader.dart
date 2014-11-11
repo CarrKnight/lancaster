@@ -10,7 +10,7 @@ part of lancaster.model;
  * this is an interface of somebody who has inventory and can be told when
  * trades happen (which is a pre-requisite to trade)
  */
-abstract class Trader implements OneGoodInventory
+abstract class Trader
 {
 
   /**
@@ -38,6 +38,17 @@ abstract class Trader implements OneGoodInventory
    * the inflow since the beginning of the day
    */
   double get  currentInflow;
+
+  void earn(double moneyAmount);
+
+  void receive(double goodAmount);
+
+  void remove(double goodAmount);
+
+  void spend(double moneyAmount);
+
+  get good;
+
 }
 
 
@@ -47,13 +58,19 @@ abstract class Trader implements OneGoodInventory
 class DummyTrader implements Trader
 {
 
-  final InventoryCrossSection _inventory;
+
+  InventoryCrossSection _inventory;
+  InventoryCrossSection _money;
 
   double _lastClosingPrice = double.NAN;
 
 
-  DummyTrader([String goodType= "gas"]):
-  _inventory=new InventoryCrossSection(new Inventory(),goodType);
+  DummyTrader([String goodType= "gas"])
+  {
+  var totalInventory = new Inventory(); //its own inventory
+  _inventory=(totalInventory).getSection(goodType);
+  _money=totalInventory.getSection("money");
+  }
 
   DummyTrader.fromMarket(Market market):
   this(market.goodType);
@@ -63,35 +80,31 @@ class DummyTrader implements Trader
     _lastClosingPrice = price;
   }
 
-  earn(double amount) {
-    _inventory.earn(amount);
-  }
-
-  spend(double amount) {
-    _inventory.spend(amount);
-  }
-
-  receive(double amount) {
-    _inventory.receive(amount);
-
-  }
-
-  remove(double amount) {
-    _inventory.remove(amount);
-
-  }
+  earn(double amount)=>_money.receive(amount);
 
 
-  get good =>  _inventory.good;
+  spend(double amount)=> _money.remove(amount);
 
 
-  get money =>
-  _inventory.money;
+  receive(double amount)=>_inventory.receive(amount);
+
+
+
+  remove(double amount)=>_inventory.remove(amount);
+
+
+
+
+  get good =>  _inventory.amount;
+
+
+  get money =>_money.amount;
 
   double get lastClosingPrice => _lastClosingPrice;
 
   double get lastOfferedPrice => double.NAN;
-  double set lastOfferedPrice(double d) => double.NAN;
+
+  void set lastOfferedPrice(double d){}
 
   double get currentOutflow => double.NAN;
 
@@ -102,10 +115,14 @@ class DummyTrader implements Trader
 
 }
 
-
+/**
+ * can be buyer or seller of a specific good. Can be an independent trader or
+ * a department for a firm (if given a reference to the firm's inventory).
+ */
 class ZeroKnowledgeTrader implements Trader
 {
-  final CountedCrossSection _inventory;
+  final InventoryCrossSection _inventory;
+  final InventoryCrossSection _money;
 
   Data _data;
 
@@ -133,8 +150,10 @@ class ZeroKnowledgeTrader implements Trader
 
   ZeroKnowledgeTrader(Market market,this.pricing,this.tradingStrategy,
                       Inventory totalInventory):
-  _inventory = new CountedCrossSection(totalInventory, market.goodType),
-  this.market = market{
+  _inventory = totalInventory.getSection(market.goodType),
+  _money  = totalInventory.getSection(market.moneyType),
+  this.market = market
+  {
     _data = new Data.SellerDefault(this);
   }
 
@@ -142,7 +161,6 @@ class ZeroKnowledgeTrader implements Trader
 
   void dawn(Schedule s)
   {
-    _inventory.resetCount();
     for(DawnEvent e in dawnEvents)
       e(this);
 
@@ -176,25 +194,25 @@ class ZeroKnowledgeTrader implements Trader
 
   }
 
-  earn(double amount) =>  _inventory.earn(amount);
+  earn(double amount)=>_money.receive(amount);
 
 
-  spend(double amount) => _inventory.spend(amount);
+  spend(double amount)=> _money.remove(amount);
 
 
-  receive(double amount) =>_inventory.receive(amount);
+  receive(double amount)=>_inventory.receive(amount);
 
 
-  remove(double amount) =>_inventory.remove(amount);
+  remove(double amount)=>_inventory.remove(amount);
+
 
 
   String get goodType  => _inventory.goodType;
 
 
-  double get money => _inventory.money;
+  get good =>  _inventory.amount;
 
-
-  double get good => _inventory.good;
+  get money =>_money.amount;
 
   double get lastClosingPrice=>_lastClosingPrice;
 
@@ -207,16 +225,20 @@ class ZeroKnowledgeTrader implements Trader
    */
   factory ZeroKnowledgeTrader.PIDSeller(SellerMarket market,
                                         {double initialPrice:100.0,
-                                        Inventory totalInventory : null})
+                                        Inventory givenInventory : null})
   {
     //if no total inventory given, this is an independent trader
-    if(totalInventory == null)
-      totalInventory = new Inventory();
+    Inventory inventory = givenInventory;
+    if(givenInventory == null)
+      inventory = new Inventory();
 
     ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader(market,
     new PIDPricing.DefaultSeller(initialPrice:initialPrice),
-    new SimpleSellerTrading(), totalInventory);
+    new SimpleSellerTrading(), inventory);
 
+    //independent trader needs to reset its own counters
+    if(givenInventory==null)
+      seller.dawnEvents.add(ResetInventories(inventory));
     return seller;
   }
 
@@ -226,15 +248,20 @@ class ZeroKnowledgeTrader implements Trader
                                        double p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
                                        double i: PIDController.DEFAULT_INTEGRAL_PARAMETER,
                                        double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER,
-                                       Inventory totalInventory : null})
+                                       Inventory givenInventory : null})
   {
     //if no total inventory given, this is an independent trader
-    if(totalInventory == null)
-      totalInventory = new Inventory();
+    Inventory inventory = givenInventory;
+    if(givenInventory == null)
+      inventory = new Inventory();
+
     ZeroKnowledgeTrader buyer = new ZeroKnowledgeTrader(market,
     new PIDPricing.FixedInflowBuyer(flowTarget:flowTarget,
-    initialPrice:initialPrice,p:p,i:i,d:d), new SimpleBuyerTrading(),
-    totalInventory);
+    initialPrice:initialPrice,p:p,i:i,d:d), new SimpleBuyerTrading(),inventory);
+
+    //independent trader needs to reset its own counters
+    if(givenInventory==null)
+      buyer.dawnEvents.add(ResetInventories(inventory));
 
     return buyer;
   }
@@ -253,18 +280,22 @@ class ZeroKnowledgeTrader implements Trader
                                               PIDController.DEFAULT_INTEGRAL_PARAMETER,
                                               double d:
                                               PIDController.DEFAULT_DERIVATIVE_PARAMETER,
-                                              Inventory totalInventory:null})
+                                              Inventory givenInventory:null})
   {
-    //if no total inventory given, this is an independent trader
-    if(totalInventory == null)
-      totalInventory = new Inventory();
+    Inventory inventory = givenInventory;
+    if(givenInventory == null)
+      inventory = new Inventory();
 
-    ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader(market,
+    ZeroKnowledgeTrader buyer = new ZeroKnowledgeTrader(market,
     new BufferInventoryPricing.simpleSeller(optimalInventory:optimalInventory,
     criticalInventory:criticalInventory,initialPrice:initialPrice,p:p,d:d,i:i),
-    new SimpleSellerTrading(), totalInventory);
+    new SimpleSellerTrading(), inventory);
 
-    return seller;
+    //independent trader needs to reset its own counters
+    if(givenInventory==null)
+      buyer.dawnEvents.add(ResetInventories(inventory));
+
+    return buyer;
   }
 
 //utility for factories
@@ -284,10 +315,10 @@ class ZeroKnowledgeTrader implements Trader
                                                   SellerMarket market,
                                                   {double depreciationRate:0.0,
                                                   double initialPrice:100.0,
-                                                  Inventory totalInventory : null})
+                                                  Inventory givenInventory:null})
   {
     ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader.PIDSeller(market,
-    initialPrice:initialPrice,totalInventory:totalInventory);
+    initialPrice:initialPrice,givenInventory:givenInventory);
     //add events
     addDailyInflowAndDepreciation(seller, dailyInflow, depreciationRate);
     return seller;
@@ -307,10 +338,10 @@ class ZeroKnowledgeTrader implements Trader
                                                   PIDController.DEFAULT_INTEGRAL_PARAMETER,
                                                   double d:
                                                   PIDController.DEFAULT_DERIVATIVE_PARAMETER,
-                                                  Inventory totalInventory : null})
+                                                  Inventory givenInventory : null})
   {
     ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader.PIDBufferSeller(market,
-    initialPrice:initialPrice,totalInventory:totalInventory,
+    initialPrice:initialPrice,givenInventory:givenInventory,
     optimalInventory:optimalInventory, criticalInventory:criticalInventory,
     d:d,i:i,p:p);
     //add events
@@ -416,3 +447,9 @@ trader.receive(inflow);
 
 DawnEvent DepreciationEvent(double depreciationRate)=>(Trader trader)=>
 trader.remove(depreciationRate*trader.good);
+
+/**
+ * reset inventories at dawn. Useful for independent traders.
+ */
+DawnEvent ResetInventories(Inventory inventory)=>(Trader trader)=>
+inventory.resetCounters();
