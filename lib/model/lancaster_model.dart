@@ -30,7 +30,7 @@ part 'engine/model.dart';
  *    \_/\_/ \___/(____)\_)__) (__) (____/
  */
 part 'agents/pricing.dart';
-part 'agents/seller.dart';
+part 'agents/trader.dart';
 /***
  *     _  _   __   ____  __ _  ____  ____  ____
  *    ( \/ ) / _\ (  _ \(  / )(  __)(_  _)/ ___)

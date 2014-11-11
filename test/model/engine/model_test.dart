@@ -26,11 +26,13 @@ main(){
     print(
         "price ${seller.lastOfferedPrice} and quantity ${seller.currentOutflow}"
     );
+    Market gasMarket = model.markets["gas"];
+
     //should be correct by now
     expect(40,seller.currentOutflow);
     expect(60,seller.lastOfferedPrice);
-    expect(model.gasMarket.quantityTraded,40);
-    expect(model.gasMarket.averageClosingPrice,60);
+    expect(gasMarket.quantityTraded,40);
+    expect(gasMarket.averageClosingPrice,60);
   });
 
 
@@ -56,14 +58,15 @@ main(){
         print(offers);
 
       }
+      Market gasMarket = model.markets["gas"];
+
       print(
-          "price ${model.gasMarket.averageClosingPrice} and quantity ${model
-          .gasMarket.quantityTraded}"
+          "price ${gasMarket.averageClosingPrice} and quantity ${gasMarket.quantityTraded}"
       );
 
       //should be correct by now
-      expect(model.gasMarket.quantityTraded,closeTo(40,1));
-      expect(model.gasMarket.averageClosingPrice,closeTo(60,1));
+      expect(gasMarket.quantityTraded,closeTo(40,1));
+      expect(gasMarket.averageClosingPrice,closeTo(60,1));
     });
 
 
@@ -87,8 +90,9 @@ main(){
     //should be correct by now
     expect(40,buyer.currentInflow);
     expect(40,buyer.lastOfferedPrice);
-    expect(model.gasMarket.quantityTraded,40);
-    expect(model.gasMarket.averageClosingPrice,40);
+    Market gasMarket = model.markets["gas"];
+    expect(gasMarket.quantityTraded,40);
+    expect(gasMarket.averageClosingPrice,40);
   });
 
   for(int j=0; j<5; j++)
@@ -111,13 +115,14 @@ main(){
         print(offers);
 
       }
+      Market gasMarket = model.markets["gas"];
+
       print(
-          "price ${model.gasMarket.averageClosingPrice} and quantity ${model
-          .gasMarket.quantityTraded}"
+          "price ${gasMarket.averageClosingPrice} and quantity ${gasMarket.quantityTraded}"
       );
       //should be correct by now
-      expect(model.gasMarket.quantityTraded,closeTo(40,1));
-      expect(model.gasMarket.averageClosingPrice,closeTo(40,1));
+      expect(gasMarket.quantityTraded,closeTo(40,1));
+      expect(gasMarket.averageClosingPrice,closeTo(40,1));
     });
 
 }

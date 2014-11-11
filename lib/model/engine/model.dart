@@ -21,11 +21,7 @@ class Model {
 
   final List<Object> agents = new List();
 
-  //this can be set at any time, but usually it is set by the scenario
-  Market gasMarket;
-
-  //this can be set at any time, but usually it is set by the scenario
-  Market laborMarket;
+  final Map<String,Market> markets = new HashMap();
 
   //this is never null, but the default scenario is empty
   Scenario scenario;
@@ -75,7 +71,7 @@ class Scenario{
     market.start(model.schedule);
 
     Random random = new Random(seed);
-    model.gasMarket = market;
+    model.markets["gas"]=market;
     //initial price 0
     for(int i=0; i< competitors; i++) {
       double p = random.nextDouble() * (maxP - minP) + minP;
@@ -102,7 +98,7 @@ class Scenario{
     ExogenousBuyerMarket market = new ExogenousBuyerMarket.linear(intercept:intercept,
     slope:slope);
     market.start(model.schedule);
-    model.gasMarket = market;
+    model.markets["gas"]=market;
     //initial price 0
     Random random = new Random(seed);
     for(int i=0; i< competitors; i++) {

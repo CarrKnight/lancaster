@@ -32,7 +32,7 @@ class ModelPresentation
   SimpleMarketPresentation gasPresentation;
 
   _initializePresentations(){
-    var market = _model.gasMarket;
+    var market = _model.markets["gas"];
     if(market != null) {
       gasPresentation = new SimpleMarketPresentation(market);
       gasPresentation.start(_model.schedule);
