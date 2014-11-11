@@ -6,8 +6,10 @@ library agent_test;
 
 import 'pricing_test.dart' as pricing;
 import 'seller_test.dart' as seller;
+import 'production_test.dart' as production;
 
 main(){
   pricing.main();
   seller.main();
+  production.main();
 }
