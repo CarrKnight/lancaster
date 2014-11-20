@@ -34,6 +34,7 @@ part 'agents/trader.dart';
 part 'agents/production.dart';
 part 'agents/prediction.dart';
 part 'agents/maximization.dart';
+part 'agents/firm.dart';
 /***
  *     _  _   __   ____  __ _  ____  ____  ____
  *    ( \/ ) / _\ (  _ \(  / )(  __)(_  _)/ ___)

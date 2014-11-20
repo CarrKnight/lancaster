@@ -477,14 +477,3 @@ DawnEvent ResetInventories(Inventory inventory)=>(Trader trader)=>
 inventory.resetCounters();
 
 
-/**
- * an inventory with a bunch of traders
- */
-class Firm extends Object with Inventory{
-
-
-  Map<String,ZeroKnowledgeTrader> salesDepartments;
-  Map<String,ZeroKnowledgeTrader> purchaseDepartments;
-
-
-}
