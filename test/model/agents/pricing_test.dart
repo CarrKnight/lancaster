@@ -34,12 +34,12 @@ void bufferTests(){
     when(data.getLatestObservation(any)).thenReturn(0.0);
     when(data.getObservations(any)).thenReturn([0.0]);
     double inventory = 0.0;
-    Extractor inventoryExtractor = (data) => inventory;
+    Extractor inventoryExtractor = new FunctionalExtractor((data) => inventory);
 
 
 
     BufferInventoryPricing pricing = new BufferInventoryPricing(
-            (data)=>0.0,inventoryExtractor,
+            new FixedExtractor(0.0),inventoryExtractor,
             new PIDPricing.DefaultSeller(),optimalInventory:10.0,
             criticalInventory:5.0);
 
@@ -139,7 +139,9 @@ void PIDFlows() {
 
 
     //if I set the initial price to 100 and target always equal cv, the price should stay at 100
-    PIDPricing pricing = new PIDPricing((data) => 1.0, (data) => 1.0, offset:100.0);
+    PIDPricing pricing = new PIDPricing(new FixedExtractor(1.0),
+    new FixedExtractor(1.0),
+    offset:100.0);
     expect(pricing.price, 100);
     for (int i = 0; i < 100; i++) {
       pricing.updatePrice(new Data(["a"], (references) => (s) {
@@ -154,7 +156,8 @@ void PIDFlows() {
 
 
     //if I set the initial price to 100 and target>cv, the price should increase
-    PIDPricing pricing = new PIDPricing((data) => 1.0, (data) => 0.0, offset:100.0);
+    PIDPricing pricing = new PIDPricing(new FixedExtractor(1.0),
+    new FixedExtractor(0.0), offset:100.0);
     expect(pricing.price, 100);
     for (int i = 0; i < 100; i++) {
       pricing.updatePrice(new Data(["a"], (references) => (s) {
@@ -168,7 +171,8 @@ void PIDFlows() {
 
 
     //if I set the initial price to 100 and target<cv, the price should decrease
-    PIDPricing pricing = new PIDPricing((data) => -10.0, (data) => 0.0, offset:100.0);
+    PIDPricing pricing = new PIDPricing(new FixedExtractor(-10.0),
+    new FixedExtractor(0.0), offset:100.0);
     expect(pricing.price, 100);
     for (int i = 0; i < 100; i++) {
       pricing.updatePrice(new Data(["a"], (references) => (s) {
@@ -357,21 +361,13 @@ void extractorTests(){
 
    test("Fixed Extractor is not variable",(){
      double target = 100.0;
-     Extractor fix = FixedExtractor(target);
-     expect(100.0,fix(null));
+     Extractor fix = new FixedExtractor(target);
+     expect(100.0,fix.extract(null));
      target = 1.0;
-     expect(100.0,fix(null)); //not 1!
+     expect(100.0,fix.extract(null)); //not 1!
 
 
    });
 
-   test("Variable Extractor is variable",(){
-     VariableExtractor ve = new VariableExtractor(100.0);
-     var extractor = ve.extractor;
-     expect(100.0, extractor(null));
-     ve.out = 1.0;
-     expect(1.0,extractor(null)); //not 1!
 
-
-   });
 }

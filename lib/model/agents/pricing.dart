@@ -28,24 +28,19 @@ abstract class PricingStrategy
 /**
  * a simple fixed extractor
  */
-Extractor FixedExtractor(double i){
-  return (data)=>i;
+class FixedExtractor implements Extractor{
+
+  final double output;
+
+  FixedExtractor(this.output);
+
+  extract(Data data)=>output;
 }
 
 abstract class HasExtractor{
   Extractor get extractor;
 }
 
-/**
- * like an extractor, but settable from outside.
- */
-class VariableExtractor implements HasExtractor{
-  double out;
-
-  VariableExtractor(this.out);
-
-  Extractor get extractor=>(data)=>out;
-}
 
 
 /**
@@ -91,8 +86,8 @@ class PIDPricing implements PricingStrategy
                            double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER
                            }) : //target: -inflows,
   // controlled variable = -outflow the minuses to adapt the right way
-  this((new SimpleExtractor("inflow",(x)=>-x)).extractor,
-  (new SimpleExtractor("outflow",(x)=>-x)).extractor,
+  this(new SimpleExtractor("inflow",(x)=>-x),
+  new SimpleExtractor("outflow",(x)=>-x),
   offset:initialPrice, p:p,i:i,d:d);
 
   PIDPricing.FixedInflowBuyer({double flowTarget:1.0, double initialPrice: 0.0,
@@ -101,8 +96,8 @@ class PIDPricing implements PricingStrategy
                            double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER
                            }) :
   // controlled variable = -outflow the minuses to adapt the right way
-  this(FixedExtractor(flowTarget),
-  (new SimpleExtractor("inflow")).extractor,
+  this(new FixedExtractor(flowTarget),
+  new SimpleExtractor("inflow"),
   offset:initialPrice, p:p,i:i,d:d);
 
 
@@ -113,8 +108,8 @@ class PIDPricing implements PricingStrategy
                               double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER
                               }) :
   // controlled variable = -outflow the minuses to adapt the right way
-  this(FixedExtractor(inventoryTarget),
-  (new SimpleExtractor("inventory")).extractor,
+  this(new FixedExtractor(inventoryTarget),
+  new SimpleExtractor("inventory"),
   offset:initialPrice, p:p,i:i,d:d);
 
 
@@ -122,8 +117,8 @@ class PIDPricing implements PricingStrategy
 
   void updatePrice(Data data) {
 
-    double target = targetExtractor(data);
-    double controlledVariable = cvExtractor(data);
+    double target = targetExtractor.extract(data);
+    double controlledVariable = cvExtractor.extract(data);
     //ignore lack of data
     if(target == null || !target.isFinite || !controlledVariable.isFinite)
       return;
@@ -149,7 +144,7 @@ class BufferInventoryPricing implements PricingStrategy
   /**
    * by default just target 0
    */
-  static final Extractor defaultTargetWhenStockingUp = FixedExtractor(0.0);
+  static final Extractor defaultTargetWhenStockingUp = new FixedExtractor(0.0);
 
 
 
@@ -203,8 +198,7 @@ class BufferInventoryPricing implements PricingStrategy
                                       double d:
                                       PIDController.DEFAULT_DERIVATIVE_PARAMETER}):
   this(
-      defaultTargetWhenStockingUp,  (new SimpleExtractor("inventory"))
-      .extractor,
+      defaultTargetWhenStockingUp,  new SimpleExtractor("inventory"),
       new PIDPricing.DefaultSeller(p:p,i:i,d:d, initialPrice:initialPrice),
       optimalInventory:optimalInventory,
       criticalInventory:criticalInventory);
@@ -212,7 +206,7 @@ class BufferInventoryPricing implements PricingStrategy
 
   void _updateStockingFlag(Data data)
   {
-    var inventory = inventoryExtractor(data);
+    var inventory = inventoryExtractor.extract(data);
 
     //ignore lack of data
     if(inventory == null || !inventory.isFinite)

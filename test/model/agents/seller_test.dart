@@ -62,6 +62,28 @@ main(){
 
   });
 
+  test("zk department doesn't reset counters",(){
+    ExogenousSellerMarket market = new ExogenousSellerMarket.linear(intercept:100.0,slope:-1.0);
+    //initial price 100
+    var realInventory = new Inventory();
+    ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader.PIDBufferSellerFixedInflow(40.0,
+    market,initialPrice:100.0,givenInventory:realInventory);
 
+
+
+    Schedule schedule = new Schedule();
+
+    market.start(schedule);
+    seller.start(schedule);
+
+    //has fixed inflow of 40
+    expect(0,realInventory.inflow("gas"));
+    schedule.simulateDay();
+    expect(40,realInventory.inflow("gas"));
+    schedule.simulateDay();
+    expect(80,realInventory.inflow("gas")); //doesn't reset!
+
+
+  });
 
 }

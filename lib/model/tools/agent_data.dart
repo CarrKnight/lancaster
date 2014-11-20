@@ -105,14 +105,32 @@ class Data
  * a function that takes data and returns a single double,
  * usually a target or a controlled variable
  */
-typedef double Extractor(Data data);
+
+
+abstract class Extractor{
+  double extract(Data data);
+
+}
+typedef double ExtractFunction(double input);
+
+class FunctionalExtractor implements Extractor
+{
+  final ExtractFunction function;
+
+  FunctionalExtractor(this.function);
+
+  extract(d)=>function(d);
+
+}
+
+
 
 typedef double Transformer(double input);
 
 /**
  * a simple "optimized" extractor. It stores a link to the observation list
  */
-class SimpleExtractor
+class SimpleExtractor implements Extractor
 {
 
 
@@ -129,13 +147,13 @@ class SimpleExtractor
       transformer= (x)=>x;
   }
 
-  Extractor get extractor => (Data data) {
+  extract(Data data) {
     if(column == null) //if needed grab the column
       column = data.getObservations(columnName);
 
     //never poll the map once you have a reference to the list
     return column.length > 0 ? transformer(column.last) : double.NAN;
-  };
+  }
 
 }
 

@@ -39,6 +39,9 @@ abstract class Trader
    */
   double get  currentInflow;
 
+
+  double predictPrice(double expectedChangeInQuantity);
+
   void earn(double moneyAmount);
 
   void receive(double goodAmount);
@@ -112,6 +115,9 @@ class DummyTrader implements Trader
 
   String get goodType =>_inventory.goodType;
 
+  double predictPrice(double expectedChangeInQuantity)=> _lastClosingPrice;
+
+
 
 }
 
@@ -128,9 +134,21 @@ class ZeroKnowledgeTrader implements Trader
 
   double dailyInflow;
 
+  /**
+   * how it prices its goods
+   */
   PricingStrategy pricing;
 
+  /**
+   * how it trades
+   */
   TradingStrategy tradingStrategy;
+
+  /**
+   * strictly speaking the trader doesn't need a predictor. But in many cases
+   * there is one associated to it and it makes sense for it to be here.
+   */
+  PricePredictor predictor = new LastPricePredictor();
 
   /**
    * market to trade in
@@ -193,6 +211,10 @@ class ZeroKnowledgeTrader implements Trader
     schedule.scheduleRepeating(Phase.PLACE_QUOTES,trade);
 
   }
+
+
+  double predictPrice(double expectedChangeInQuantity) => predictor
+  .predictPrice(this,expectedChangeInQuantity);
 
   earn(double amount)=>_money.receive(amount);
 
@@ -453,3 +475,16 @@ trader.remove(depreciationRate*trader.good);
  */
 DawnEvent ResetInventories(Inventory inventory)=>(Trader trader)=>
 inventory.resetCounters();
+
+
+/**
+ * an inventory with a bunch of traders
+ */
+class Firm extends Object with Inventory{
+
+
+  Map<String,ZeroKnowledgeTrader> salesDepartments;
+  Map<String,ZeroKnowledgeTrader> purchaseDepartments;
+
+
+}

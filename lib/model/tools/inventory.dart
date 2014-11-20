@@ -38,13 +38,6 @@ class Inventory implements HasInventory{
   double hasHowMuch(String goodType)=>getSection(goodType).amount;
 
   /**
-   * schedule itself to call reset counters every dawn
-   */
-  void autoresetCounters(Schedule s){
-    s.scheduleRepeating(Phase.DAWN,(s)=>resetCounters());
-  }
-
-  /**
    * zeroes inflows and outflows
    */
   void resetCounters(){
@@ -52,6 +45,9 @@ class Inventory implements HasInventory{
       section._resetCounters();
 
   }
+
+  double inflow(String goodType)=> getSection(goodType)._inflow;
+  double outflow(String goodType)=> getSection(goodType)._outflow;
 
 
 

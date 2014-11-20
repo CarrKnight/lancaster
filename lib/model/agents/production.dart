@@ -23,8 +23,6 @@ class SISOProductionFunction
   double multiplier;
 
 
-
-
   /**
    * how much gets produced given this inventory
    */
