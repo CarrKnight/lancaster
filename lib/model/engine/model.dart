@@ -230,6 +230,7 @@ class OneMarketCompetition extends Scenario
   double purchaseMinI=0.05; double purchaseMaxI=.5;
   //plant
   double productionMultiplier = 1.0;
+  int competitors = 1;
 
   /**
    * called to build the pricer of hr. By default it creates a marginal
@@ -266,16 +267,16 @@ class OneMarketCompetition extends Scenario
     hr.predictor = new LastPricePredictor();
   };
 
-  int competitors = 1;
 
 
   start(Model model) {
 
-    Firm mainFirm = new Firm();
     Random random = model.random;
 
 
     for(int competitor =0; competitor< competitors; competitor++) {
+      Firm mainFirm = new Firm();
+
       //build plant
       SISOProductionFunction function = new SISOProductionFunction();
       SISOPlant plant = new SISOPlant(mainFirm.getSection("labor"),

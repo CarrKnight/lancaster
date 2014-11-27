@@ -47,7 +47,7 @@ learnedCompetitorTest(int competitors)
     LastPricePredictor();
   };
 
-  model.scenario = new OneMarketCompetition();
+  model.scenario = scenario;
   model.start();
 
   Market gas = model.markets["gas"];
@@ -63,4 +63,5 @@ learnedCompetitorTest(int competitors)
   expect(gas.quantityTraded,closeTo(50.0,1));
   expect(labor.averageClosingPrice,closeTo(50.0,1));
   expect(labor.quantityTraded,closeTo(50.0,1));
+  expect(model.agents.length,competitors);
 }
