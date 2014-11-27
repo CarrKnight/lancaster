@@ -12,7 +12,7 @@ main(){
 
   test("simple seller scenario",(){
 
-    Model model = new Model(0,new Scenario.simpleSeller());
+    Model model = new Model(0,new SimpleScenario.simpleSeller());
     model.start();
 
 
@@ -41,7 +41,7 @@ main(){
     test("4 competitors seller",(){
 
       var seed = (new Random()).nextInt((1 << 32) - 1);
-      Model model = new Model(0,new Scenario.simpleSeller(minInitialPrice: 0.0,
+      Model model = new Model(0,new SimpleScenario.simpleSeller(minInitialPrice: 0.0,
       maxInitialPrice : 100.0,competitors:4,dailyFlow:10.0,
       seed: seed));
       model.start();
@@ -73,7 +73,7 @@ main(){
 
   test("simple buyer scenario",(){
 
-    Model model = new Model(0,new Scenario.simpleBuyer());
+    Model model = new Model(0,new SimpleScenario.simpleBuyer());
     model.start();
 
 
@@ -100,7 +100,7 @@ main(){
     test("4 competitors buyers",(){
       var seed = (new Random()).nextInt((1 << 32) - 1);
 
-      Model model = new Model(0,new Scenario.simpleBuyer(minInitialPrice: 0.0,
+      Model model = new Model(0,new SimpleScenario.simpleBuyer(minInitialPrice: 0.0,
       maxInitialPrice : 100.0,competitors:4,dailyTarget:10.0,
       seed: seed));
       model.start();

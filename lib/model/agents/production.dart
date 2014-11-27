@@ -51,11 +51,11 @@ class SISOPlant
 
 
   SISOPlant.defaultSISO(Inventory inventory):
-  this(inventory.getSection("gas"),inventory.getSection("labor"),
+  this(inventory.getSection("labor"),inventory.getSection("gas"),
   new SISOProductionFunction());
 
 
-  SISOPlant(this.output, this.input, this.function);
+  SISOPlant( this.input,this.output, this.function);
 
   /**
    * given this inventory, produce output and add it (and if needed consume
@@ -66,6 +66,13 @@ class SISOPlant
       input.remove(function.consumption(input.amount));
   }
 
+  /**
+   * schedule itself to repeatedly produce
+   */
+  void start(Schedule schedule)
+  {
+    schedule.scheduleRepeating(Phase.PRODUCTION,(schedule)=>produce());
+  }
 
 
   String get inputType=>input.goodType;

@@ -13,7 +13,7 @@ class Firm extends Object with Inventory{
 
   final Map<String,ZeroKnowledgeTrader> salesDepartments = new HashMap();
   final Map<String,ZeroKnowledgeTrader> purchasesDepartments = new HashMap();
-  List<SISOPlant> plants;
+  final List<SISOPlant> plants = new List();
 
 
   /**
@@ -33,6 +33,8 @@ class Firm extends Object with Inventory{
       t(this,s);
     }
     todo.clear();
+    //schedule resetting counters
+    s.scheduleRepeating(Phase.DAWN,(s)=>resetCounters());
   }
 
   /**
@@ -70,6 +72,13 @@ class Firm extends Object with Inventory{
   }
 
 
+  void addPlant(SISOPlant plant){
+    plants.add(plant);
+
+    //prepare to start
+    startWhenPossible((f,s)=>plant.start(s));
+  }
+
   /**
    * give a function that is called immediately if the firm has started or at
    * start() otherwise
@@ -79,7 +88,7 @@ class Firm extends Object with Inventory{
     //if we have been started already
     if(_schedule !=null)
       startable(this,_schedule);
-      //otherwise it add it to the list of things to start
+    //otherwise it add it to the list of things to start
     else
       todo.add(startable);
   }

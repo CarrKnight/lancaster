@@ -7,6 +7,7 @@ library firm.test;
 
 import 'package:mockito/mockito.dart';
 import 'package:unittest/unittest.dart';
+import 'dart:math';
 import 'package:lancaster/model/lancaster_model.dart';
 
 
@@ -61,4 +62,33 @@ main()
     verify(t.start(any));
 
   });
+
+
+  //buy,sell,produce at a fixed target of 10 workers
+  test("Hires, Produces and Sells",(){
+
+    for(int i=0; i<5;i++) {
+      var seed = (new Random()).nextInt((1 << 32) - 1);
+
+      Model model = new Model(seed, new SimpleFirmScenario());
+
+      model.start();
+      Market gas = model.markets["gas"];
+      Market labor = model.markets["labor"];
+      Firm firm = model.agents[0] as Firm;
+      for (int i = 0; i < 1000; i++) {
+        model.schedule.simulateDay();
+        /*    print('''gas price: ${gas.averageClosingPrice} workers' wages: ${labor
+      .averageClosingPrice}''');
+      print('''gas inv: ${firm.hasHowMuch("gas")} workers hired: ${firm
+      .hasHowMuch("labor")}''');
+      */
+      }
+
+      expect(gas.averageClosingPrice, 90.0);
+      expect(labor.averageClosingPrice, 10.0);
+    }
+  });
+
+
 }

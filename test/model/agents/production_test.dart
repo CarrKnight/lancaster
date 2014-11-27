@@ -49,5 +49,33 @@ main(){
 
 
   });
+
+
+  test("multiple productions",(){
+    SISOProductionFunction function = new SISOProductionFunction(multiplier:2.0,
+    consumeInput:true);
+    Inventory totalInventory = new Inventory();
+    Schedule s = new Schedule();
+
+
+    SISOPlant plant = new SISOPlant.defaultSISO(totalInventory);
+    totalInventory.receive("labor",100.0);
+    plant.start(s);
+    plant.function.multiplier=2.0;
+    expect(totalInventory.hasHowMuch("gas"),0);
+    expect(totalInventory.hasHowMuch("labor"),100);
+
+    s.simulateDay();
+    expect(totalInventory.hasHowMuch("gas"),200);
+    expect(totalInventory.hasHowMuch("labor"),0);
+    totalInventory.receive("labor",100.0);
+    s.simulateDay();
+    expect(totalInventory.hasHowMuch("gas"),400);
+    expect(totalInventory.hasHowMuch("labor"),0);
+
+
+
+
+  });
 }
 

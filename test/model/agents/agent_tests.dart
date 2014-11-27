@@ -8,10 +8,12 @@ import 'pricing_test.dart' as pricing;
 import 'seller_test.dart' as seller;
 import 'production_test.dart' as production;
 import 'maximization_test.dart' as maximization;
+import 'firm_test.dart' as firm;
 
 main(){
   pricing.main();
   seller.main();
   production.main();
   maximization.main();
+  firm.main();
 }
