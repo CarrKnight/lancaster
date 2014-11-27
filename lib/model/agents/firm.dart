@@ -11,8 +11,8 @@ part of lancaster.model;
 class Firm extends Object with Inventory{
 
 
-  Map<String,ZeroKnowledgeTrader> salesDepartments;
-  Map<String,ZeroKnowledgeTrader> purchaseDepartments;
+  final Map<String,ZeroKnowledgeTrader> salesDepartments = new HashMap();
+  final Map<String,ZeroKnowledgeTrader> purchasesDepartments = new HashMap();
   List<SISOPlant> plants;
 
 
@@ -22,6 +22,67 @@ class Firm extends Object with Inventory{
   Schedule _schedule;
   List<toStart> todo = new List();
 
+
+  start(Schedule s)
+  {
+    assert(_schedule==null);
+    _schedule = s;
+    //start all the startable
+    for(toStart t in todo)
+    {
+      t(this,s);
+    }
+    todo.clear();
+  }
+
+  /**
+   * add to the map and auto-schedules to start when the firm starts
+   */
+  void addSalesDepartment(ZeroKnowledgeTrader sales)
+  {
+    /**
+     * store in map
+     */
+    assert(!salesDepartments.containsKey(sales.goodType));
+    salesDepartments[sales.goodType]=sales;
+    assert(salesDepartments.containsKey(sales.goodType));
+
+    //prepare to start
+    startWhenPossible((f,s)=>sales.start(s));
+
+  }
+
+  /**
+   * add to the map and auto-schedules to start when the firm starts
+   */
+  void addPurchasesDepartment(ZeroKnowledgeTrader purchases)
+  {
+    /**
+     * store in map
+     */
+    assert(!purchasesDepartments.containsKey(purchases.goodType));
+    purchasesDepartments[purchases.goodType]=purchases;
+    assert(purchasesDepartments.containsKey(purchases.goodType));
+
+    //prepare to start
+    startWhenPossible((f,s)=>purchases.start(s));
+
+  }
+
+
+  /**
+   * give a function that is called immediately if the firm has started or at
+   * start() otherwise
+   */
+  void startWhenPossible(toStart startable)
+  {
+    //if we have been started already
+    if(_schedule !=null)
+      startable(this,_schedule);
+      //otherwise it add it to the list of things to start
+    else
+      todo.add(startable);
+  }
 
 
 }

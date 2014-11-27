@@ -79,6 +79,22 @@ class MarginalMaximizer implements Extractor
   // now and then. This has average 20 (negative binomial)
 
 
+  MarginalMaximizer();
+
+
+  /**
+   * build a marginal maximizer and set it to start when the firm starts.
+   */
+  factory MarginalMaximizer.forHumanResources(SISOPlant plant, Trader
+  laborBuyer, Firm firm, Random r)
+  {
+
+    MarginalMaximizer toReturn = new MarginalMaximizer();
+    firm.startWhenPossible((f,s)=> toReturn.start(s,f,r,plant,laborBuyer));
+    return toReturn;
+
+  }
+
   /**
    * Basically try to find the new target
    */
@@ -109,12 +125,18 @@ class MarginalMaximizer implements Extractor
 
   }
 
-//todo this requires a firm or something
-  void start(Schedule s, Trader buyer, Trader seller, Random r,
-             SISOProductionFunction production){
+  void start(Schedule s, Firm firm, Random r, SISOPlant producer, Trader buyer)
+  {
+    Trader seller = firm.salesDepartments[producer.outputType];
+
     s.scheduleRepeating(Phase.ADJUST_PRODUCTION,(s)=>updateTarget(r,buyer,
-    seller,production,seller.currentOutflow));
+    seller,producer.function,seller.currentOutflow));
   }
+
+
+
+
+
 
   double extract(Data data) {
     return currentTarget;
