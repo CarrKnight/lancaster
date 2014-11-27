@@ -91,22 +91,32 @@ class PIDPricing implements PricingStrategy
   offset:initialPrice, p:p,i:i,d:d);
 
   PIDPricing.FixedInflowBuyer({double flowTarget:1.0, double initialPrice: 0.0,
-                           double p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
-                           double i: PIDController.DEFAULT_INTEGRAL_PARAMETER,
-                           double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER
-                           }) :
+                              double p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
+                              double i: PIDController.DEFAULT_INTEGRAL_PARAMETER,
+                              double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER
+                              }) :
   // controlled variable = -outflow the minuses to adapt the right way
   this(new FixedExtractor(flowTarget),
   new SimpleExtractor("inflow"),
   offset:initialPrice, p:p,i:i,d:d);
 
+  PIDPricing.MaximizerBuyer(SISOPlant plant, Firm firm, Random r,
+                            {double initialPrice: 0.0,
+                            double p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
+                            double i: PIDController.DEFAULT_INTEGRAL_PARAMETER,
+                            double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER
+                            }) :
+  // controlled variable = -outflow the minuses to adapt the right way
+  this(new MarginalMaximizer.forHumanResources(plant,firm,r),
+  new SimpleExtractor("inflow"),
+  offset:initialPrice, p:p,i:i,d:d);
 
 
   PIDPricing.FixedInventoryBuyer({double inventoryTarget:1.0, double initialPrice: 0.0,
-                              double p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
-                              double i: PIDController.DEFAULT_INTEGRAL_PARAMETER,
-                              double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER
-                              }) :
+                                 double p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
+                                 double i: PIDController.DEFAULT_INTEGRAL_PARAMETER,
+                                 double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER
+                                 }) :
   // controlled variable = -outflow the minuses to adapt the right way
   this(new FixedExtractor(inventoryTarget),
   new SimpleExtractor("inventory"),
@@ -181,8 +191,8 @@ class BufferInventoryPricing implements PricingStrategy
     _originalTargetExtractor = delegate.targetExtractor;
     assert(_originalTargetExtractor != null);
     if( optimalInventory < 0 ||
-        criticalInventory < 0 ||
-        criticalInventory >=optimalInventory )
+    criticalInventory < 0 ||
+    criticalInventory >=optimalInventory )
       throw new ArgumentError(
           "'inventory targets must >0 and critical<optimal");
   }

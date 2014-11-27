@@ -45,7 +45,7 @@ _EffectEstimate computeMarginalEffect(Trader trader,
   //compute totals
   double totalUp = priceUp*(currentInputLevel+deltaInput);
   double totalNow = priceNow*(currentInputLevel);
-  double totalDown = deltaInput>=currentInputLevel? 0 : priceDown*
+  double totalDown = deltaInput>=currentInputLevel? 0.0 : priceDown*
   (currentInputLevel-deltaInput);
 
   //compute marginals, use infinity if the total  is not finite
@@ -85,12 +85,12 @@ class MarginalMaximizer implements Extractor
   /**
    * build a marginal maximizer and set it to start when the firm starts.
    */
-  factory MarginalMaximizer.forHumanResources(SISOPlant plant, Trader
-  laborBuyer, Firm firm, Random r)
+  factory MarginalMaximizer.forHumanResources(SISOPlant plant, Firm firm,
+                                              Random r)
   {
 
     MarginalMaximizer toReturn = new MarginalMaximizer();
-    firm.startWhenPossible((f,s)=> toReturn.start(s,f,r,plant,laborBuyer));
+    firm.startWhenPossible((f,s)=> toReturn.start(s,f,r,plant));
     return toReturn;
 
   }
@@ -125,9 +125,10 @@ class MarginalMaximizer implements Extractor
 
   }
 
-  void start(Schedule s, Firm firm, Random r, SISOPlant producer, Trader buyer)
+  void start(Schedule s, Firm firm, Random r, SISOPlant producer)
   {
     Trader seller = firm.salesDepartments[producer.outputType];
+    Trader buyer = firm.purchasesDepartments[producer.inputType];
 
     s.scheduleRepeating(Phase.ADJUST_PRODUCTION,(s)=>updateTarget(r,buyer,
     seller,producer.function,seller.currentOutflow));

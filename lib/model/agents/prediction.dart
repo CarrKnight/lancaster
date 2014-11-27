@@ -39,6 +39,6 @@ class LastPricePredictor implements PricePredictor
     return _singleton;
   }
 
-  double predictPrice(Trader trader, double changeInInput, SISOPlant plant) =>
+  double predictPrice(Trader trader, double changeInInput) =>
   trader.lastClosingPrice;
 }
