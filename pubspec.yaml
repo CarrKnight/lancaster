@@ -5,9 +5,7 @@ description: A monopolistic competition model that would hopefully run straight 
 dependencies:
   angular: 1.0.0
   browser: any
-  observe: any
   charted: any
-  perf_api: 0.0.9
 dev_dependencies:
   mockito:
     git: https://github.com/fibulwinter/dart-mockito.git

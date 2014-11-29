@@ -2,7 +2,7 @@
  * Copyright (c) 2014 to Ernesto Carrella.
  * This is open source on MIT license. Isn't this jolly?
  */
-
+library inventory.test;
 import 'package:unittest/unittest.dart';
 import 'package:lancaster/model/lancaster_model.dart';
 

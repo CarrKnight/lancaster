@@ -52,4 +52,5 @@ part 'market/linear.dart';
  */
 part 'tools/agent_data.dart';
 part 'tools/inventory.dart';
+part 'tools/kalman.dart';
 part 'tools/pid_controller.dart';

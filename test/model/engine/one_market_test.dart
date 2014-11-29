@@ -5,25 +5,24 @@
 library one_market.test;
 import 'package:unittest/unittest.dart';
 import 'package:lancaster/model/lancaster_model.dart';
-import 'dart:math';
 
 
 main()
 {
 
   //one agent working as competitive
-  test("Fake competitive", (){
+  for(int i=0;i<5;i++)
+    test("Fake competitive", (){
 
-    for(int i=0;i<5;i++)
       learnedCompetitorTest(1);
 
 
   });
 
   //five agents, all learned
-  test("Fake competitive", (){
+  for(int i=0;i<5;i++)
+    test("Learned competitive", (){
 
-    for(int i=0;i<5;i++)
       learnedCompetitorTest(5);
 
 
