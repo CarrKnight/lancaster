@@ -31,6 +31,11 @@ class KalmanFilter
   double noiseVariance = 1.0;
 
 
+  double forgettingFactor = 1.0;
+
+  double maxTraceToStopForgetting = 100.0;
+
+
 
 
   /**
@@ -112,6 +117,28 @@ class KalmanFilter
     }
   }
 
+  _forget(double trace) {
+    if (trace < maxTraceToStopForgetting && forgettingFactor < 1.0 &&
+    forgettingFactor > 0)
+      for (int i = 0;i < dimension;i++)
+        for (int j = 0;j < dimension;j++)
+          pCovariance[i][j] /= forgettingFactor;
+  }
+
+  double _updateP(List<List<double>> newP) {
+    double trace = 0.0;
+    for (int i = 0;i < dimension;i++)
+      for (int j = 0;j < dimension;j++)
+        if (i == j) {
+          double diagonal = newP[i][j];
+          pCovariance[i][j] = diagonal;
+          trace += diagonal;
+        }
+        else
+          pCovariance[i][j] = 0.5 * newP[i][j] + 0.5 * newP[j][i];
+    return trace;
+  }
+
   void _updateCovarianceP(List<double> observation) {
     List<List<double>> toMultiply = new List(dimension);
     for(int i=0;i<dimension; i++)
@@ -147,11 +174,15 @@ class KalmanFilter
     //todo reject if any eigenvalue is negative
 
 
-    //copy the new result into the old matrix
-    pCovariance = newP;
 
 
+    //copy the new result into the old matrix with a trick to keep it
+    // positive definite. Basically P_{t+1} = 0.5 P_t + 0.5 P'_t
+    var trace = _updateP(newP);
 
+
+    //exponential forgetting, if needed
+    _forget(trace);
 
 
   }
