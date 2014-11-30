@@ -52,6 +52,8 @@ abstract class Trader
 
   get good;
 
+  Data get data;
+
 }
 
 
@@ -66,6 +68,8 @@ class DummyTrader implements Trader
   InventoryCrossSection _money;
 
   double _lastClosingPrice = double.NAN;
+
+  double lastOfferedPrice = double.NAN;
 
 
   DummyTrader([String goodType= "gas"])
@@ -100,14 +104,11 @@ class DummyTrader implements Trader
 
   get good =>  _inventory.amount;
 
+  get data=>null;
 
   get money =>_money.amount;
 
   double get lastClosingPrice => _lastClosingPrice;
-
-  double get lastOfferedPrice => double.NAN;
-
-  void set lastOfferedPrice(double d){}
 
   double get currentOutflow => double.NAN;
 
@@ -206,6 +207,8 @@ class ZeroKnowledgeTrader implements Trader
     _data.start(schedule);
     //register yourself
     tradingStrategy.start(schedule,this,market,_data,pricing);
+    //strategies start
+    predictor.start(this,schedule,data);
 
     schedule.scheduleRepeating(Phase.DAWN,dawn);
     schedule.scheduleRepeating(Phase.PLACE_QUOTES,trade);
@@ -230,6 +233,8 @@ class ZeroKnowledgeTrader implements Trader
 
 
   String get goodType  => _inventory.goodType;
+
+  Data get data =>_data;
 
 
   get good =>  _inventory.amount;

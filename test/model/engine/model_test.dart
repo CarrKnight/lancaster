@@ -65,8 +65,8 @@ main(){
       );
 
       //should be correct by now
-      expect(gasMarket.quantityTraded,closeTo(40,1));
-      expect(gasMarket.averageClosingPrice,closeTo(60,1));
+      expect(gasMarket.quantityTraded,closeTo(40,1.5));
+      expect(gasMarket.averageClosingPrice,closeTo(60,1.5));
     });
 
 

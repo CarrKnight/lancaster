@@ -231,6 +231,7 @@ class OneMarketCompetition extends Scenario
   //plant
   double productionMultiplier = 1.0;
   int competitors = 1;
+  List<Firm> firms = new List();
 
   /**
    * called to build the pricer of hr. By default it creates a marginal
@@ -275,15 +276,15 @@ class OneMarketCompetition extends Scenario
 
 
     for(int competitor =0; competitor< competitors; competitor++) {
-      Firm mainFirm = new Firm();
+      Firm firm = new Firm();
 
       //build plant
       SISOProductionFunction function = new SISOProductionFunction();
-      SISOPlant plant = new SISOPlant(mainFirm.getSection("labor"),
-      mainFirm.getSection("gas"), function);
-      mainFirm.addPlant(plant);
+      SISOPlant plant = new SISOPlant(firm.getSection("labor"),
+      firm.getSection("gas"), function);
+      firm.addPlant(plant);
 
-      model.agents.add(mainFirm);
+      model.agents.add(firm);
 
       //build labor market
       ExogenousBuyerMarket laborMarket = new ExogenousBuyerMarket.linear
@@ -294,10 +295,10 @@ class OneMarketCompetition extends Scenario
       //build hr
       (maxInitialPriceBuying - minInitialPriceBuying) + minInitialPriceBuying;
       ZeroKnowledgeTrader hr = new ZeroKnowledgeTrader(laborMarket,
-      hrPricingInitialization(plant, mainFirm, random, this), new
-      SimpleBuyerTrading(), mainFirm);
+      hrPricingInitialization(plant, firm, random, this), new
+      SimpleBuyerTrading(), firm);
       hrIntializer(hr);
-      mainFirm.addPurchasesDepartment(hr);
+      firm.addPurchasesDepartment(hr);
 
       //build sales market
       ExogenousSellerMarket market = new ExogenousSellerMarket.linear
@@ -311,10 +312,11 @@ class OneMarketCompetition extends Scenario
       double initialPrice = random.nextDouble() *
       (maxInitialPriceSelling - minInitialPriceSelling) + minInitialPriceSelling;
       ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader.PIDBufferSeller(
-          market, initialPrice:initialPrice, p:p, i:i, givenInventory:mainFirm);
+          market, initialPrice:initialPrice, p:p, i:i, givenInventory:firm);
       salesInitializer(seller);
-      mainFirm.addSalesDepartment(seller);
-      mainFirm.start(model.schedule);
+      firm.addSalesDepartment(seller);
+      firm.start(model.schedule);
+      firms.add(firm);
 
     }
   }
