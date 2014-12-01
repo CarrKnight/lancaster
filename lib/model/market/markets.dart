@@ -53,7 +53,7 @@ abstract class Market{
 
 abstract class AsksOrderBook{
 
-  final Set<Trader> sellers = new LinkedHashSet();
+  final Set<Trader> sellers = new HashSet();
 
   final List<_TradeQuote> _asks = new List();
 

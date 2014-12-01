@@ -23,30 +23,41 @@ main()
   for(int i=0;i<5;i++)
     test("Learned competitive", (){
 
-      learnedCompetitorTest(5);
+      oneMarketTest(true,5);
+
+    });
+
+  //five agents, learning
+  //fails about 3% of the time, unfortunately
+  for(int i=0;i<5;i++)
+    test("Learning competitive", (){
+
+      oneMarketTest(false,5);
 
     });
 
   for(int i=0;i<5;i++)
     test("Learned Monopolist", (){ //knows the price impacts
-      monopolistTest(true);
+      oneMarketTest(true);
     });
 
   for(int i=0;i<5;i++)
-    test("Learnin Monopolist", (){ //knows the price impacts
-      monopolistTest(false);
+    test("Learning Monopolist", (){ //knows the price impacts
+      oneMarketTest(false);
     });
 
 }
 
-monopolistTest(bool learned)
+oneMarketTest(bool learned, [int competitors=1])
 {
   Model model = new Model.randomSeed();
   OneMarketCompetition scenario = new OneMarketCompetition();
+  scenario.competitors = competitors;
+
   //doesn't add slopes when predicting prices
   scenario.salesInitializer = (ZeroKnowledgeTrader sales) {
     if(learned)
-      sales.predictor = new FixedSlopePredictor(-1.0);
+      sales.predictor = new FixedSlopePredictor(competitors == 1 ? -1.0 : 0.0);
     else {
       KalmanPricePredictor kalman = new KalmanPricePredictor("outflow");
       //in the original model I used to regress on inflow. I might have to do
@@ -67,7 +78,7 @@ monopolistTest(bool learned)
   };
   scenario.hrIntializer = (ZeroKnowledgeTrader hr) {
     if(learned)
-      hr.predictor = new FixedSlopePredictor(1.0);
+      hr.predictor = new FixedSlopePredictor(competitors == 1 ? 1.0 : 0.0);
     else
     //no inventory no problem.
       hr.predictor = new KalmanPricePredictor("inflow");
@@ -76,23 +87,45 @@ monopolistTest(bool learned)
   model.scenario = scenario;
   model.start();
 
-  Market gas = model.markets["gas"];
-  Market labor = model.markets["labor"];
 
-  for (int i = 0; i < 3000; i++) {
+
+  //run the simulation!
+  for (int i = 0; i < 2500; i++) {
     model.schedule.simulateDay();
   }
+  Market gasMarket = model.markets["gas"];
+  Market laborMarket = model.markets["labor"];
+  //take average over last 500 days
+  List<double> gasPrice = new List(500);
+  List<double> wage = new List(500);
+  for (int i = 0; i < 500; i++)
+  {
+    model.schedule.simulateDay();
+    gasPrice[i]=gasMarket.averageClosingPrice;
+    wage[i]=laborMarket.averageClosingPrice;
+  }
 
-  print('''gas price: ${gas.averageClosingPrice} workers' wages: ${labor
-  .averageClosingPrice}\n''');
+
+  double averageGas= 0.0; gasPrice.forEach((e)=>averageGas+=e);averageGas/=500;
+  double averageWage= 0.0; wage.forEach((e)=>averageWage+=e);averageWage/=500;
   double salesSlope = scenario.firms[0].salesDepartments["gas"].predictedSlope;
-  double hrSlope = scenario.firms[0].purchasesDepartments["labor"]
-  .predictedSlope;
+  double hrSlope = scenario.firms[0].purchasesDepartments["labor"].predictedSlope;
+  print('''gas price: ${gasMarket.averageClosingPrice} workers' wages: ${laborMarket
+  .averageClosingPrice}\n''');
   print("sales slope: $salesSlope hr slope: $hrSlope\n");
 
   //expect monopolist making money
-  expect(gas.averageClosingPrice,75);
-  expect(labor.averageClosingPrice,25);
+  if(competitors==1) {
+    expect(gasMarket.averageClosingPrice, 75);
+    expect(laborMarket.averageClosingPrice, 25);
+  }
+  else
+  {
+    expect(averageGas, closeTo(50,5));
+    expect(averageWage, closeTo(50,5));
+  }
+
+
 }
 
 

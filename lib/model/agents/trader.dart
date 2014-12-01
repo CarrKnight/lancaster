@@ -421,7 +421,9 @@ class SimpleSellerTrading extends TradingStrategy<SellerMarket>
    */
   void start(Schedule s, Trader trader, SellerMarket market, Data data,
              PricingStrategy strategy) {
+    assert(!market.sellers.contains(trader));
     market.sellers.add(trader);
+    assert(market.sellers.contains(trader));
 
   }
 

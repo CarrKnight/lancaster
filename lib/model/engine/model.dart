@@ -274,6 +274,18 @@ class OneMarketCompetition extends Scenario
 
     Random random = model.random;
 
+    //build labor market
+    ExogenousBuyerMarket laborMarket = new ExogenousBuyerMarket.linear
+    (intercept:supplyIntercept, slope:supplySlope, goodType : "labor");
+    laborMarket.start(model.schedule);
+    model.markets["labor"] = laborMarket;
+
+    //build sales market
+    ExogenousSellerMarket market = new ExogenousSellerMarket.linear
+    (intercept:demandIntercept, slope:demandSlope);
+    market.start(model.schedule);
+    model.markets["gas"] = market;
+
 
     for(int competitor =0; competitor< competitors; competitor++) {
       Firm firm = new Firm();
@@ -286,11 +298,7 @@ class OneMarketCompetition extends Scenario
 
       model.agents.add(firm);
 
-      //build labor market
-      ExogenousBuyerMarket laborMarket = new ExogenousBuyerMarket.linear
-      (intercept:supplyIntercept, slope:supplySlope, goodType : "labor");
-      laborMarket.start(model.schedule);
-      model.markets["labor"] = laborMarket;
+
 
       //build hr
       (maxInitialPriceBuying - minInitialPriceBuying) + minInitialPriceBuying;
@@ -300,11 +308,7 @@ class OneMarketCompetition extends Scenario
       hrIntializer(hr);
       firm.addPurchasesDepartment(hr);
 
-      //build sales market
-      ExogenousSellerMarket market = new ExogenousSellerMarket.linear
-      (intercept:demandIntercept, slope:demandSlope);
-      market.start(model.schedule);
-      model.markets["gas"] = market;
+
 
       //build sales
       double p = random.nextDouble() * (salesMaxP - salesMinP) + salesMinP;

@@ -29,8 +29,8 @@ class _EffectEstimate{
  * compute marginal benefits and costs.
  */
 _EffectEstimate computeMarginalEffect(Trader trader,
-                                  double currentInputLevel,
-                                  double deltaInput, [double defaultReturn =
+                                      double currentInputLevel,
+                                      double deltaInput, [double defaultReturn =
     double.INFINITY]){
 
   //cost expected now
@@ -99,15 +99,20 @@ class MarginalMaximizer implements Extractor
    * Basically try to find the new target
    */
   void updateTarget(Random random, Trader buyer,Trader seller,
-  SISOProductionFunction production, double currentValue)
+                    SISOProductionFunction production, double currentValue)
   {
-   if(random.nextDouble()>updateProbability) //only act every now and then
-     return;
+    if(random.nextDouble()>updateProbability) //only act every now and then
+      return;
 
     var costs = computeMarginalEffect(buyer,currentTarget,delta);
+    //if there are no estimates, return
+    if(identical(costs, _EffectEstimate.NO_ESTIMATE))
+      return;
     var benefits = computeMarginalEffect(seller,production.production
     (currentTarget), production.multiplier*delta,0.0);
-
+    //if there are no estimates, return
+    if(identical(benefits, _EffectEstimate.NO_ESTIMATE))
+      return;
 
     double marginalProfitUp = benefits.marginalEffectUp-costs.marginalEffectUp;
     double marginalProfitDown = benefits.marginalEffectDown-costs
