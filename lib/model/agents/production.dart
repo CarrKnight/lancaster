@@ -5,6 +5,21 @@
 part of lancaster.model;
 
 
+abstract class SISOProductionFunction
+{
+  /**
+   * how much is produced given input
+   */
+  double production(double input);
+
+  /**
+   * how much of the input gets consumed
+   */
+  double consumption(double input);
+
+
+}
+
 /**
  * compute how much gets produced and how much gets consumed given inputs.
  * Doesn't actually produce anything. Useful for hypotheticals and marginals.
@@ -12,7 +27,7 @@ part of lancaster.model;
  * For now this only works on single input->single ouput. Might make more
  * complicated later
  */
-class SISOProductionFunction
+class LinearProductionFunction implements SISOProductionFunction
 {
 
   bool consumeInput;
@@ -23,17 +38,43 @@ class SISOProductionFunction
   double multiplier;
 
 
+  LinearProductionFunction({this.consumeInput:true, this.multiplier:1.0});
   /**
    * how much gets produced given this inventory
    */
-  SISOProductionFunction({this.consumeInput:true, this.multiplier:1.0});
-
   double production(double input) => input * multiplier;
 
   /**
    * how much of the input would get consumed during production?
    */
   double consumption(double input ) => consumeInput ? input : 0.0;
+
+}
+
+/**
+ * output = [multiplier]*input^[exponent]
+ */
+class ExponentialProductionFunction implements SISOProductionFunction
+{
+
+  double exponent;
+
+  double multiplier;
+
+  ExponentialProductionFunction({this.multiplier:1.0,this.exponent:1.0});
+
+
+  /**
+   * output = [multiplier]*input^[exponent]
+   */
+  double production(double input) => pow(input,exponent) * multiplier;
+
+  /**
+   * consume all
+   */
+  double consumption(double input ) => input;
+
+
 
 }
 
@@ -52,7 +93,7 @@ class SISOPlant
 
   SISOPlant.defaultSISO(Inventory inventory):
   this(inventory.getSection("labor"),inventory.getSection("gas"),
-  new SISOProductionFunction());
+  new LinearProductionFunction());
 
 
   SISOPlant( this.input,this.output, this.function);

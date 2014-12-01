@@ -38,7 +38,7 @@ main(){
     when(buyer.predictPrice(-.5)).thenReturn(currentX-.5);
 
     //production: 1 input ==> 1 output
-    SISOProductionFunction func = new SISOProductionFunction();
+    LinearProductionFunction func = new LinearProductionFunction();
 
     //step it 100 times
     for(int i=0; i<100;i++)
@@ -84,7 +84,7 @@ main(){
     when(buyer.predictPrice(-.5)).thenReturn(currentX-.5);
 
     //production: 1 input ==> 1 output
-    SISOProductionFunction func = new SISOProductionFunction();
+    LinearProductionFunction func = new LinearProductionFunction();
 
     //step it 100 times
     for(int i=0; i<100;i++)

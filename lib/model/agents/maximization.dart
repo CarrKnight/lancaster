@@ -29,24 +29,27 @@ class _EffectEstimate{
  * compute marginal benefits and costs.
  */
 _EffectEstimate computeMarginalEffect(Trader trader,
-                                      double currentInputLevel,
-                                      double deltaInput, [double defaultReturn =
+                                      double currentLevel,
+                                      double deltaLevelUp,
+                                      double deltaLevelDown,
+                                      [double
+    defaultReturn =
     double.INFINITY]){
 
   //cost expected now
   double priceNow = trader.predictPrice(0.0);
-  double priceUp = trader.predictPrice(deltaInput);
-  double priceDown = trader.predictPrice(-deltaInput);
+  double priceUp = trader.predictPrice(deltaLevelUp);
+  double priceDown = trader.predictPrice(deltaLevelDown);
 
   //if you can't predict even no change price then give up
   if(priceNow.isNaN)
     return _EffectEstimate.NO_ESTIMATE;
 
   //compute totals
-  double totalUp = priceUp*(currentInputLevel+deltaInput);
-  double totalNow = priceNow*(currentInputLevel);
-  double totalDown = deltaInput>=currentInputLevel? 0.0 : priceDown*
-  (currentInputLevel-deltaInput);
+  double totalUp = priceUp*(currentLevel+deltaLevelUp);
+  double totalNow = priceNow*(currentLevel);
+  double totalDown = (-deltaLevelDown)>=currentLevel? 0.0 : priceDown*
+  (currentLevel+deltaLevelDown);
 
   //compute marginals, use infinity if the total  is not finite
   assert(totalNow.isFinite); //we wouldn't be here otherwise
@@ -99,21 +102,59 @@ class MarginalMaximizer implements Extractor
    * Basically try to find the new target
    */
   void updateTarget(Random random, Trader buyer,Trader seller,
-                    SISOProductionFunction production, double currentValue)
+                    LinearProductionFunction production, double currentValue)
   {
     if(random.nextDouble()>updateProbability) //only act every now and then
       return;
 
-    var costs = computeMarginalEffect(buyer,currentTarget,delta);
+    /**
+        .o88b.  .d88b.  .d8888. d888888b
+        d8P  Y8 .8P  Y8. 88'  YP `~~88~~'
+        8P      88    88 `8bo.      88
+        8b      88    88   `Y8b.    88
+        Y8b  d8 `8b  d8' db   8D    88
+        `Y88P'  `Y88P'  `8888Y'    YP
+     */
+    double consumption = production.consumption(currentTarget);
+    double deltaConsumptionUp =
+      production.consumption(currentTarget+delta) - consumption;
+    double deltaConsumptionDown =
+      production.consumption(currentTarget-delta) - consumption;
+
+    var costs = computeMarginalEffect(buyer,consumption,deltaConsumptionUp,
+    deltaConsumptionDown);
     //if there are no estimates, return
     if(identical(costs, _EffectEstimate.NO_ESTIMATE))
       return;
-    var benefits = computeMarginalEffect(seller,production.production
-    (currentTarget), production.multiplier*delta,0.0);
+
+    /**
+        d8888b. d88888b d8b   db d88888b d88888b d888888b d888888b
+        88  `8D 88'     888o  88 88'     88'       `88'   `~~88~~'
+        88oooY' 88ooooo 88V8o 88 88ooooo 88ooo      88       88
+        88~~~b. 88~~~~~ 88 V8o88 88~~~~~ 88~~~      88       88
+        88   8D 88.     88  V888 88.     88        .88.      88
+        Y8888P' Y88888P VP   V8P Y88888P YP      Y888888P    YP
+     */
+    double ouput = production.production(currentTarget);
+    double deltaOutputUp =
+    production.production(currentTarget+delta) - ouput;
+    double deltaOutputDown =
+    production.production(currentTarget-delta) - ouput;
+
+    var benefits = computeMarginalEffect(seller,ouput,deltaOutputUp ,
+    deltaOutputDown,0.0);
     //if there are no estimates, return
     if(identical(benefits, _EffectEstimate.NO_ESTIMATE))
       return;
 
+    /**
+        d8888b. d88888b  .o88b. d888888b .d8888. d888888b  .d88b.  d8b   db
+        88  `8D 88'     d8P  Y8   `88'   88'  YP   `88'   .8P  Y8. 888o  88
+        88   88 88ooooo 8P         88    `8bo.      88    88    88 88V8o 88
+        88   88 88~~~~~ 8b         88      `Y8b.    88    88    88 88 V8o88
+        88  .8D 88.     Y8b  d8   .88.   db   8D   .88.   `8b  d8' 88  V888
+        Y8888D' Y88888P  `Y88P' Y888888P `8888Y' Y888888P  `Y88P'  VP   V8P
+     */
     double marginalProfitUp = benefits.marginalEffectUp-costs.marginalEffectUp;
     double marginalProfitDown = benefits.marginalEffectDown-costs
     .marginalEffectDown;

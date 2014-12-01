@@ -196,7 +196,7 @@ class SimpleFirmScenario extends Scenario
 
 
     //build plant
-    SISOProductionFunction function = new SISOProductionFunction();
+    LinearProductionFunction function = new LinearProductionFunction();
     SISOPlant plant = new SISOPlant(mainFirm.getSection("labor"),
     mainFirm.getSection("gas"),function);
     mainFirm.addPlant(plant);
@@ -291,7 +291,7 @@ class OneMarketCompetition extends Scenario
       Firm firm = new Firm();
 
       //build plant
-      SISOProductionFunction function = new SISOProductionFunction();
+      LinearProductionFunction function = new LinearProductionFunction();
       SISOPlant plant = new SISOPlant(firm.getSection("labor"),
       firm.getSection("gas"), function);
       firm.addPlant(plant);

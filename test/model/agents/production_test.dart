@@ -10,7 +10,7 @@ import 'package:lancaster/model/lancaster_model.dart';
 
 main(){
   test("production function works",(){
-    SISOProductionFunction function = new SISOProductionFunction
+    LinearProductionFunction function = new LinearProductionFunction
     (multiplier:2.0,consumeInput:true);
 
     expect(function.production(100.0),200);
@@ -29,14 +29,14 @@ main(){
 
 
   test("plant produces correctly",(){
-    SISOProductionFunction function = new SISOProductionFunction(multiplier:2.0,
+    LinearProductionFunction function = new LinearProductionFunction(multiplier:2.0,
     consumeInput:true);
     Inventory totalInventory = new Inventory();
 
 
     SISOPlant plant = new SISOPlant.defaultSISO(totalInventory);
     totalInventory.receive("labor",100.0);
-    plant.function.multiplier=2.0;
+    (plant.function as LinearProductionFunction).multiplier=2.0;
 
     expect(totalInventory.hasHowMuch("gas"),0);
     expect(totalInventory.hasHowMuch("labor"),100);
@@ -52,7 +52,7 @@ main(){
 
 
   test("multiple productions",(){
-    SISOProductionFunction function = new SISOProductionFunction(multiplier:2.0,
+    LinearProductionFunction function = new LinearProductionFunction(multiplier:2.0,
     consumeInput:true);
     Inventory totalInventory = new Inventory();
     Schedule s = new Schedule();
@@ -61,7 +61,7 @@ main(){
     SISOPlant plant = new SISOPlant.defaultSISO(totalInventory);
     totalInventory.receive("labor",100.0);
     plant.start(s);
-    plant.function.multiplier=2.0;
+    (plant.function as LinearProductionFunction).multiplier=2.0;
     expect(totalInventory.hasHowMuch("gas"),0);
     expect(totalInventory.hasHowMuch("labor"),100);
 
