@@ -93,6 +93,8 @@ class FixedSlopePredictor implements PricePredictor
 
 }
 
+typedef bool DataValidator(double x,double y);
+
 /**
  * runs a kalman linear regression price~a+b*quantity and then predicts:
  * newPrice = lastClosingPrice + b* quantityChange.
@@ -121,6 +123,12 @@ class KalmanPricePredictor implements PricePredictor
   final KalmanFilter filter;
 
   final FixedSlopePredictor delegate;
+
+  /**
+   * useful function if you need some observations removed. By default
+   * accepts all
+   */
+  DataValidator dataValidator = (double x, double y)  =>true;
 
   Data data;
 
@@ -166,7 +174,7 @@ class KalmanPricePredictor implements PricePredictor
     double x = xColumn.last;
     double y = yColumn.last;
 
-    if(!x.isFinite || !y.isFinite)
+    if(!x.isFinite || !y.isFinite || !dataValidator(x,y))
       //can't really use this observation!
       return;
 

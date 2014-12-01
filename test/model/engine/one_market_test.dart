@@ -32,7 +32,7 @@ main()
       monopolistTest(true);
     });
 
-  for(int i=0;i<500;i++)
+  for(int i=0;i<5;i++)
     test("Learnin Monopolist", (){ //knows the price impacts
       monopolistTest(false);
     });
@@ -47,13 +47,29 @@ monopolistTest(bool learned)
   scenario.salesInitializer = (ZeroKnowledgeTrader sales) {
     if(learned)
       sales.predictor = new FixedSlopePredictor(-1.0);
-    else
-      sales.predictor = new KalmanPricePredictor("outflow");
+    else {
+      KalmanPricePredictor kalman = new KalmanPricePredictor("outflow");
+      //in the original model I used to regress on inflow. I might have to do
+      // it here too, but the imperfection resulting out of that is bigger
+      // here, so I get about 480/500 right by regressing on inflow and all
+      // correct regressing on outflow
+      sales.predictor =kalman;
+      //because you have inventory buffer, ignore observations that happen
+      // during stockouts and  stockups
+      kalman.dataValidator = (x,y) {
+        if ((sales.pricing as BufferInventoryPricing).stockingUp || sales
+        .data.getLatestObservation("inventory") == 0) return false;
+        else return true;
+      };
+
+
+    }
   };
   scenario.hrIntializer = (ZeroKnowledgeTrader hr) {
     if(learned)
       hr.predictor = new FixedSlopePredictor(1.0);
     else
+    //no inventory no problem.
       hr.predictor = new KalmanPricePredictor("inflow");
   };
 
@@ -69,6 +85,10 @@ monopolistTest(bool learned)
 
   print('''gas price: ${gas.averageClosingPrice} workers' wages: ${labor
   .averageClosingPrice}\n''');
+  double salesSlope = scenario.firms[0].salesDepartments["gas"].predictedSlope;
+  double hrSlope = scenario.firms[0].purchasesDepartments["labor"]
+  .predictedSlope;
+  print("sales slope: $salesSlope hr slope: $hrSlope\n");
 
   //expect monopolist making money
   expect(gas.averageClosingPrice,75);

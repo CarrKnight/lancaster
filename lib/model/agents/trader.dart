@@ -215,6 +215,8 @@ class ZeroKnowledgeTrader implements Trader
 
   }
 
+  double get predictedSlope=>predictPrice(1.0)-predictPrice(0.0);
+
 
   double predictPrice(double expectedChangeInQuantity) => predictor
   .predictPrice(this,expectedChangeInQuantity);
