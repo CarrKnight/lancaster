@@ -28,6 +28,22 @@ main(){
   });
 
 
+  test("exponential function works",(){
+    ExponentialProductionFunction function = new ExponentialProductionFunction
+    (multiplier:2.0,exponent:0.5);
+
+    expect(function.production(100.0),20);
+    expect(function.consumption(100.0),100);
+
+
+
+    function.multiplier = 0.5;
+    expect(function.production(100.0),5);
+    expect(function.consumption(100.0),100);
+
+  });
+
+
   test("plant produces correctly",(){
     LinearProductionFunction function = new LinearProductionFunction(multiplier:2.0,
     consumeInput:true);
