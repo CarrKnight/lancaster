@@ -4,12 +4,15 @@ library pidtest;
 
 import 'package:unittest/unittest.dart';
 import 'package:lancaster/model/lancaster_model.dart';
+import 'package:mockito/mockito.dart';
 import 'dart:math';
 
 
 
-main(){
+class MockController extends Mock implements Controller{}
+class MockRandom extends Mock implements Random{}
 
+main(){
 
   test("error>0 increases mv ",(){
     PIDController controller = new PIDController.standardPI();
@@ -44,8 +47,40 @@ main(){
   );
 
 
+  test("delays correctly nonrandom",(){
+    MockController controller = new MockController();
+    StickyPID pid = new StickyPID.Fixed(controller,3);
+    //first two days no adjust
+    pid.adjust(0.0,0.0);
+    verifyNever(controller.adjust(any,any));
+    pid.adjust(0.0,0.0);
+    verifyNever(controller.adjust(any,any));
+    //adjust on the third day!
+    pid.adjust(0.0,0.0);
+    verify(controller.adjust(any,any));
+    //two more days with no steps
+    pid.adjust(0.0,0.0);
+    verifyNever(controller.adjust(any,any));
+    pid.adjust(0.0,0.0);
+    verifyNever(controller.adjust(any,any));
+    //again on the third day!
+    pid.adjust(0.0,0.0);
+    verify(controller.adjust(any,any));
+  });
 
+  test("delays correctly random",(){
+    MockController controller = new MockController();
+    MockRandom random = new MockRandom();
+    StickyPID pid =new StickyPID.Random(controller,random,1);
+    //as long as the random is too high, it doesn't happen
+    when(random.nextDouble()).thenReturn(1.0);;
+    for(int i=0; i<10; i++)
+      pid.adjust(0.0,0.0);
+    verifyNever(controller.adjust(any,any));
 
-
+    when(random.nextDouble()).thenReturn(0.499);;
+    pid.adjust(0.0,0.0);
+    verify(controller.adjust(any,any));
+  });
 
 }

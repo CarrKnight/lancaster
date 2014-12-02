@@ -1,9 +1,25 @@
 part of lancaster.model;
 
+
+abstract class Controller
+{
+  set offset(double value);
+
+  double get offset;
+
+  double get manipulatedVariable;
+
+  /**
+   * "step" the controller to change the manipulated variable
+   */
+  void adjust(double target, double controlledVariable);
+
+}
+
 /**
  * A simple PID controller, never lets MV go negative, doesn't allow negative parameters, has windup-stop enabled
  */
-class PIDController {
+class PIDController implements Controller {
 
 
   static const  double DEFAULT_PROPORTIONAL_PARAMETER = .1;
@@ -110,5 +126,72 @@ class PIDController {
       numerator-= derivativeParameter * (_currentError-_previousError);
     return numerator/integrativeParameter;
   }
+
+}
+
+
+/**
+ * A PID controller decorator to step the controller only every x days
+ * ( possibly randomly) to slow it down a bit
+ */
+class StickyPID implements Controller
+{
+  final Controller delegate;
+
+  /**
+   * function called every day to decide whether to adjust or not the
+   * manipulated variable. By default it always act
+   */
+  var _adjustToday = ()=>true;
+
+  StickyPID(this.delegate,bool adjustmentChecker())
+  {
+   _adjustToday = adjustmentChecker;
+  }
+
+  /**
+   * pid controller with same fixed probability of acting every day, the
+   * probability is 1/(1+[decisionPeriod]).
+   */
+  factory StickyPID.Random(Controller delegate, Random r, int
+  decisionPeriod)
+  {
+    double probability = 1.0/(1.0 + decisionPeriod.toDouble());
+    return new StickyPID(delegate,()=> r.nextDouble() < probability);
+  }
+
+  /**
+   * The delegate will adjust precisely every [decisionPeriod] days
+   */
+  factory StickyPID.Fixed(Controller delegate, int decisionPeriod)
+  {
+    int counter = 0;
+    var adjustmentChecker=(){
+      counter++;
+      if(counter == decisionPeriod)
+      {
+        counter = 0;
+        return true;
+      }
+      return false;
+    };
+    return new StickyPID(delegate,adjustmentChecker);
+  }
+
+
+  set adjustToday( bool dailyCheck()) => _adjustToday = dailyCheck;
+  Function get adjustToday => _adjustToday;
+
+
+  set offset(double value)=> delegate.offset=value;
+  get offset=>delegate.offset;
+
+  get manipulatedVariable=>delegate.manipulatedVariable;
+
+  void adjust(double target, double controlledVariable) {
+    if (_adjustToday())
+      delegate.adjust(target, controlledVariable);
+  }
+
 
 }
