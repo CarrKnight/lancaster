@@ -144,16 +144,12 @@ class BidsOrderBook{
  * a market where the buying is "done" by a fixed demand curve while the
  * sellers are normal agents
  */
-class ExogenousSellerMarket extends SellerMarket{
+class ExogenousSellerMarket extends SellerMarket with OneSideMarketClearer{
 
 
   final String goodType;
   final String moneyType;
 
-  /**
-   * routine to recursively clear markets
-   */
-  final OneSideMarketClearer clearer = new OneSideMarketClearer();
 
 
   final ExogenousCurve demand;
@@ -162,9 +158,9 @@ class ExogenousSellerMarket extends SellerMarket{
   double _moneyExchanged = 0.0;
 
   ExogenousSellerMarket.linear( {double intercept : 100.0,
-                             double slope:-1.0,
-                             String goodType : "gas",
-                             String moneyType: "money"}):
+                                double slope:-1.0,
+                                String goodType : "gas",
+                                String moneyType: "money"}):
   this(new LinearCurve(intercept,slope),goodType:goodType,moneyType:moneyType);
 
 
@@ -189,7 +185,7 @@ class ExogenousSellerMarket extends SellerMarket{
 
   void _clearMarket(Schedule s){
     sortAsks();
-    _moneyExchanged = clearer.clearMarket(demand,_asks,_tradeStreamer,true);
+    _moneyExchanged = clearMarket(demand,_asks,_tradeStreamer,true);
   }
 
 
@@ -200,24 +196,18 @@ class ExogenousSellerMarket extends SellerMarket{
 
 
 
-
 }
 
 /**
  * a market where the buying is "done" by a fixed demand curve while the
  * sellers are normal agents
  */
-class ExogenousBuyerMarket extends BuyerMarket{
+class ExogenousBuyerMarket extends BuyerMarket with OneSideMarketClearer{
 
 
   final String goodType;
 
   final String moneyType;
-
-  /**
-   * routine to recursively clear markets
-   */
-  final OneSideMarketClearer clearer = new OneSideMarketClearer();
 
 
   final ExogenousCurve supply;
@@ -226,8 +216,8 @@ class ExogenousBuyerMarket extends BuyerMarket{
   double _moneyExchanged = 0.0;
 
   ExogenousBuyerMarket.linear( {double intercept : 0.0,
-                                double slope:1.0,
-                                String goodType : "gas",
+                               double slope:1.0,
+                               String goodType : "gas",
                                String moneyType: "money" }):
   this(new LinearCurve(intercept,slope),goodType:goodType,moneyType:moneyType);
 
@@ -254,7 +244,7 @@ class ExogenousBuyerMarket extends BuyerMarket{
 
   void _clearMarket(Schedule s){
     sortAsks();
-    _moneyExchanged = clearer.clearMarket(supply,_bids,_tradeStreamer,false);
+    _moneyExchanged = clearMarket(supply,_bids,_tradeStreamer,false);
   }
 
 
@@ -445,8 +435,10 @@ class TradeStream extends TimestampedStreamBase<TradeEvent>{
  */
 class OneSideMarketClearer{
 
+  PricePolicy pricePolicy = QUOTED_PRICE;
+
   /**
-   * expects [book] to be already sorted where last is beset.
+   * expects [book] to be already sorted where last is best.
    * Returns the total amount of money that was exchanged
    */
   double clearMarket(ExogenousCurve curve, List<_TradeQuote> book,
@@ -457,7 +449,7 @@ class OneSideMarketClearer{
     while (book.isNotEmpty) {
 
       var best = book.last;
-      var price = best._pricePerUnit;
+      var price = pricePolicy(best._pricePerUnit);
       var maxDemandForThisPrice = curve.quantityAtThisPrice(price); //demand
       // minus what has been already sold today!
 
@@ -492,3 +484,22 @@ class OneSideMarketClearer{
 
 }
 
+/**
+ * what is the prevailing price in a one side market given [bestQuotePrice]
+ */
+typedef double PricePolicy(double bestQuotePrice);
+
+/**
+ * standard price policy, trading price is the quote price.
+ */
+final PricePolicy QUOTED_PRICE = (x)=>x;
+
+/**
+ * closing price is always fixed price. It doesn't check that x is below
+ * price, that's the clearer responsbility, not the price policy. This is
+ * useful for infinitely elastic markets and the price-taking it entails.
+ */
+PricePolicy FIXED_PRICE(double price)
+{
+  return (x)=>price;
+}

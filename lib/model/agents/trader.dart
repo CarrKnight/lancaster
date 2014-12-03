@@ -74,9 +74,9 @@ class DummyTrader implements Trader
 
   DummyTrader([String goodType= "gas"])
   {
-  var totalInventory = new Inventory(); //its own inventory
-  _inventory=(totalInventory).getSection(goodType);
-  _money=totalInventory.getSection("money");
+    var totalInventory = new Inventory(); //its own inventory
+    _inventory=(totalInventory).getSection(goodType);
+    _money=totalInventory.getSection("money");
   }
 
   DummyTrader.fromMarket(Market market):
@@ -141,6 +141,11 @@ class ZeroKnowledgeTrader implements Trader
   PricingStrategy pricing;
 
   /**
+   * how much it is willing to buy/sell?
+   */
+  QuotaStrategy quota;
+
+  /**
    * how it trades
    */
   TradingStrategy tradingStrategy;
@@ -167,7 +172,8 @@ class ZeroKnowledgeTrader implements Trader
 
   final List<DawnEvent> dawnEvents = new List();
 
-  ZeroKnowledgeTrader(Market market,this.pricing,this.tradingStrategy,
+  ZeroKnowledgeTrader(Market market,this.pricing,this.quota,
+                      this.tradingStrategy,
                       Inventory totalInventory):
   _inventory = totalInventory.getSection(market.goodType),
   _money  = totalInventory.getSection(market.moneyType),
@@ -195,7 +201,7 @@ class ZeroKnowledgeTrader implements Trader
 
   void trade(Schedule s)
   {
-    tradingStrategy.step(this,market,_data,pricing);
+    tradingStrategy.step(this,market,_data,pricing,quota);
   }
 
   /**
@@ -206,7 +212,7 @@ class ZeroKnowledgeTrader implements Trader
     //start the datal
     _data.start(schedule);
     //register yourself
-    tradingStrategy.start(schedule,this,market,_data,pricing);
+    tradingStrategy.start(schedule,this,market,_data, pricing, quota);
     //strategies start
     predictor.start(this,schedule,data);
 
@@ -263,6 +269,7 @@ class ZeroKnowledgeTrader implements Trader
 
     ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader(market,
     new PIDPricing.DefaultSeller(initialPrice:initialPrice),
+    new AllOwned(),
     new SimpleSellerTrading(), inventory);
 
     //independent trader needs to reset its own counters
@@ -286,7 +293,9 @@ class ZeroKnowledgeTrader implements Trader
 
     ZeroKnowledgeTrader buyer = new ZeroKnowledgeTrader(market,
     new PIDPricing.FixedInflowBuyer(flowTarget:flowTarget,
-    initialPrice:initialPrice,p:p,i:i,d:d), new SimpleBuyerTrading(),inventory);
+    initialPrice:initialPrice,p:p,i:i,d:d),
+    new FixedQuota(),
+    new SimpleBuyerTrading(),inventory);
 
     //independent trader needs to reset its own counters
     if(givenInventory==null)
@@ -318,6 +327,7 @@ class ZeroKnowledgeTrader implements Trader
     ZeroKnowledgeTrader buyer = new ZeroKnowledgeTrader(market,
     new BufferInventoryPricing.simpleSeller(optimalInventory:optimalInventory,
     criticalInventory:criticalInventory,initialPrice:initialPrice,p:p,d:d,i:i),
+    new FixedQuota(),
     new SimpleSellerTrading(), inventory);
 
     //independent trader needs to reset its own counters
@@ -341,10 +351,10 @@ class ZeroKnowledgeTrader implements Trader
    * PIDSeller with exogenous fixed inflow
    */
   factory ZeroKnowledgeTrader.PIDSellerFixedInflow(double dailyInflow,
-                                                  SellerMarket market,
-                                                  {double depreciationRate:0.0,
-                                                  double initialPrice:100.0,
-                                                  Inventory givenInventory:null})
+                                                   SellerMarket market,
+                                                   {double depreciationRate:0.0,
+                                                   double initialPrice:100.0,
+                                                   Inventory givenInventory:null})
   {
     ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader.PIDSeller(market,
     initialPrice:initialPrice,givenInventory:givenInventory);
@@ -356,18 +366,18 @@ class ZeroKnowledgeTrader implements Trader
    * PIDSeller with exogenous fixed inflow
    */
   factory ZeroKnowledgeTrader.PIDBufferSellerFixedInflow(double dailyInflow,
-                                                  SellerMarket market,
-                                                  {double depreciationRate:0.0,
-                                                  double initialPrice:100.0,
-                                                  double optimalInventory:100.0,
-                                                  double criticalInventory:10.0,
-                                                  double p:
-                                                  PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
-                                                  double i:
-                                                  PIDController.DEFAULT_INTEGRAL_PARAMETER,
-                                                  double d:
-                                                  PIDController.DEFAULT_DERIVATIVE_PARAMETER,
-                                                  Inventory givenInventory : null})
+                                                         SellerMarket market,
+                                                         {double depreciationRate:0.0,
+                                                         double initialPrice:100.0,
+                                                         double optimalInventory:100.0,
+                                                         double criticalInventory:10.0,
+                                                         double p:
+                                                         PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
+                                                         double i:
+                                                         PIDController.DEFAULT_INTEGRAL_PARAMETER,
+                                                         double d:
+                                                         PIDController.DEFAULT_DERIVATIVE_PARAMETER,
+                                                         Inventory givenInventory : null})
   {
     ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader.PIDBufferSeller(market,
     initialPrice:initialPrice,givenInventory:givenInventory,
@@ -401,12 +411,13 @@ abstract class TradingStrategy<T extends Market>{
    * that is the user responsibility.
    */
   void start(Schedule s, Trader trader, T market, Data data,
-             PricingStrategy strategy);
+             PricingStrategy pricing, QuotaStrategy quota);
 
   /**
    * [[strategy]] ought to be updated within this step
    */
-  void step(Trader trader, T market, Data data, PricingStrategy pricing);
+  void step(Trader trader, T market, Data data,PricingStrategy pricing,
+            QuotaStrategy quota);
 }
 
 /**
@@ -420,7 +431,7 @@ class SimpleSellerTrading extends TradingStrategy<SellerMarket>
    * register trader as seller on the market. Nothing more
    */
   void start(Schedule s, Trader trader, SellerMarket market, Data data,
-             PricingStrategy strategy) {
+             PricingStrategy pricing, QuotaStrategy quota) {
     assert(!market.sellers.contains(trader));
     market.sellers.add(trader);
     assert(market.sellers.contains(trader));
@@ -428,10 +439,12 @@ class SimpleSellerTrading extends TradingStrategy<SellerMarket>
   }
 
   void step(Trader trader, SellerMarket market, Data data,
-            PricingStrategy pricing) {
+            PricingStrategy pricing, QuotaStrategy quota) {
     pricing.updatePrice(data);
-    if(trader.good > 0) //if you have anything to sell
-      market.placeSaleQuote(trader,trader.good,pricing.price);
+    quota.updateQuoteSize(trader,data);
+    double quoteSize = quota.quoteSize;
+    if(quoteSize> 0) //if you have anything to sell
+      market.placeSaleQuote(trader,quoteSize,pricing.price);
     trader.lastOfferedPrice = pricing.price;
   }
 
@@ -446,26 +459,29 @@ class SimpleSellerTrading extends TradingStrategy<SellerMarket>
 class SimpleBuyerTrading extends TradingStrategy<BuyerMarket>
 {
 
-  double maxOrder = 1000.0;
 
   /**
    * register trader as seller on the market. Nothing more
    */
   void start(Schedule s, Trader trader, BuyerMarket market, Data data,
-             PricingStrategy strategy) {
+             PricingStrategy pricing, QuotaStrategy quota) {
     market.buyers.add(trader);
 
   }
 
   void step(Trader trader, BuyerMarket market, Data data,
-            PricingStrategy pricing) {
+            PricingStrategy pricing, QuotaStrategy quota) {
     pricing.updatePrice(data);
-    market.placeBuyerQuote(trader,maxOrder,pricing.price);
+    quota.updateQuoteSize(trader,data);
+    double quoteSize = quota.quoteSize;
+    if(quoteSize > 0)
+      market.placeBuyerQuote(trader,quota.quoteSize,pricing.price);
     trader.lastOfferedPrice = pricing.price;
   }
 
 
 }
+
 
 /**
  * any additional thing to happen to a trader at dawn (fixed inflows,

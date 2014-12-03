@@ -303,8 +303,9 @@ class OneMarketCompetition extends Scenario
       //build hr
       (maxInitialPriceBuying - minInitialPriceBuying) + minInitialPriceBuying;
       ZeroKnowledgeTrader hr = new ZeroKnowledgeTrader(laborMarket,
-      hrPricingInitialization(plant, firm, random, this), new
-      SimpleBuyerTrading(), firm);
+      hrPricingInitialization(plant, firm, random, this),
+      new FixedQuota(),
+      new SimpleBuyerTrading(), firm);
       hrIntializer(hr);
       firm.addPurchasesDepartment(hr);
 
