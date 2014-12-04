@@ -7,7 +7,7 @@ import 'package:unittest/unittest.dart';
 import 'package:lancaster/model/lancaster_model.dart';
 
 
-main()
+main2()
 {
 
   //one agent working as competitive
@@ -68,7 +68,7 @@ oneMarketTest(bool learned, [int competitors=1])
       //because you have inventory buffer, ignore observations that happen
       // during stockouts and  stockups
       kalman.dataValidator = (x,y) {
-        if ((sales.pricing as BufferInventoryPricing).stockingUp || sales
+        if ((sales.pricing as BufferInventoryAdaptive).stockingUp || sales
         .data.getLatestObservation("inventory") == 0) return false;
         else return true;
       };
@@ -161,4 +161,40 @@ learnedCompetitorTest(int competitors)
   expect(labor.averageClosingPrice,closeTo(50.0,1.5));
   expect(labor.quantityTraded,closeTo(50.0,1.5));
   expect(model.agents.length,competitors);
+}
+
+
+main()
+{
+  test("Can solve market days by changing L",(){
+
+    Model model = new Model.randomSeed();
+    InfiniteElasticLaborKeynesianExperiment experiment = new
+    InfiniteElasticLaborKeynesianExperiment()
+    ..minInitialPriceSelling=2.5
+    ..maxInitialPriceSelling=2.5;
+    model.scenario = experiment;
+
+    model.start();
+
+    Market gas = model.markets["gas"];
+    Market labor = model.markets["labor"];
+
+    for (int i = 0; i < 3000; i++) {
+      model.schedule.simulateDay();
+
+    }
+    print('''gas price: ${gas.averageClosingPrice} workers' wages: ${labor
+    .averageClosingPrice}''');
+    print('''gas quantity: ${gas.quantityTraded} workers : ${labor
+    .quantityTraded}''');
+
+    //should have throttled production more
+    expect(gas.quantityTraded,.5);
+    expect(labor.quantityTraded,.5);
+
+
+  });
+
+
 }

@@ -138,12 +138,12 @@ class ZeroKnowledgeTrader implements Trader
   /**
    * how it prices its goods
    */
-  PricingStrategy pricing;
+  AdaptiveStrategy pricing;
 
   /**
    * how much it is willing to buy/sell?
    */
-  QuotaStrategy quota;
+  AdaptiveStrategy quota;
 
   /**
    * how it trades
@@ -268,7 +268,7 @@ class ZeroKnowledgeTrader implements Trader
       inventory = new Inventory();
 
     ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader(market,
-    new PIDPricing.DefaultSeller(initialPrice:initialPrice),
+    new PIDAdaptive.DefaultSeller(initialPrice:initialPrice),
     new AllOwned(),
     new SimpleSellerTrading(), inventory);
 
@@ -292,9 +292,9 @@ class ZeroKnowledgeTrader implements Trader
       inventory = new Inventory();
 
     ZeroKnowledgeTrader buyer = new ZeroKnowledgeTrader(market,
-    new PIDPricing.FixedInflowBuyer(flowTarget:flowTarget,
+    new PIDAdaptive.FixedInflowBuyer(flowTarget:flowTarget,
     initialPrice:initialPrice,p:p,i:i,d:d),
-    new FixedQuota(),
+    new FixedValue(),
     new SimpleBuyerTrading(),inventory);
 
     //independent trader needs to reset its own counters
@@ -325,9 +325,9 @@ class ZeroKnowledgeTrader implements Trader
       inventory = new Inventory();
 
     ZeroKnowledgeTrader buyer = new ZeroKnowledgeTrader(market,
-    new BufferInventoryPricing.simpleSeller(optimalInventory:optimalInventory,
+    new BufferInventoryAdaptive.simpleSeller(optimalInventory:optimalInventory,
     criticalInventory:criticalInventory,initialPrice:initialPrice,p:p,d:d,i:i),
-    new FixedQuota(),
+    new FixedValue(),
     new SimpleSellerTrading(), inventory);
 
     //independent trader needs to reset its own counters
@@ -411,13 +411,13 @@ abstract class TradingStrategy<T extends Market>{
    * that is the user responsibility.
    */
   void start(Schedule s, Trader trader, T market, Data data,
-             PricingStrategy pricing, QuotaStrategy quota);
+             AdaptiveStrategy pricing, AdaptiveStrategy quota);
 
   /**
    * [[strategy]] ought to be updated within this step
    */
-  void step(Trader trader, T market, Data data,PricingStrategy pricing,
-            QuotaStrategy quota);
+  void step(Trader trader, T market, Data data,AdaptiveStrategy pricing,
+            AdaptiveStrategy quota);
 }
 
 /**
@@ -431,7 +431,7 @@ class SimpleSellerTrading extends TradingStrategy<SellerMarket>
    * register trader as seller on the market. Nothing more
    */
   void start(Schedule s, Trader trader, SellerMarket market, Data data,
-             PricingStrategy pricing, QuotaStrategy quota) {
+             AdaptiveStrategy pricing, AdaptiveStrategy quota) {
     assert(!market.sellers.contains(trader));
     market.sellers.add(trader);
     assert(market.sellers.contains(trader));
@@ -439,13 +439,13 @@ class SimpleSellerTrading extends TradingStrategy<SellerMarket>
   }
 
   void step(Trader trader, SellerMarket market, Data data,
-            PricingStrategy pricing, QuotaStrategy quota) {
-    pricing.updatePrice(data);
-    quota.updateQuoteSize(trader,data);
-    double quoteSize = quota.quoteSize;
+            AdaptiveStrategy pricing, AdaptiveStrategy quota) {
+    pricing.adapt(trader,data);
+    quota.adapt(trader,data);
+    double quoteSize = quota.value;
     if(quoteSize> 0) //if you have anything to sell
-      market.placeSaleQuote(trader,quoteSize,pricing.price);
-    trader.lastOfferedPrice = pricing.price;
+      market.placeSaleQuote(trader,quoteSize,pricing.value);
+    trader.lastOfferedPrice = pricing.value;
   }
 
 
@@ -464,19 +464,19 @@ class SimpleBuyerTrading extends TradingStrategy<BuyerMarket>
    * register trader as seller on the market. Nothing more
    */
   void start(Schedule s, Trader trader, BuyerMarket market, Data data,
-             PricingStrategy pricing, QuotaStrategy quota) {
+             AdaptiveStrategy pricing, AdaptiveStrategy quota) {
     market.buyers.add(trader);
 
   }
 
   void step(Trader trader, BuyerMarket market, Data data,
-            PricingStrategy pricing, QuotaStrategy quota) {
-    pricing.updatePrice(data);
-    quota.updateQuoteSize(trader,data);
-    double quoteSize = quota.quoteSize;
+            AdaptiveStrategy pricing, AdaptiveStrategy quota) {
+    pricing.adapt(trader,data);
+    quota.adapt(trader,data);
+    double quoteSize = quota.value;
     if(quoteSize > 0)
-      market.placeBuyerQuote(trader,quota.quoteSize,pricing.price);
-    trader.lastOfferedPrice = pricing.price;
+      market.placeBuyerQuote(trader,quota.value,pricing.value);
+    trader.lastOfferedPrice = pricing.value;
   }
 
 

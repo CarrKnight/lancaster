@@ -38,9 +38,9 @@ void bufferTests(){
 
 
 
-    BufferInventoryPricing pricing = new BufferInventoryPricing(
+    BufferInventoryAdaptive pricing = new BufferInventoryAdaptive(
             new FixedExtractor(0.0),inventoryExtractor,
-            new PIDPricing.DefaultSeller(),optimalInventory:10.0,
+            new PIDAdaptive.DefaultSeller(),optimalInventory:10.0,
             criticalInventory:5.0);
 
 
@@ -48,27 +48,27 @@ void bufferTests(){
 
     //if inventory is 0 it is still stocking up
     inventory = 0.0;
-    pricing.updatePrice(data);
+    pricing.adapt(null,data);
     expect(pricing.stockingUp,true);
 
     //if inventory is above critical but below optimal, it is still stocking up
     inventory = 6.0;
-    pricing.updatePrice(data);
+    pricing.adapt(null,data);
     expect(pricing.stockingUp,true);
 
     //if inventory is at least optimal, it stops stocking up
     inventory = 10.0;
-    pricing.updatePrice(data);
+    pricing.adapt(null,data);
     expect(pricing.stockingUp,false);
 
     //if it drops below optimal but above critical, it still doesn't stock up
     inventory = 6.0;
-    pricing.updatePrice(data);
+    pricing.adapt(null,data);
     expect(pricing.stockingUp,false);
 
     //if it drops below critical it starts stocking up again!
     inventory = 4.0;
-    pricing.updatePrice(data);
+    pricing.adapt(null,data);
     expect(pricing.stockingUp,true);
 
 
@@ -86,18 +86,18 @@ void bufferTests(){
     when(data.getObservations("outflow")).thenReturn([1.0]);
     when(data.getObservations("inventory")).thenReturn([0.0]);
 
-    BufferInventoryPricing pricing = new BufferInventoryPricing.simpleSeller
+    BufferInventoryAdaptive pricing = new BufferInventoryAdaptive.simpleSeller
       (
       optimalInventory: 1000.0, //pointless sets, just for verbosity sake
       criticalInventory: 500.0,
       initialPrice:10.0
       );
     //making sure the initial price is initialized correctly
-    expect(pricing.price,10.0);
+    expect(pricing.value,10.0);
 
 
-    pricing.updatePrice(data);
-    expect(pricing.price>10.0,true); //price should have gone up even though
+    pricing.adapt(null,data);
+    expect(pricing.value>10.0,true); //price should have gone up even though
     // inflow>outflow!
   });
 
@@ -114,7 +114,7 @@ void bufferTests(){
     //enough inventory
     when(data.getObservations("inventory")).thenReturn([50000.0]);
 
-    BufferInventoryPricing pricing = new BufferInventoryPricing.simpleSeller
+    BufferInventoryAdaptive pricing = new BufferInventoryAdaptive.simpleSeller
     (
         optimalInventory: 1000.0, //pointless sets, just for verbosity sake
         criticalInventory: 500.0,
@@ -124,10 +124,10 @@ void bufferTests(){
     expect(pricing.stockingUp,true);
 
 
-    pricing.updatePrice(data);
+    pricing.adapt(null,data);
     expect(pricing.stockingUp,false);
     //prices should have been lowered!
-    expect(pricing.price<10.0,true);
+    expect(pricing.value<10.0,true);
 
 
 
@@ -139,14 +139,14 @@ void PIDFlows() {
 
 
     //if I set the initial price to 100 and target always equal cv, the price should stay at 100
-    PIDPricing pricing = new PIDPricing(new FixedExtractor(1.0),
+    PIDAdaptive pricing = new PIDAdaptive(new FixedExtractor(1.0),
     new FixedExtractor(1.0),
     offset:100.0);
-    expect(pricing.price, 100);
+    expect(pricing.value, 100);
     for (int i = 0; i < 100; i++) {
-      pricing.updatePrice(new Data(["a"], (references) => (s) {
+      pricing.adapt(null,new Data(["a"], (references) => (s) {
       }));
-      expect(pricing.price, 100);
+      expect(pricing.value, 100);
     }
 
   });
@@ -156,13 +156,13 @@ void PIDFlows() {
 
 
     //if I set the initial price to 100 and target>cv, the price should increase
-    PIDPricing pricing = new PIDPricing(new FixedExtractor(1.0),
+    PIDAdaptive pricing = new PIDAdaptive(new FixedExtractor(1.0),
     new FixedExtractor(0.0), offset:100.0);
-    expect(pricing.price, 100);
+    expect(pricing.value, 100);
     for (int i = 0; i < 100; i++) {
-      pricing.updatePrice(new Data(["a"], (references) => (s) {
+      pricing.adapt(null,new Data(["a"], (references) => (s) {
       }));
-      expect(pricing.price > 100, true);
+      expect(pricing.value > 100, true);
     }
 
   });
@@ -171,13 +171,13 @@ void PIDFlows() {
 
 
     //if I set the initial price to 100 and target<cv, the price should decrease
-    PIDPricing pricing = new PIDPricing(new FixedExtractor(-10.0),
+    PIDAdaptive pricing = new PIDAdaptive(new FixedExtractor(-10.0),
     new FixedExtractor(0.0), offset:100.0);
-    expect(pricing.price, 100);
+    expect(pricing.value, 100);
     for (int i = 0; i < 100; i++) {
-      pricing.updatePrice(new Data(["a"], (references) => (s) {
+      pricing.adapt(null,new Data(["a"], (references) => (s) {
       }));
-      expect(pricing.price < 100 && pricing.price >= 0, true);
+      expect(pricing.value < 100 && pricing.value >= 0, true);
     }
 
   });
@@ -185,58 +185,58 @@ void PIDFlows() {
   test("default seller increase", () {
 
     //the seller: when inflow > outflow price should go down
-    PIDPricing pricing = new PIDPricing.DefaultSeller(initialPrice:100.0);
+    PIDAdaptive pricing = new PIDAdaptive.DefaultSeller(initialPrice:100.0);
     //default seller takes "inflow" and "outflow" columns
     var data = new Data(["inflow", "outflow"], (references) => (Schedule s) {
       references["inflow"].add(1.0);
       references["outflow"].add(0.0);
     });
 
-    expect(pricing.price, 100);
+    expect(pricing.value, 100);
     data.updateStep(new Schedule()); //"update" inflow = 1, outflow = 0 ====> price ↓
 
-    pricing.updatePrice(data);
-    expect(pricing.price < 100, true);
+    pricing.adapt(null,data);
+    expect(pricing.value < 100, true);
 
   });
 
   test("default seller decrease", () {
 
     //the seller:  when inflow < outflow price go up
-    PIDPricing pricing = new PIDPricing.DefaultSeller(initialPrice:100.0);
+    PIDAdaptive pricing = new PIDAdaptive.DefaultSeller(initialPrice:100.0);
     //default seller takes "inflow" and "outflow" columns
     var data = new Data(["inflow", "outflow"], (references) => (Schedule s) {
       references["inflow"].add(0.0);
       references["outflow"].add(1.0);
     });
 
-    expect(pricing.price, 100);
+    expect(pricing.value, 100);
     data.updateStep(new Schedule()); //"update" inflow = 0, outflow = 1 ====> price ↑
 
-    pricing.updatePrice(data);
-    expect(pricing.price > 100, true);
+    pricing.adapt(null,data);
+    expect(pricing.value > 100, true);
 
   });
 
   test("ignore NAs and lack of data", () {
 
-    PIDPricing pricing = new PIDPricing.DefaultSeller(initialPrice:100.0);
+    PIDAdaptive pricing = new PIDAdaptive.DefaultSeller(initialPrice:100.0);
     var data = new Data(["inflow", "outflow"], (references) => (Schedule s) {
       //puts garbage in
       references["inflow"].add(double.NAN);
       references["outflow"].add(1.0);
     });
 
-    expect(pricing.price, 100);
+    expect(pricing.value, 100);
     //if i have no data, it shouldn't break it just shouldn't update
-    pricing.updatePrice(data);
-    expect(pricing.price, 100);
+    pricing.adapt(null,data);
+    expect(pricing.value, 100);
 
 
     data.updateStep(new Schedule()); //data is NAN
 
-    pricing.updatePrice(data); //should be ignored
-    expect(pricing.price, 100);
+    pricing.adapt(null,data); //should be ignored
+    expect(pricing.value, 100);
 
   });
 }
@@ -247,16 +247,16 @@ void buyerPIDFlows(){
 
 
     //if I set the initial price to 100 and target always equal cv, the price should stay at 100
-    PIDPricing pricing = new PIDPricing.FixedInflowBuyer(
+    PIDAdaptive pricing = new PIDAdaptive.FixedInflowBuyer(
         flowTarget:20.0, initialPrice:100.0);
-    expect(pricing.price, 100);
+    expect(pricing.value, 100);
     for (int i = 0; i < 100; i++) {
       var data = new Data(["inflow"], (references) => (Schedule s) {
         references["inflow"].add(20.0);
       });
       data.updateStep(new Schedule()); //"update" data
-      pricing.updatePrice(data);
-      expect(pricing.price, 100);
+      pricing.adapt(null,data);
+      expect(pricing.value, 100);
     }
 
   });
@@ -266,16 +266,16 @@ void buyerPIDFlows(){
 
 
     //if I set the initial price to 100 and target>cv, the price should increase
-    PIDPricing pricing = new PIDPricing.FixedInflowBuyer(
+    PIDAdaptive pricing = new PIDAdaptive.FixedInflowBuyer(
         flowTarget:20.0, initialPrice:100.0);
-    expect(pricing.price, 100);
+    expect(pricing.value, 100);
     for (int i = 0; i < 100; i++) {
       var data = new Data(["inflow"], (references) => (Schedule s) {
         references["inflow"].add(10.0); //wants 20, only get 10, raise price
       });
       data.updateStep(new Schedule()); //"update" data
-      pricing.updatePrice(data);
-      expect(pricing.price > 100, true);
+      pricing.adapt(null,data);
+      expect(pricing.value > 100, true);
     }
 
   });
@@ -284,16 +284,16 @@ void buyerPIDFlows(){
 
 
     //if I set the initial price to 100 and target<cv, the price should decrease
-    PIDPricing pricing = new PIDPricing.FixedInflowBuyer(
+    PIDAdaptive pricing = new PIDAdaptive.FixedInflowBuyer(
         flowTarget:20.0, initialPrice:100.0);
-    expect(pricing.price, 100);
+    expect(pricing.value, 100);
     for (int i = 0; i < 100; i++) {
       var data = new Data(["inflow"], (references) => (Schedule s) {
         references["inflow"].add(30.0); //buying too much
       });
       data.updateStep(new Schedule()); //"update" data
-      pricing.updatePrice(data);
-      expect(pricing.price < 100 && pricing.price >= 0, true);
+      pricing.adapt(null,data);
+      expect(pricing.value < 100 && pricing.value >= 0, true);
     }
 
   });
@@ -303,16 +303,16 @@ void buyerPIDFlows(){
 
 
     //if I set the initial price to 100 and target always equal cv, the price should stay at 100
-    PIDPricing pricing = new PIDPricing.FixedInventoryBuyer(
+    PIDAdaptive pricing = new PIDAdaptive.FixedInventoryBuyer(
         inventoryTarget:20.0, initialPrice:100.0);
-    expect(pricing.price, 100);
+    expect(pricing.value, 100);
     for (int i = 0; i < 100; i++) {
       var data = new Data(["inventory"], (references) => (Schedule s) {
         references["inventory"].add(20.0);
       });
       data.updateStep(new Schedule()); //"update" data
-      pricing.updatePrice(data);
-      expect(pricing.price, 100);
+      pricing.adapt(null,data);
+      expect(pricing.value, 100);
     }
 
   });
@@ -322,16 +322,16 @@ void buyerPIDFlows(){
 
 
     //if I set the initial price to 100 and target>cv, the price should increase
-    PIDPricing pricing = new PIDPricing.FixedInventoryBuyer(
+    PIDAdaptive pricing = new PIDAdaptive.FixedInventoryBuyer(
         inventoryTarget:20.0, initialPrice:100.0);
-    expect(pricing.price, 100);
+    expect(pricing.value, 100);
     for (int i = 0; i < 100; i++) {
       var data = new Data(["inventory"], (references) => (Schedule s) {
         references["inventory"].add(10.0); //wants 20, only get 10, raise price
       });
       data.updateStep(new Schedule()); //"update" data
-      pricing.updatePrice(data);
-      expect(pricing.price > 100, true);
+      pricing.adapt(null,data);
+      expect(pricing.value > 100, true);
     }
 
   });
@@ -340,16 +340,16 @@ void buyerPIDFlows(){
 
 
     //if I set the initial price to 100 and target<cv, the price should decrease
-    PIDPricing pricing = new PIDPricing.FixedInventoryBuyer(
+    PIDAdaptive pricing = new PIDAdaptive.FixedInventoryBuyer(
         inventoryTarget:20.0, initialPrice:100.0);
-    expect(pricing.price, 100);
+    expect(pricing.value, 100);
     for (int i = 0; i < 100; i++) {
       var data = new Data(["inventory"], (references) => (Schedule s) {
         references["inventory"].add(30.0); //buying too much
       });
       data.updateStep(new Schedule()); //"update" data
-      pricing.updatePrice(data);
-      expect(pricing.price < 100 && pricing.price >= 0, true);
+      pricing.adapt(null,data);
+      expect(pricing.value < 100 && pricing.value >= 0, true);
     }
 
   });

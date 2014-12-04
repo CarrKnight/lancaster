@@ -160,6 +160,191 @@ buyerTests(){
 }
 
 
+infinitelyElasticBuyer(){
+
+  test("Clears one quote", () {
+    Schedule schedule = new Schedule(); //the scheduler
+
+    //create a q=p supply market
+    ExogenousBuyerMarket market = new ExogenousBuyerMarket.infinitelyElastic
+    (100.0);
+    market.start(schedule);
+
+    DummyTrader buyer = new DummyTrader();
+    market.buyers.add(buyer);
+
+    //try to buy 150 units for 100$ dollars (exactly the minimum)
+    schedule.schedule(Phase.PLACE_QUOTES, (s) => market.placeBuyerQuote(buyer,
+    150.0,
+    100.0));
+
+    //execute day
+    schedule.simulateDay();
+
+    expect(buyer.good, 150.0);
+    expect(buyer.money, -15000.0);
+
+    expect(market.quantityTraded, 150.0);
+    expect(market.averageClosingPrice, 100.0);
+  });
+
+
+  test("The price doesn't depend on the bid", () {
+    Schedule schedule = new Schedule(); //the scheduler
+
+    //create a q=p supply market
+    ExogenousBuyerMarket market = new ExogenousBuyerMarket.infinitelyElastic
+    (100.0);
+    market.start(schedule);
+
+    DummyTrader buyer = new DummyTrader();
+    market.buyers.add(buyer);
+
+    //try to buy 150 units for 150$ dollars (more than the minimum)
+    schedule.schedule(Phase.PLACE_QUOTES, (s) => market.placeBuyerQuote(buyer,
+    150.0,
+    100.0));
+
+    //execute day
+    schedule.simulateDay();
+
+    //but the closing price is just 100$ again
+    expect(buyer.good, 150.0);
+    expect(buyer.money, -15000.0);
+
+    expect(market.quantityTraded, 150.0);
+    expect(market.averageClosingPrice, 100.0);
+  });
+
+  test("Bid that is too low get nothing", () {
+    Schedule schedule = new Schedule(); //the scheduler
+
+    //create a q=p supply market
+    ExogenousBuyerMarket market = new ExogenousBuyerMarket.infinitelyElastic
+    (100.0);
+    market.start(schedule);
+
+    DummyTrader buyer = new DummyTrader();
+    market.buyers.add(buyer);
+
+    //try to buy 150 units for 90$ dollars (less than minimum)
+    schedule.schedule(Phase.PLACE_QUOTES, (s) => market.placeBuyerQuote(buyer,
+    150.0, 90.0));
+
+    //execute day
+    schedule.simulateDay();
+
+    //but the closing price is just 100$ again
+    expect(buyer.good, 0.0);
+    expect(buyer.money, 0.0);
+
+    expect(market.quantityTraded, 0.0);
+    expect(market.averageClosingPrice.isNaN,true);
+  });
+
+  test("two valid quotes get both cleared", () {
+    Schedule schedule = new Schedule(); //the scheduler
+
+    //create a q=p supply market
+    ExogenousBuyerMarket market = new ExogenousBuyerMarket.infinitelyElastic
+    (100.0);
+    market.start(schedule);
+
+
+    DummyTrader buyer1 = new DummyTrader();
+    DummyTrader buyer2 = new DummyTrader();
+    market.buyers.add(buyer1);
+    market.buyers.add(buyer2);
+
+    //both want 10, first guy pays 100$ second guy pays 110$. Both get all
+    schedule.schedule(Phase.PLACE_QUOTES, (s) => market.placeBuyerQuote
+    (buyer1,10.0,100.0));
+    schedule.schedule(Phase.PLACE_QUOTES, (s) => market.placeBuyerQuote
+    (buyer2,10.0,110.0));
+
+    //execute day
+    schedule.simulateDay();
+
+    expect(buyer1.good, 10.0);
+    expect(buyer2.good, 10.0);
+    expect(buyer1.money, -1000);
+    expect(buyer2.money, -1100);
+
+    expect(market.quantityTraded, 20.0);
+    expect(market.averageClosingPrice, 105.0);
+    schedule.simulateDay();
+    expect(market.quantityTraded, 0.0);
+    expect(market.averageClosingPrice.isNaN,true);
+  });
+
+
+  test("two buyers one acceptable offer the other not", () {
+    Schedule schedule = new Schedule(); //the scheduler
+
+    //create a q=p supply market
+    ExogenousBuyerMarket market = new ExogenousBuyerMarket.infinitelyElastic
+    (100.0);
+    market.start(schedule);
+
+
+    DummyTrader buyer1 = new DummyTrader();
+    DummyTrader buyer2 = new DummyTrader();
+    market.buyers.add(buyer1);
+    market.buyers.add(buyer2);
+
+    //both want 10, first guy pays 90$ second guy pays 110$. only the second
+    // wins
+    schedule.schedule(Phase.PLACE_QUOTES, (s) => market.placeBuyerQuote
+    (buyer1,10.0,90.0));
+    schedule.schedule(Phase.PLACE_QUOTES, (s) => market.placeBuyerQuote
+    (buyer2,10.0,110.0));
+
+    //execute day
+    schedule.simulateDay();
+
+    expect(buyer1.good, 0.0);
+    expect(buyer2.good, 10.0);
+    expect(buyer1.money, 0.0);
+    expect(buyer2.money, -1100);
+
+    expect(market.quantityTraded, 10.0);
+    expect(market.averageClosingPrice, 110.0);
+    schedule.simulateDay();
+    expect(market.quantityTraded, 0.0);
+    expect(market.averageClosingPrice.isNaN,true);
+  });
+
+
+  test("Buyer gets notified", () {
+    bool called = false;
+
+
+    Schedule schedule = new Schedule(); //the scheduler
+
+    //create a q=p supply market
+    ExogenousBuyerMarket market = new ExogenousBuyerMarket.infinitelyElastic
+    (100.0);
+    market.start(schedule);
+
+    DummyTrader buyer = new MockDummyTrader();
+    market.buyers.add(buyer);
+
+    //try to buy 150 units for 100$ dollars (exactly the minimum)
+    schedule.schedule(Phase.PLACE_QUOTES, (s) => market.placeBuyerQuote(buyer,
+    150.0,
+    100.0));
+
+    //execute day
+    schedule.simulateDay();
+
+
+    //make sure you were notified
+    verify(buyer.notifyOfTrade(100.0, 100.0));
+  });
+
+}
+
+
 sellerTests() {
   test("Clears one quote", () {
     Schedule schedule = new Schedule(); //the scheduler
@@ -303,5 +488,6 @@ sellerTests() {
 void main() {
   buyerTests();
   sellerTests();
+  infinitelyElasticBuyer();
 
 }

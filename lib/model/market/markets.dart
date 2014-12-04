@@ -222,11 +222,22 @@ class ExogenousBuyerMarket extends BuyerMarket with OneSideMarketClearer{
   this(new LinearCurve(intercept,slope),goodType:goodType,moneyType:moneyType);
 
 
+  ExogenousBuyerMarket.
+  infinitelyElastic(double price, {
+                               String goodType : "gas",
+                               String moneyType: "money" }):
+  this(new InfinitelyElasticAsk(price),goodType:goodType,moneyType:moneyType,
+  pricePolicy: FIXED_PRICE(price));
+
 
   ExogenousBuyerMarket(ExogenousCurve this.supply, {String goodType : "gas",
-  String moneyType: "money"}):
+  String moneyType: "money", pricePolicy : null}):
   this.goodType = goodType,
-  this.moneyType = moneyType;
+  this.moneyType = moneyType
+  {
+    if(pricePolicy != null)
+      this.pricePolicy = pricePolicy;
+  }
 
   void start(Schedule s){
     super.start(s);
@@ -450,7 +461,8 @@ class OneSideMarketClearer{
 
       var best = book.last;
       var price = pricePolicy(best._pricePerUnit);
-      var maxDemandForThisPrice = curve.quantityAtThisPrice(price); //demand
+      var maxDemandForThisPrice = curve.quantityAtThisPrice(best._pricePerUnit); //demand
+
       // minus what has been already sold today!
 
       if (maxDemandForThisPrice <= 0) //if the best price gets no sales, we are done

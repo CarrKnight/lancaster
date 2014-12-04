@@ -7,47 +7,30 @@ part of lancaster.model;
 
 
 /**
- * The other side of pricing strategy, basically how much should the size of
- * quotes placed (in terms of max amount bought or sold).
+ * Useful to output the same number all the time. I use it mostly for PID
+ * buyers to tell them what is the maximum number of goods to buy if they
+ * misprice (1000).
+ *
+ * The name is a misnomer. You can change the value at will from outside,
+ * fixed means that it doesn't adapt.
  */
-abstract class QuotaStrategy
+class FixedValue implements AdaptiveStrategy
 {
 
-  /**
-   * to call by the user, probably every day.
-   */
-  updateQuoteSize(Trader t, Data data);
+  double value;
 
-  /**
-   * the max quantity to buy/sell when placing a quote
-   */
-  double get quoteSize;
+  FixedValue([this.value=1000.0]);
 
-}
+  adapt(Trader t, Data data) {}
 
-
-/**
- * always same max quantity to trade. Useful for buyers that use price rather
- * than quotas to manipulate inflow
- */
-class FixedQuota implements QuotaStrategy
-{
-
-  double maxQuoteSize;
-
-  FixedQuota([this.maxQuoteSize=1000.0]);
-
-  updateQuoteSize(Trader t, Data data) {}
-
-  double get quoteSize=>maxQuoteSize;
 
 
 }
 
 /**
- * quote size is just goods owned.
+ * Returns the current inventory of the trader.
  */
-class AllOwned implements QuotaStrategy
+class AllOwned implements AdaptiveStrategy
 {
 
 
@@ -58,11 +41,11 @@ class AllOwned implements QuotaStrategy
 
   double inventory;
 
-  updateQuoteSize(Trader t, Data data) {
+  adapt(Trader t, Data data) {
     inventory = t.good;
   }
 
-  double get quoteSize=>inventory;
+  double get value=>inventory;
 
   factory AllOwned()=>instance;
 

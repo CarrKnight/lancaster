@@ -5,20 +5,20 @@
 part of lancaster.model;
 
 /**
- * a class used by traders to adapt prices
+ * a class used by traders to adapt prices or quantities
  */
-abstract class PricingStrategy
+abstract class AdaptiveStrategy
 {
 
   /**
    * to call by the user, probably every day.
    */
-  updatePrice(Data data);
+  adapt(Trader t, Data data);
 
   /**
    * the price per unit to charge for this strategy
    */
-  double get price;
+  double get value;
 
 
 }
@@ -48,7 +48,7 @@ abstract class HasExtractor{
  * stockouts are counted it can only work when decreasing prices
  * rather than increasing them, which is why we need inventory buffers
  */
-class PIDPricing implements PricingStrategy
+class PIDAdaptive implements AdaptiveStrategy
 {
 
   /**
@@ -70,7 +70,7 @@ class PIDPricing implements PricingStrategy
   /**
    * constructor
    */
-  PIDPricing(this.targetExtractor,this.cvExtractor,
+  PIDAdaptive(this.targetExtractor,this.cvExtractor,
              {double p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
              double i: PIDController.DEFAULT_INTEGRAL_PARAMETER,
              double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER,
@@ -80,7 +80,7 @@ class PIDPricing implements PricingStrategy
   }
 
 
-  PIDPricing.DefaultSeller({double initialPrice: 0.0,
+  PIDAdaptive.DefaultSeller({double initialPrice: 0.0,
                            double p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
                            double i: PIDController.DEFAULT_INTEGRAL_PARAMETER,
                            double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER
@@ -90,7 +90,7 @@ class PIDPricing implements PricingStrategy
   new SimpleExtractor("outflow",(x)=>-x),
   offset:initialPrice, p:p,i:i,d:d);
 
-  PIDPricing.FixedInflowBuyer({double flowTarget:1.0, double initialPrice: 0.0,
+  PIDAdaptive.FixedInflowBuyer({double flowTarget:1.0, double initialPrice: 0.0,
                               double p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
                               double i: PIDController.DEFAULT_INTEGRAL_PARAMETER,
                               double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER
@@ -100,7 +100,7 @@ class PIDPricing implements PricingStrategy
   new SimpleExtractor("inflow"),
   offset:initialPrice, p:p,i:i,d:d);
 
-  PIDPricing.MaximizerBuyer(SISOPlant plant, Firm firm, Random r,
+  PIDAdaptive.MaximizerBuyer(SISOPlant plant, Firm firm, Random r,
                             {double initialPrice: 0.0,
                             double p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
                             double i: PIDController.DEFAULT_INTEGRAL_PARAMETER,
@@ -112,7 +112,7 @@ class PIDPricing implements PricingStrategy
   offset:initialPrice, p:p,i:i,d:d);
 
 
-  PIDPricing.FixedInventoryBuyer({double inventoryTarget:1.0, double initialPrice: 0.0,
+  PIDAdaptive.FixedInventoryBuyer({double inventoryTarget:1.0, double initialPrice: 0.0,
                                  double p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
                                  double i: PIDController.DEFAULT_INTEGRAL_PARAMETER,
                                  double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER
@@ -123,9 +123,9 @@ class PIDPricing implements PricingStrategy
   offset:initialPrice, p:p,i:i,d:d);
 
 
-  double get price => pid.manipulatedVariable;
+  double get value => pid.manipulatedVariable;
 
-  void updatePrice(Data data) {
+  void adapt(Trader t,Data data) {
 
     double target = targetExtractor.extract(data);
     double controlledVariable = cvExtractor.extract(data);
@@ -147,7 +147,7 @@ class PIDPricing implements PricingStrategy
  * [optimalInventory]. It switches back from normal to stockingup
  * if inventory goes below [criticalInventory].
  */
-class BufferInventoryPricing implements PricingStrategy
+class BufferInventoryAdaptive implements AdaptiveStrategy
 {
 
 
@@ -160,7 +160,7 @@ class BufferInventoryPricing implements PricingStrategy
 
   Extractor targetExtractingStockingUp;
 
-  Extractor _originalTargetExtractor;
+  Extractor originalTargetExtractor;
 
   /**
    * tells me how to check inventory levels
@@ -169,7 +169,7 @@ class BufferInventoryPricing implements PricingStrategy
 
 
 
-  final PIDPricing delegate;
+  final PIDAdaptive delegate;
 
   bool _stockingUp = true;
 
@@ -177,7 +177,7 @@ class BufferInventoryPricing implements PricingStrategy
 
   double _criticalInventory;
 
-  BufferInventoryPricing(this.targetExtractingStockingUp,
+  BufferInventoryAdaptive(this.targetExtractingStockingUp,
                          this.inventoryExtractor,
                          this.delegate,
                          {double optimalInventory:100.0,
@@ -188,8 +188,8 @@ class BufferInventoryPricing implements PricingStrategy
     assert(inventoryExtractor != null);
     _optimalInventory = optimalInventory;
     _criticalInventory = criticalInventory;
-    _originalTargetExtractor = delegate.targetExtractor;
-    assert(_originalTargetExtractor != null);
+    originalTargetExtractor = delegate.targetExtractor;
+    assert(originalTargetExtractor != null);
     if( optimalInventory < 0 ||
     criticalInventory < 0 ||
     criticalInventory >=optimalInventory )
@@ -198,7 +198,7 @@ class BufferInventoryPricing implements PricingStrategy
   }
 
 
-  BufferInventoryPricing.simpleSeller({double initialPrice:100.0,
+  BufferInventoryAdaptive.simpleSeller({double initialPrice:100.0,
                                       double optimalInventory:100.0,
                                       double criticalInventory:10.0,
                                       double p:
@@ -209,7 +209,7 @@ class BufferInventoryPricing implements PricingStrategy
                                       PIDController.DEFAULT_DERIVATIVE_PARAMETER}):
   this(
       defaultTargetWhenStockingUp,  new SimpleExtractor("inventory"),
-      new PIDPricing.DefaultSeller(p:p,i:i,d:d, initialPrice:initialPrice),
+      new PIDAdaptive.DefaultSeller(p:p,i:i,d:d, initialPrice:initialPrice),
       optimalInventory:optimalInventory,
       criticalInventory:criticalInventory);
 
@@ -239,15 +239,15 @@ class BufferInventoryPricing implements PricingStrategy
   }
 
 
-  updatePrice(Data data)
+  adapt(Trader t,Data data)
   {
     _updateStockingFlag(data);
     if(_stockingUp)
       delegate.targetExtractor = targetExtractingStockingUp;
     else
-      delegate.targetExtractor = _originalTargetExtractor;
+      delegate.targetExtractor = originalTargetExtractor;
 
-    delegate.updatePrice(data);
+    delegate.adapt(t,data);
   }
 
 
@@ -261,16 +261,16 @@ class BufferInventoryPricing implements PricingStrategy
    */
   set targetExtractor(Extractor e){
     delegate.targetExtractor = e;
-    _originalTargetExtractor = e;
+    originalTargetExtractor = e;
   }
 
-  Extractor get targetExtractor => _originalTargetExtractor;
+  Extractor get targetExtractor => originalTargetExtractor;
   Extractor get cvExtractor => delegate.cvExtractor;
 
 
   bool get stockingUp => _stockingUp;
 
-  double get price=> delegate.price;
+  double get value=> delegate.value;
 
   double get optimalInventory => _optimalInventory;
   double get criticalInventory => _criticalInventory;

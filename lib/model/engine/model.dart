@@ -102,6 +102,8 @@ class SimpleScenario extends Scenario{
   });
 
 
+
+
   SimpleScenario.simpleBuyer({minInitialPrice : 100.0,
                              maxInitialPrice:100, dailyTarget : 40.0,
                              intercept:0.0,slope:1.0,minP:0.05,maxP:.5,minI:0.05,
@@ -247,7 +249,7 @@ class OneMarketCompetition extends Scenario
     double initialPrice = r.nextDouble() *
     (scenario.maxInitialPriceBuying - scenario.minInitialPriceBuying) +
     scenario.minInitialPriceBuying;
-    PricingStrategy s = new PIDPricing.MaximizerBuyer(plant,firm,r,
+    AdaptiveStrategy s = new PIDAdaptive.MaximizerBuyer(plant,firm,r,
     initialPrice:initialPrice,p:p,i:i,d:0.0);
     return s;
   };
@@ -304,7 +306,7 @@ class OneMarketCompetition extends Scenario
       (maxInitialPriceBuying - minInitialPriceBuying) + minInitialPriceBuying;
       ZeroKnowledgeTrader hr = new ZeroKnowledgeTrader(laborMarket,
       hrPricingInitialization(plant, firm, random, this),
-      new FixedQuota(),
+      new FixedValue(),
       new SimpleBuyerTrading(), firm);
       hrIntializer(hr);
       firm.addPurchasesDepartment(hr);
@@ -322,6 +324,169 @@ class OneMarketCompetition extends Scenario
       firm.addSalesDepartment(seller);
       firm.start(model.schedule);
       firms.add(firm);
+
+    }
+  }
+
+}
+
+
+/**
+ * wage=1 infinite supply labor; This is a scenario to test the feasibility
+ * of clearing markets by moving quantities rather than 
+ */
+class InfiniteElasticLaborKeynesianExperiment extends Scenario
+{
+
+
+  double minInitialPriceSelling = 2.0;
+  double maxInitialPriceSelling = 2.0;
+  double demandIntercept=3.0; double demandSlope=-1.0;
+  double wage = 1.0;
+  //labor pid
+  double laborMinP=0.05; double laborMaxP=.5;
+  double laborMinI=0.05; double laborMaxI=.5;
+  double quantityInventory = 10.0;
+  //plant
+  double productionMultiplier = 1.0;
+  double productionExponent = 0.5;
+  int competitors = 1;
+  List<Firm> firms = new List();
+
+  /**
+   * called to build the pricer of hr. By default it creates a marginal
+   * maximizer
+   */
+  Function hrPricingInitialization = (SISOPlant plant, Firm firm,
+                                      Random r,
+                                      InfiniteElasticLaborKeynesianExperiment scenario)
+  {
+    FixedValue fixedPrice = new FixedValue(scenario.wage);
+    return fixedPrice;
+  };
+
+
+  /**
+   * this is the particular part
+   */
+  Function hrQuotaInitialization = (SISOPlant plant, Firm firm,
+                                      Random r, ZeroKnowledgeTrader trader,
+                                      InfiniteElasticLaborKeynesianExperiment scenario)
+  {
+
+    double p = r.nextDouble() * (scenario.laborMaxP - scenario.laborMinP) +
+    scenario.laborMinP;
+    double i = r.nextDouble() * (scenario.laborMaxI - scenario
+    .laborMinI)  + scenario.laborMinI;
+
+    double optimalInventory = scenario.quantityInventory;
+
+    //here price really is people to hire
+    BufferInventoryAdaptive quotaStrategy =
+    new BufferInventoryAdaptive.simpleSeller(optimalInventory:optimalInventory,
+    criticalInventory:optimalInventory/10.0,initialPrice:1.0,p:p,d:0.0,
+    i:i);
+    //we want to change L given the seller results rather than our own
+    quotaStrategy.targetExtractingStockingUp = new OtherDataExtractor(trader,
+    quotaStrategy.targetExtractingStockingUp);
+    quotaStrategy.originalTargetExtractor = new OtherDataExtractor(trader,
+    quotaStrategy.originalTargetExtractor);
+    quotaStrategy.inventoryExtractor = new OtherDataExtractor(trader,
+    quotaStrategy.inventoryExtractor);
+    quotaStrategy.delegate.cvExtractor = new OtherDataExtractor(trader,
+    quotaStrategy.delegate.cvExtractor);
+
+
+
+
+
+
+
+    return quotaStrategy;
+  };
+
+
+  /**
+   * called to build the pricer of hr. By default it creates a marginal
+   * maximizer
+   */
+  Function salePricingInitialization = (Firm firm, Random r,
+                                      InfiniteElasticLaborKeynesianExperiment scenario)
+  {
+    double price = r.nextDouble() * (scenario.minInitialPriceSelling - scenario
+    .maxInitialPriceSelling)  + scenario.minInitialPriceSelling;
+    FixedValue fixedPrice = new FixedValue(price);
+    //todo make this MB-MC maximization
+    return fixedPrice;
+  };
+
+  /**
+   * called after sales has been built for further tuning. By default we just
+   * put a last price predictor in there
+   */
+  Function salesInitializer = (ZeroKnowledgeTrader sales){
+    sales.predictor = new LastPricePredictor();
+  };
+
+  /**
+   * called after hr has been built for further tuning. By default we just
+   * put a last price predictor in there
+   */
+  Function hrIntializer = (ZeroKnowledgeTrader hr){
+    hr.predictor = new LastPricePredictor();
+  };
+
+
+
+  start(Model model) {
+
+    Random random = model.random;
+
+    //build labor market
+    ExogenousBuyerMarket laborMarket = new ExogenousBuyerMarket.infinitelyElastic
+    (wage, goodType : "labor");
+    laborMarket.start(model.schedule);
+    model.markets["labor"] = laborMarket;
+
+    //build sales market
+    ExogenousSellerMarket market = new ExogenousSellerMarket.linear
+    (intercept:demandIntercept, slope:demandSlope);
+    market.start(model.schedule);
+    model.markets["gas"] = market;
+
+
+    for(int competitor =0; competitor< competitors; competitor++) {
+      Firm firm = new Firm();
+
+      //build plant
+      LinearProductionFunction function = new LinearProductionFunction();
+      SISOPlant plant = new SISOPlant(firm.getSection("labor"),
+      firm.getSection("gas"), function);
+      firm.addPlant(plant);
+
+      model.agents.add(firm);
+
+      //build sales
+      ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader(market,
+      salePricingInitialization(firm,random,this),new AllOwned(),
+      new SimpleSellerTrading(), firm);
+      salesInitializer(seller);
+      firm.addSalesDepartment(seller);
+
+
+
+      //build hr
+      ZeroKnowledgeTrader hr = new ZeroKnowledgeTrader(laborMarket,
+      hrPricingInitialization(plant, firm, random, this),
+      hrQuotaInitialization(plant,firm,random,seller,this),
+      new SimpleBuyerTrading(), firm);
+      hrIntializer(hr);
+      firm.addPurchasesDepartment(hr);
+
+
+      firm.start(model.schedule);
+      firms.add(firm);
+
 
     }
   }

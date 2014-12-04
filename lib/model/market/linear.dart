@@ -53,3 +53,28 @@ class LinearCurve implements ExogenousCurve
 
 
 }
+
+/**
+ * useful for infinitely elastic supply or just useless markets where
+ * everything you want to buy gets bought(above the minimum price)
+ */
+class InfinitelyElasticAsk implements ExogenousCurve
+{
+
+  double quantityTraded = 0.0;
+
+  double minPrice;
+
+
+  InfinitelyElasticAsk([this.minPrice=0.0]);
+
+  double quantityAtThisPrice(double price) => price >= minPrice ?
+  double.MAX_FINITE : 0.0;
+
+
+  double recordTrade(double quantity)=> quantityTraded+=quantity;
+
+  double reset()=>quantityTraded = 0.0;
+
+
+}

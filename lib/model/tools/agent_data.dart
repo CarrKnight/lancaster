@@ -123,6 +123,26 @@ class FunctionalExtractor implements Extractor
 
 }
 
+/**
+ * Extractor feeds the data of the user, but sometimes you need to act on
+ * some other data. In which case use this. It feeds the [delegate] the
+ * [trader] data.
+ */
+class OtherDataExtractor implements Extractor
+{
+
+  final Trader trader;
+
+  final Extractor extractor;
+
+  OtherDataExtractor(this.trader, this.extractor);
+
+  double extract(Data data) =>extractor.extract(trader.data);
+
+
+
+}
+
 
 
 typedef double Transformer(double input);
