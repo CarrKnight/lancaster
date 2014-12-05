@@ -339,7 +339,7 @@ infinitelyElasticBuyer(){
 
 
     //make sure you were notified
-    verify(buyer.notifyOfTrade(100.0, 100.0));
+    verify(buyer.notifyOfTrade(150.0, 100.0));
   });
 
 }

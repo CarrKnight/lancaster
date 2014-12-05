@@ -33,8 +33,8 @@ _EffectEstimate computeMarginalEffect(Trader trader,
                                       double deltaLevelUp,
                                       double deltaLevelDown,
                                       [double
-    defaultReturn =
-    double.INFINITY]){
+                                      defaultReturn =
+                                      double.INFINITY]){
 
   //cost expected now
   double priceNow = trader.predictPrice(0.0);
@@ -102,7 +102,7 @@ class MarginalMaximizer implements Extractor
    * Basically try to find the new target
    */
   void updateTarget(Random random, Trader buyer,Trader seller,
-                    LinearProductionFunction production, double currentValue)
+                    SISOProductionFunction production, double currentValue)
   {
     if(random.nextDouble()>updateProbability) //only act every now and then
       return;
@@ -117,9 +117,9 @@ class MarginalMaximizer implements Extractor
      */
     double consumption = production.consumption(currentTarget);
     double deltaConsumptionUp =
-      production.consumption(currentTarget+delta) - consumption;
+    production.consumption(currentTarget+delta) - consumption;
     double deltaConsumptionDown =
-      production.consumption(currentTarget-delta) - consumption;
+    production.consumption(currentTarget-delta) - consumption;
 
     var costs = computeMarginalEffect(buyer,consumption,deltaConsumptionUp,
     deltaConsumptionDown);
@@ -191,3 +191,101 @@ class MarginalMaximizer implements Extractor
 
 
 }
+
+
+class PIDMaximizer implements Extractor
+{
+
+  final StickyPID pid;
+
+  double currentTarget=1.0;
+
+  double delta = 1.0;
+
+
+  double extract(Data data) {
+    return currentTarget;
+  }
+
+
+  factory PIDMaximizer.ForHumanResources(SISOPlant plant, Firm firm,
+                                              Random r,[int averagePIDPeriod = 20, double
+      PImultiplier = 10.0])
+  {
+
+    PIDMaximizer toReturn = new PIDMaximizer(r,averagePIDPeriod,
+    PImultiplier);
+    firm.startWhenPossible((f,s)=> toReturn.start(s,f,plant));
+    return toReturn;
+
+  }
+
+
+  PIDMaximizer(Random random,[int averagePIDPeriod = 20, double
+  PImultiplier = 10.0]):
+  pid = new StickyPID.Random(new PIDController.standardPI(),random,
+  averagePIDPeriod)
+  {
+    pid.offset=currentTarget;
+    (pid.delegate as PIDController).proportionalParameter *=PImultiplier;
+    (pid.delegate as PIDController).integrativeParameter *=PImultiplier;
+  }
+
+  updateTarget(Trader buyer,Trader seller,
+               SISOProductionFunction production, double currentValue)
+  {
+    /***
+     *       ___               ____ __
+     *      / _ )___ ___  ___ / _(_) /____
+     *     / _  / -_) _ \/ -_) _/ / __(_-<
+     *    /____/\__/_//_/\__/_//_/\__/___/
+     *
+     */
+
+    //new products at new price - old products at old prices
+    double benefits =  seller.predictPrice(delta)*production.production
+    (currentTarget+delta) - seller.predictPrice(-delta) * production
+    .production(currentTarget-delta);
+    benefits/=2.0;
+    //so this is a little trick from somehwere. Numerical derivatives work
+    // better when you have (f(x+h)-f(x-h))/2
+
+
+    /***
+     *      _________  ______________
+     *     / ___/ __ \/ __/_  __/ __/
+     *    / /__/ /_/ /\ \  / / _\ \
+     *    \___/\____/___/ /_/ /___/
+     *
+     */
+
+    //new inputs at new price - old inputs at old prices
+    double costs =  buyer.predictPrice(delta)*production.consumption
+    (currentTarget+delta) - buyer.predictPrice(-delta) *production.consumption
+    (currentTarget-delta) ;
+    costs /=2.0;
+
+
+    if(costs==0 || !costs.isFinite || !benefits.isFinite)
+      return;
+
+    pid.adjust(benefits/costs,1.0);
+    currentTarget = pid.manipulatedVariable;
+  }
+
+  void start(Schedule s, Firm firm, SISOPlant producer)
+  {
+    Trader seller = firm.salesDepartments[producer.outputType];
+    Trader buyer = firm.purchasesDepartments[producer.inputType];
+
+    s.scheduleRepeating(Phase.ADJUST_PRODUCTION,(s)=>updateTarget(buyer,
+    seller,producer.function,seller.currentOutflow));
+  }
+
+
+
+
+}
+//return (float) (1f/(1+Math.exp(-(x- center)))) ;
+
+double sigmoid(double x, double center)=> (1.0/(1.0+exp(-(x- center)))) ;

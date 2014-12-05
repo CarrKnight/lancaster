@@ -112,6 +112,19 @@ class PIDAdaptive implements AdaptiveStrategy
   offset:initialPrice, p:p,i:i,d:d);
 
 
+  PIDAdaptive.PIDMaximizerBuyer(SISOPlant plant, Firm firm, Random r,
+                             {double initialPrice: 0.0,
+                             double p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
+                             double i: PIDController.DEFAULT_INTEGRAL_PARAMETER,
+                             double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER
+                             ,int averagePIDPeriod : 20,
+                             double piMultiplier : 10.0}) :
+  // controlled variable = -outflow the minuses to adapt the right way
+  this(new PIDMaximizer.ForHumanResources(plant,firm,r,averagePIDPeriod,piMultiplier),
+  new SimpleExtractor("inflow"),
+  offset:initialPrice, p:p,i:i,d:d);
+
+
   PIDAdaptive.FixedInventoryBuyer({double inventoryTarget:1.0, double initialPrice: 0.0,
                                  double p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
                                  double i: PIDController.DEFAULT_INTEGRAL_PARAMETER,

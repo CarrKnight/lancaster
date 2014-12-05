@@ -239,8 +239,11 @@ class OneMarketCompetition extends Scenario
    * called to build the pricer of hr. By default it creates a marginal
    * maximizer
    */
-  Function hrPricingInitialization = (SISOPlant plant, Firm firm,
-                                      Random r,OneMarketCompetition scenario)
+  Function hrPricingInitialization = MARGINAL_MAXIMIZER_HR;
+
+
+  static final Function MARGINAL_MAXIMIZER_HR = (SISOPlant plant, Firm firm,
+                                                             Random r,OneMarketCompetition scenario)
   {
     double p = r.nextDouble() * (scenario.purchaseMaxP - scenario.purchaseMinP) +
     scenario.purchaseMinP;
@@ -250,6 +253,21 @@ class OneMarketCompetition extends Scenario
     (scenario.maxInitialPriceBuying - scenario.minInitialPriceBuying) +
     scenario.minInitialPriceBuying;
     AdaptiveStrategy s = new PIDAdaptive.MaximizerBuyer(plant,firm,r,
+    initialPrice:initialPrice,p:p,i:i,d:0.0);
+    return s;
+  };
+
+  static final Function PID_MAXIMIZER_HR = (SISOPlant plant, Firm firm,
+                                                 Random r,OneMarketCompetition scenario)
+  {
+    double p = r.nextDouble() * (scenario.purchaseMaxP - scenario.purchaseMinP) +
+    scenario.purchaseMinP;
+    double i = r.nextDouble() * (scenario.purchaseMaxI - scenario
+    .purchaseMinI)  + scenario.purchaseMinI;
+    double initialPrice = r.nextDouble() *
+    (scenario.maxInitialPriceBuying - scenario.minInitialPriceBuying) +
+    scenario.minInitialPriceBuying;
+    AdaptiveStrategy s = new PIDAdaptive.PIDMaximizerBuyer(plant,firm,r,
     initialPrice:initialPrice,p:p,i:i,d:0.0);
     return s;
   };

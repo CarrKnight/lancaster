@@ -7,7 +7,7 @@ import 'package:unittest/unittest.dart';
 import 'package:lancaster/model/lancaster_model.dart';
 
 
-main2()
+main()
 {
 
   //one agent working as competitive
@@ -23,7 +23,15 @@ main2()
   for(int i=0;i<5;i++)
     test("Learned competitive", (){
 
-      oneMarketTest(true,5);
+      oneMarketTest(true,false,5);
+
+    });
+
+  //five agents, all learned, pid
+  for(int i=0;i<5;i++)
+    test("Learned competitive PID", (){
+
+      oneMarketTest(true,true,5);
 
     });
 
@@ -32,27 +40,77 @@ main2()
   for(int i=0;i<5;i++)
     test("Learning competitive", (){
 
-      oneMarketTest(false,5);
+      oneMarketTest(false,false,5);
+
+    });
+
+  for(int i=0;i<5;i++)
+    test("Learning competitive PID", (){
+
+      oneMarketTest(false,true,5);
 
     });
 
   for(int i=0;i<5;i++)
     test("Learned Monopolist", (){ //knows the price impacts
-      oneMarketTest(true);
+      oneMarketTest(true,false);
+    });
+  //same, but with pid
+  for(int i=0;i<5;i++)
+    test("Learned Monopolist PID", (){ //knows the price impacts
+      oneMarketTest(true,false);
     });
 
   for(int i=0;i<5;i++)
     test("Learning Monopolist", (){ //knows the price impacts
-      oneMarketTest(false);
+      oneMarketTest(false,false);
     });
+
+  for(int i=0;i<5;i++)
+    test("Learning Monopolist PID", (){ //knows the price impacts
+      oneMarketTest(false,true);
+    });
+
+  test("Can solve market days by changing L",(){
+
+    Model model = new Model.randomSeed();
+    InfiniteElasticLaborKeynesianExperiment experiment = new
+    InfiniteElasticLaborKeynesianExperiment()
+      ..minInitialPriceSelling=2.5
+      ..maxInitialPriceSelling=2.5;
+    model.scenario = experiment;
+
+    model.start();
+
+    Market gas = model.markets["gas"];
+    Market labor = model.markets["labor"];
+
+    for (int i = 0; i < 100; i++) {
+      model.schedule.simulateDay();
+
+    }
+    print('''gas price: ${gas.averageClosingPrice} workers' wages: ${labor
+    .averageClosingPrice}''');
+    print('''gas quantity: ${gas.quantityTraded} workers : ${labor
+    .quantityTraded}''');
+
+    //should have throttled production more
+    expect(gas.quantityTraded,.5);
+    expect(labor.quantityTraded,.5);
+
+
+  });
 
 }
 
-oneMarketTest(bool learned, [int competitors=1])
+oneMarketTest(bool learned, bool pidMaximizer, [int competitors=1])
 {
   Model model = new Model.randomSeed();
   OneMarketCompetition scenario = new OneMarketCompetition();
   scenario.competitors = competitors;
+
+  if(pidMaximizer)
+    scenario.hrPricingInitialization = OneMarketCompetition.PID_MAXIMIZER_HR;
 
   //doesn't add slopes when predicting prices
   scenario.salesInitializer = (ZeroKnowledgeTrader sales) {
@@ -80,7 +138,7 @@ oneMarketTest(bool learned, [int competitors=1])
     if(learned)
       hr.predictor = new FixedSlopePredictor(competitors == 1 ? 1.0 : 0.0);
     else
-    //no inventory no problem.
+      //no inventory no problem.
       hr.predictor = new KalmanPricePredictor("inflow");
   };
 
@@ -116,8 +174,8 @@ oneMarketTest(bool learned, [int competitors=1])
 
   //expect monopolist making money
   if(competitors==1) {
-    expect(gasMarket.averageClosingPrice, 75);
-    expect(laborMarket.averageClosingPrice, 25);
+    expect(gasMarket.averageClosingPrice, closeTo(75,.1));
+    expect(laborMarket.averageClosingPrice, closeTo(25,.1));
   }
   else
   {
@@ -164,37 +222,3 @@ learnedCompetitorTest(int competitors)
 }
 
 
-main()
-{
-  test("Can solve market days by changing L",(){
-
-    Model model = new Model.randomSeed();
-    InfiniteElasticLaborKeynesianExperiment experiment = new
-    InfiniteElasticLaborKeynesianExperiment()
-    ..minInitialPriceSelling=2.5
-    ..maxInitialPriceSelling=2.5;
-    model.scenario = experiment;
-
-    model.start();
-
-    Market gas = model.markets["gas"];
-    Market labor = model.markets["labor"];
-
-    for (int i = 0; i < 3000; i++) {
-      model.schedule.simulateDay();
-
-    }
-    print('''gas price: ${gas.averageClosingPrice} workers' wages: ${labor
-    .averageClosingPrice}''');
-    print('''gas quantity: ${gas.quantityTraded} workers : ${labor
-    .quantityTraded}''');
-
-    //should have throttled production more
-    expect(gas.quantityTraded,.5);
-    expect(labor.quantityTraded,.5);
-
-
-  });
-
-
-}

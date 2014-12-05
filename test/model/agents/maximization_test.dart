@@ -108,7 +108,51 @@ main(){
   });
 
 
+  test("climb mount fuji PID",(){
 
+    Random random = new Random();
+    PIDMaximizer maximizer = new PIDMaximizer(random,0);
+    double currentX = maximizer.extract(null);
+    expect(currentX,1.0);
+    maximizer.delta=1.0; //increase by 1.0 steps
+
+    //prices are: 100-x
+    var seller = new MockTrader();
+    //make sure only deltas get called
+    when(seller.predictPrice(1.0)).thenReturn( 100-currentX-1.0);
+    when(seller.predictPrice(0.0)).thenReturn( 100-currentX );
+    when(seller.predictPrice(-1.0)).thenReturn( 100-currentX+1.0);
+
+    //fixed costs: x
+    var buyer = new MockTrader();
+    when(buyer.predictPrice(1.0)).thenReturn(currentX+1.0);
+    when(buyer.predictPrice(0.0)).thenReturn(currentX);
+    when(buyer.predictPrice(-1.0)).thenReturn(currentX-1.0);
+
+    //production: 1 input ==> 1 output
+    LinearProductionFunction func = new LinearProductionFunction();
+
+    //step it 100 times
+    for(int i=0; i<10000;i++)
+    {
+      maximizer.updateTarget(buyer,seller,func,currentX);
+      currentX = maximizer.extract(null);
+
+      //reset mocks
+      when(seller.predictPrice(1.0)).thenReturn( 100-currentX-1.0);
+      when(seller.predictPrice(0.0)).thenReturn( 100-currentX );
+      when(seller.predictPrice(-1.0)).thenReturn( 100-currentX+1.0);
+      when(buyer.predictPrice(1.0)).thenReturn(currentX+1.0);
+      when(buyer.predictPrice(0.0)).thenReturn(currentX);
+      when(buyer.predictPrice(-1.0)).thenReturn(currentX-1.0);
+      print("current $currentX");
+
+    }
+    print("current $currentX");
+    //maximum is at 25
+    expect(currentX,25.0);
+
+  });
 
 
 
