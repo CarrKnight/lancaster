@@ -428,14 +428,34 @@ class InfiniteElasticLaborKeynesianExperiment extends Scenario
    * called to build the pricer of hr. By default it creates a marginal
    * maximizer
    */
-  Function salePricingInitialization = (Firm firm, Random r,
-                                      InfiniteElasticLaborKeynesianExperiment scenario)
+  Function salePricingInitialization = FIXED_PRICE;
+
+  /**
+   * Price. Price never changes.
+   */
+  static Function FIXED_PRICE = (Firm firm, Random r, SISOPlant p,
+  InfiniteElasticLaborKeynesianExperiment scenario)
   {
-    double price = r.nextDouble() * (scenario.minInitialPriceSelling - scenario
+  double price = r.nextDouble() * (scenario.minInitialPriceSelling - scenario
+  .maxInitialPriceSelling)  + scenario.minInitialPriceSelling;
+  FixedValue fixedPrice = new FixedValue(price);
+  return fixedPrice;
+  };
+
+
+  /**
+   * Price. Price never changes.
+   */
+  static Function PROFIT_MAXIMIZER_PRICING = (Firm firm, Random r, SISOPlant p,
+                                 InfiniteElasticLaborKeynesianExperiment scenario)
+  {
+    double initialPrice = r.nextDouble() * (scenario.minInitialPriceSelling -
+    scenario
     .maxInitialPriceSelling)  + scenario.minInitialPriceSelling;
-    FixedValue fixedPrice = new FixedValue(price);
-    //todo make this MB-MC maximization
-    return fixedPrice;
+
+    PIDMaximizerFacade pricer = new PIDMaximizerFacade.PricingFacade(p,firm,r,
+    initialPrice,20,1.0);
+    return pricer;
   };
 
   /**
@@ -486,7 +506,7 @@ class InfiniteElasticLaborKeynesianExperiment extends Scenario
 
       //build sales
       ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader(market,
-      salePricingInitialization(firm,random,this),new AllOwned(),
+      salePricingInitialization(firm,random,plant,this),new AllOwned(),
       new SimpleSellerTrading(), firm);
       salesInitializer(seller);
       firm.addSalesDepartment(seller);

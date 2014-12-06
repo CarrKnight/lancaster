@@ -7,6 +7,53 @@ import 'package:unittest/unittest.dart';
 import 'package:lancaster/model/lancaster_model.dart';
 
 
+KeynesianInfiniteElasticity(bool marketDayOnly) {
+  Model model = new Model.randomSeed();
+  InfiniteElasticLaborKeynesianExperiment experiment = new
+  InfiniteElasticLaborKeynesianExperiment()
+    ..minInitialPriceSelling = 2.5
+    ..maxInitialPriceSelling = 2.5;
+  model.scenario = experiment;
+
+  if(marketDayOnly)
+    experiment.salePricingInitialization =
+    InfiniteElasticLaborKeynesianExperiment.FIXED_PRICE;
+  else
+    experiment.salePricingInitialization =
+    InfiniteElasticLaborKeynesianExperiment.PROFIT_MAXIMIZER_PRICING;
+
+  model.start();
+
+  Market gas = model.markets["gas"];
+  Market labor = model.markets["labor"];
+
+  for (int i = 0; i < 3000; i++) {
+    model.schedule.simulateDay();
+    print('''gas price: ${gas.averageClosingPrice} workers' wages: ${labor
+    .averageClosingPrice}''');
+    print('''gas quantity: ${gas.quantityTraded} workers : ${labor
+    .quantityTraded}''');
+
+  }
+  print('''gas price: ${gas.averageClosingPrice} workers' wages: ${labor
+  .averageClosingPrice}''');
+  print('''gas quantity: ${gas.quantityTraded} workers : ${labor
+  .quantityTraded}''');
+
+  //should have throttled production more
+  if(marketDayOnly) {
+    expect(gas.quantityTraded, .5);
+    expect(labor.quantityTraded, .5);
+  }
+  else
+  {
+    //equilibrium is price = 1, L= 2
+    expect(gas.quantityTraded, 2);
+    expect(gas.averageClosingPrice, 1);
+    expect(labor.quantityTraded,2);
+  }
+}
+
 main()
 {
 
@@ -71,37 +118,24 @@ main()
       oneMarketTest(false,true);
     });
 
-  test("Can solve market days by changing L",(){
+  for(int i=0;i<5;i++)
+    test("Can solve market days by changing L",(){
 
-    Model model = new Model.randomSeed();
-    InfiniteElasticLaborKeynesianExperiment experiment = new
-    InfiniteElasticLaborKeynesianExperiment()
-      ..minInitialPriceSelling=2.5
-      ..maxInitialPriceSelling=2.5;
-    model.scenario = experiment;
-
-    model.start();
-
-    Market gas = model.markets["gas"];
-    Market labor = model.markets["labor"];
-
-    for (int i = 0; i < 100; i++) {
-      model.schedule.simulateDay();
-
-    }
-    print('''gas price: ${gas.averageClosingPrice} workers' wages: ${labor
-    .averageClosingPrice}''');
-    print('''gas quantity: ${gas.quantityTraded} workers : ${labor
-    .quantityTraded}''');
-
-    //should have throttled production more
-    expect(gas.quantityTraded,.5);
-    expect(labor.quantityTraded,.5);
+      KeynesianInfiniteElasticity(true);
 
 
-  });
+    });
+
+  for(int i=0;i<5;i++)
+
+    test("Short run Keynes, inelastic w",(){
+      KeynesianInfiniteElasticity(false);
+    });
 
 }
+
+
+
 
 oneMarketTest(bool learned, bool pidMaximizer, [int competitors=1])
 {

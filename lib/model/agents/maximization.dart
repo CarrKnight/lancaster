@@ -102,7 +102,7 @@ class MarginalMaximizer implements Extractor
    * Basically try to find the new target
    */
   void updateTarget(Random random, Trader buyer,Trader seller,
-                    SISOProductionFunction production, double currentValue)
+                    SISOProductionFunction production, double input)
   {
     if(random.nextDouble()>updateProbability) //only act every now and then
       return;
@@ -202,6 +202,8 @@ class PIDMaximizer implements Extractor
 
   double delta = 1.0;
 
+  Transformer ratioTransformer = (x)=>x;
+
 
   double extract(Data data) {
     return currentTarget;
@@ -209,7 +211,7 @@ class PIDMaximizer implements Extractor
 
 
   factory PIDMaximizer.ForHumanResources(SISOPlant plant, Firm firm,
-                                              Random r,[int averagePIDPeriod = 20, double
+                                         Random r,[int averagePIDPeriod = 20, double
       PImultiplier = 10.0])
   {
 
@@ -231,8 +233,11 @@ class PIDMaximizer implements Extractor
     (pid.delegate as PIDController).integrativeParameter *=PImultiplier;
   }
 
+
+
+
   updateTarget(Trader buyer,Trader seller,
-               SISOProductionFunction production, double currentValue)
+               SISOProductionFunction production, double input)
   {
     /***
      *       ___               ____ __
@@ -243,10 +248,7 @@ class PIDMaximizer implements Extractor
      */
 
     //new products at new price - old products at old prices
-    double benefits =  seller.predictPrice(delta)*production.production
-    (currentTarget+delta) - seller.predictPrice(-delta) * production
-    .production(currentTarget-delta);
-    benefits/=2.0;
+    var benefits = marginalBenefits(seller, production,input,delta);
     //so this is a little trick from somehwere. Numerical derivatives work
     // better when you have (f(x+h)-f(x-h))/2
 
@@ -260,16 +262,13 @@ class PIDMaximizer implements Extractor
      */
 
     //new inputs at new price - old inputs at old prices
-    double costs =  buyer.predictPrice(delta)*production.consumption
-    (currentTarget+delta) - buyer.predictPrice(-delta) *production.consumption
-    (currentTarget-delta) ;
-    costs /=2.0;
+    var costs = marginalCosts(buyer, production,input,delta);
 
 
     if(costs==0 || !costs.isFinite || !benefits.isFinite)
       return;
 
-    pid.adjust(benefits/costs,1.0);
+    pid.adjust(ratioTransformer(benefits/costs),1.0);
     currentTarget = pid.manipulatedVariable;
   }
 
@@ -279,7 +278,7 @@ class PIDMaximizer implements Extractor
     Trader buyer = firm.purchasesDepartments[producer.inputType];
 
     s.scheduleRepeating(Phase.ADJUST_PRODUCTION,(s)=>updateTarget(buyer,
-    seller,producer.function,seller.currentOutflow));
+    seller,producer.function,currentTarget));
   }
 
 
@@ -288,4 +287,85 @@ class PIDMaximizer implements Extractor
 }
 //return (float) (1f/(1+Math.exp(-(x- center)))) ;
 
+
+/**
+ * this is a facade/adapter of the PIDMaximizer, but instead of being an
+ * extractor it really is a pricing strategy. This is handy for the Keynesian
+ * short run model
+ */
+class PIDMaximizerFacade implements AdaptiveStrategy
+{
+
+  final PIDMaximizer delegate;
+
+
+  final Firm firm;
+
+  final SISOPlant plant;
+
+
+  Trader seller = null;
+
+  Trader buyer = null;
+
+
+  PIDMaximizerFacade(this.delegate,this.firm,this.plant,
+                     [double initialPrice=1.0])
+  {
+    delegate.pid.offset = initialPrice;
+  }
+
+  factory PIDMaximizerFacade.PricingFacade(SISOPlant plant, Firm firm,
+                                           Random r,[double initialPrice=1.0,
+      int averagePIDPeriod = 20, double
+      PImultiplier = 10.0])
+  {
+
+    PIDMaximizer delegate = new PIDMaximizer(r,averagePIDPeriod,
+    PImultiplier);
+    //we are not going to start it, since we can call it from updatePrice
+    delegate.ratioTransformer = (x)=>1/x;
+    PIDMaximizerFacade facade = new PIDMaximizerFacade(delegate,
+    firm,plant,initialPrice);
+    return facade;
+
+  }
+
+  double get value=> delegate.currentTarget;
+
+
+  //unused because the maximizer steps itself.
+  adapt(Trader t, Data data) {
+    if(seller == null)
+      seller = firm.salesDepartments[plant.outputType];
+    if(buyer == null)
+      buyer = firm.purchasesDepartments[plant.inputType];
+
+    delegate.updateTarget(buyer,seller,plant.function,(buyer as
+    ZeroKnowledgeTrader).quota.value);
+
+  }
+
+
+}
+
+
 double sigmoid(double x, double center)=> (1.0/(1.0+exp(-(x- center)))) ;
+
+double marginalBenefits(Trader seller, SISOProductionFunction production,
+                        double input,double delta) {
+  double benefits = seller.predictPrice(delta) * production.production
+  (input + delta) - seller.predictPrice(-delta) * production
+  .production(input - delta);
+  benefits /= 2.0;
+  return benefits;
+}
+
+double marginalCosts(Trader buyer, SISOProductionFunction production,
+                     double input, double delta) {
+  double costs = buyer.predictPrice(delta) * production.consumption
+  (input + delta) - buyer.predictPrice(-delta) * production.consumption
+  (input - delta) ;
+  costs /= 2.0;
+  return costs;
+}
