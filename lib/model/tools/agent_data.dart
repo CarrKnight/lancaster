@@ -32,13 +32,15 @@ class Data
 
 
 
-  Data.SellerDefault(Trader seller):
-     this(["outflow","inflow","closingPrice","offeredPrice","inventory"],(data)=>(s){
-       data["outflow"].add(seller.currentOutflow);
-       data["inflow"].add(seller.currentInflow);
-       data["closingPrice"].add(seller.lastClosingPrice);
-       data["offeredPrice"].add(seller.lastOfferedPrice);
-       data["inventory"].add(seller.good);
+  Data.TraderData(Trader trader):
+     this(["outflow","inflow","stockouts","closingPrice","offeredPrice",
+     "inventory"],(data)=>(s){
+       data["outflow"].add(trader.currentOutflow);
+       data["inflow"].add(trader.currentInflow);
+       data["stockouts"].add(trader.stockouts);
+       data["closingPrice"].add(trader.lastClosingPrice);
+       data["offeredPrice"].add(trader.lastOfferedPrice);
+       data["inventory"].add(trader.good);
      });
 
 
@@ -176,5 +178,38 @@ class SimpleExtractor implements Extractor
   }
 
 }
+
+/**
+ * multiple "optimized" extractor. Sums up all the extractors. Transforms
+ * each extractor separately before summing it
+ */
+class SumOfSimpleExtractors implements Extractor
+{
+
+  List<SimpleExtractor> extractors = new List();
+
+
+
+
+
+  SumOfSimpleExtractors(List<String> columns,[Transformer transformer=null]){
+    for(String column in columns)
+      extractors.add(new SimpleExtractor(column,transformer));
+
+  }
+
+  extract(Data data) {
+
+    double sum = 0.0;
+    for(var extractor in extractors)
+      sum+= extractor.extract(data);
+
+    return sum;
+
+
+  }
+
+}
+
 
 

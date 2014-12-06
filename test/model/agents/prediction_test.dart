@@ -16,7 +16,7 @@ main(){
   test("Slope changes correctly",(){
 
     DummyTrader trader = new DummyTrader();
-    trader.notifyOfTrade(0.0,100.0); //set the last closing price
+    trader.notifyOfTrade(0.0,100.0,0.0); //set the last closing price
 
     FixedSlopePredictor sloper = new FixedSlopePredictor(1.0);
     expect(sloper.predictPrice(trader,50.0),150.0);
@@ -77,7 +77,7 @@ main(){
 
     //create fake trader
     Trader t = new DummyTrader();
-    t.notifyOfTrade(0.0,100.0);
+    t.notifyOfTrade(0.0,100.0,0.0);
 
     Schedule schedule = new Schedule();
 

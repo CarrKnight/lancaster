@@ -36,10 +36,37 @@ buyerTests(){
     schedule.simulateDay();
 
     expect(buyer.good, 10.0);
+    expect(buyer.stockouts, 0.0);
     expect(buyer.money, -100);
 
     expect(market.quantityTraded, 10.0);
     expect(market.averageClosingPrice, 10.0);
+  });
+
+  test("Stockouts counted correctly", () {
+    Schedule schedule = new Schedule(); //the scheduler
+
+    //create a q=p supply market
+    ExogenousBuyerMarket market = new ExogenousBuyerMarket.linear
+    (intercept:0.0, slope:1.0);
+    market.start(schedule);
+
+    DummyTrader buyer = new DummyTrader();
+    market.buyers.add(buyer);
+
+    //try to buy 10 units for 20$ (you could by 20 for that price)
+    schedule.schedule(Phase.PLACE_QUOTES, (s) => market.placeBuyerQuote(buyer, 10.0,
+    20.0));
+
+    //execute day
+    schedule.simulateDay();
+
+    expect(buyer.good, 10.0);
+    expect(buyer.stockouts, 10.0);
+    expect(buyer.money, -200);
+
+    expect(market.quantityTraded, 10.0);
+    expect(market.averageClosingPrice, 20.0);
   });
 
 
@@ -154,7 +181,7 @@ buyerTests(){
     schedule.simulateDay();
 
     //make sure you were notified
-    verify(buyer.notifyOfTrade(any, any));
+    verify(buyer.notifyOfTrade(any, any,any));
   });
 
 }
@@ -339,7 +366,7 @@ infinitelyElasticBuyer(){
 
 
     //make sure you were notified
-    verify(buyer.notifyOfTrade(150.0, 100.0));
+    verify(buyer.notifyOfTrade(150.0, 100.0,any));
   });
 
 }
@@ -364,9 +391,37 @@ sellerTests() {
     schedule.simulateDay();
 
     expect(seller.good, 0);
+    expect(seller.stockouts, 0);
     expect(seller.money, 900);
 
     expect(market.quantityTraded, 10.0);
+    expect(market.averageClosingPrice, 90.0);
+  });
+
+  test("Counts stockouts correctly", () {
+    Schedule schedule = new Schedule(); //the scheduler
+
+    //create a q=101-p demand market
+    ExogenousSellerMarket market = new ExogenousSellerMarket.linear(intercept:100.0,
+    slope:-1.0);
+    market.start(schedule);
+
+    DummyTrader seller = new DummyTrader();
+    market.sellers.add(seller);
+    seller.receive(2.0); //seller has 2 units of gas it can sell
+    //try to sell 2 units for 90$ (you attract 10 customers, but it's not
+    // really a stockout)
+    schedule.schedule(Phase.PLACE_QUOTES, (s) => market.placeSaleQuote
+    (seller, 2.0, 90.0));
+
+    //execute day
+    schedule.simulateDay();
+
+    expect(seller.good, 0.0);
+    expect(seller.stockouts, 8);
+    expect(seller.money, 180.0);
+
+    expect(market.quantityTraded, 2.0);
     expect(market.averageClosingPrice, 90.0);
   });
 
@@ -481,7 +536,7 @@ sellerTests() {
     schedule.simulateDay();
 
     //make sure you were notified
-    verify(seller.notifyOfTrade(any, any));
+    verify(seller.notifyOfTrade(any, any,any));
   });
 }
 

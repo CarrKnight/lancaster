@@ -297,19 +297,19 @@ class _TradeQuote
 
 //easy functions for trading
 
-void sold(Trader seller, double amount, double price){
+void sold(Trader seller, double amount, double price, [double stockouts = 0.0]){
 
   seller.earn(price*amount);
   seller.remove(amount);
-  seller.notifyOfTrade(amount,price);
+  seller.notifyOfTrade(amount,price,stockouts);
 
 }
 
-void bought(Trader buyer, double amount, double price){
+void bought(Trader buyer, double amount, double price, [double stockouts = 0.0]){
 
   buyer.spend(price*amount);
   buyer.receive(amount);
-  buyer.notifyOfTrade(amount,price);
+  buyer.notifyOfTrade(amount,price,stockouts);
 
 
 }
@@ -469,11 +469,12 @@ class OneSideMarketClearer{
         break;
 
       var amountTraded = min(maxDemandForThisPrice, best.amount);
+      double stockouts = max(maxDemandForThisPrice - best.amount,0.0);
       //trade!
       if(bookIsForSales)
-        sold(best.owner, amountTraded, best.pricePerunit);
+        sold(best.owner, amountTraded, best.pricePerunit,stockouts);
       else
-        bought(best.owner,amountTraded,best.pricePerunit);
+        bought(best.owner,amountTraded,best.pricePerunit,stockouts);
       curve.recordTrade(amountTraded);
       moneyExchanged += amountTraded * best.pricePerunit;
       //log

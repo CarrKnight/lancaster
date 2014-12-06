@@ -90,6 +90,33 @@ class PIDAdaptive implements AdaptiveStrategy
   new SimpleExtractor("outflow",(x)=>-x),
   offset:initialPrice, p:p,i:i,d:d);
 
+
+  /**
+   * pid seller that counts stockouts
+   */
+  PIDAdaptive.StockoutSeller({double initialPrice: 0.0,
+                            double p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
+                            double i: PIDController.DEFAULT_INTEGRAL_PARAMETER,
+                            double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER
+                            }) : //target: -inflows,
+  // controlled variable = -outflow - stockouts
+  this(new SimpleExtractor("inflow",(x)=>-x),
+  new SumOfSimpleExtractors(["outflow","stockouts"],(x)=>-x),
+  offset:initialPrice, p:p,i:i,d:d);
+
+  /**
+   * pid buyer that counts stockouts
+   */
+  PIDAdaptive.StockoutBuyer({double initialPrice: 0.0,
+                             double p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
+                             double i: PIDController.DEFAULT_INTEGRAL_PARAMETER,
+                             double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER
+                             }) : //target: -outflow,
+  // controlled variable = -(inflow+stockouts)
+  this(new SimpleExtractor("outflow",(x)=>-x),
+  new SumOfSimpleExtractors(["inflow","stockouts"],(x)=>-x),
+  offset:initialPrice, p:p,i:i,d:d);
+
   PIDAdaptive.FixedInflowBuyer({double flowTarget:1.0, double initialPrice: 0.0,
                               double p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
                               double i: PIDController.DEFAULT_INTEGRAL_PARAMETER,

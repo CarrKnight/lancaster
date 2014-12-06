@@ -17,7 +17,7 @@ abstract class Trader
    * this is usually to record the price and sales. It doesn't really change inventory,
    * that's already been done when this is called
    */
-  void notifyOfTrade(double quantity, double price);
+  void notifyOfTrade(double quantity, double price, double stockouts);
 
   /**
    * the last offered price
@@ -38,6 +38,12 @@ abstract class Trader
    * the inflow since the beginning of the day
    */
   double get  currentInflow;
+
+  /**
+   * How many "stockouts" (customers we could have traded with at current
+   * prices) we have seen today. Not every market gives out this information
+   */
+  double get  stockouts;
 
 
   double predictPrice(double expectedChangeInQuantity);
@@ -71,6 +77,8 @@ class DummyTrader implements Trader
 
   double lastOfferedPrice = double.NAN;
 
+  double stockouts = double.NAN;
+
 
   DummyTrader([String goodType= "gas"])
   {
@@ -83,8 +91,9 @@ class DummyTrader implements Trader
   this(market.goodType);
 
 
-  void notifyOfTrade(double quantity, double price) {
+  void notifyOfTrade(double quantity, double price, double stockouts) {
     _lastClosingPrice = price;
+    this.stockouts = stockouts;
   }
 
   earn(double amount)=>_money.receive(amount);
@@ -164,9 +173,7 @@ class ZeroKnowledgeTrader implements Trader
   //stats:
   double _lastClosingPrice = double.NAN;
 
-  double _currentOutflow = 0.0;
-
-  double _currentInflow =0.0;
+  double _stockouts =0.0;
 
   double lastOfferedPrice = double.NAN;
 
@@ -179,13 +186,14 @@ class ZeroKnowledgeTrader implements Trader
   _money  = totalInventory.getSection(market.moneyType),
   this.market = market
   {
-    _data = new Data.SellerDefault(this);
+    _data = new Data.TraderData(this);
   }
 
 
 
   void dawn(Schedule s)
   {
+    _stockouts = 0.0; //reset stockouts counter
     for(DawnEvent e in dawnEvents)
       e(this);
 
@@ -194,8 +202,9 @@ class ZeroKnowledgeTrader implements Trader
   /**
    * store the trade results
    */
-  void notifyOfTrade(double quantity, double price) {
+  void notifyOfTrade(double quantity, double price,double stockouts) {
     _lastClosingPrice=price;
+    _stockouts += stockouts;
   }
 
 
@@ -255,8 +264,10 @@ class ZeroKnowledgeTrader implements Trader
 
   double get currentInflow=> _inventory.inflow;
 
+  double get stockouts => _stockouts;
+
   /**
-   * seller or sales-department targeting inflow=outflow
+   * seller or sales-department targeting inflow=outflow+stockouts
    */
   factory ZeroKnowledgeTrader.PIDSeller(SellerMarket market,
                                         {double initialPrice:100.0,
