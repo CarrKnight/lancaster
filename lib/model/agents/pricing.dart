@@ -64,7 +64,7 @@ class PIDAdaptive implements AdaptiveStrategy
    */
   Extractor cvExtractor;
 
-  final PIDController pid;
+  Controller pid;
 
 
   /**

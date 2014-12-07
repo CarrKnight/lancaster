@@ -335,17 +335,17 @@ class ZeroKnowledgeTrader implements Trader
     if(givenInventory == null)
       inventory = new Inventory();
 
-    ZeroKnowledgeTrader buyer = new ZeroKnowledgeTrader(market,
+    ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader(market,
     new BufferInventoryAdaptive.simpleSeller(optimalInventory:optimalInventory,
     criticalInventory:criticalInventory,initialPrice:initialPrice,p:p,d:d,i:i),
-    new FixedValue(),
+   new AllOwned(),
     new SimpleSellerTrading(), inventory);
 
     //independent trader needs to reset its own counters
     if(givenInventory==null)
-      buyer.dawnEvents.add(ResetInventories(inventory));
+      seller.dawnEvents.add(ResetInventories(inventory));
 
-    return buyer;
+    return seller;
   }
 
 //utility for factories

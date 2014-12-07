@@ -5,22 +5,103 @@
 library one_market.test;
 import 'package:unittest/unittest.dart';
 import 'package:lancaster/model/lancaster_model.dart';
+import 'dart:math';
 
+
+
+KeynesianLearnedCompetitive()
+{
+  Model model = new Model.randomSeed();
+  OneMarketCompetition scenario = new OneMarketCompetition();
+  model.scenario = scenario;
+
+
+  scenario.hrIntializer = (ZeroKnowledgeTrader sales) {
+    sales.predictor = new
+    LastPricePredictor();
+  };
+  scenario.salesInitializer = (ZeroKnowledgeTrader sales) {
+    sales.predictor = new
+    LastPricePredictor();
+  };
+
+  scenario.salesPricingInitialization =
+  OneMarketCompetition.PROFIT_MAXIMIZER_PRICING;
+
+  scenario.hrPricingInitialization = (SISOPlant plant,
+                                      Firm firm,  Random r,  ZeroKnowledgeTrader seller,
+                                      OneMarketCompetition scenario)
+  {
+    double p = r.nextDouble()*(scenario.purchaseMaxP-scenario.purchaseMinP) +
+    scenario.purchaseMinP;
+    double i = r.nextDouble()*(scenario.purchaseMaxI-scenario.purchaseMinI) +
+    scenario.purchaseMinI;
+    double price = r.nextDouble()*(scenario.maxInitialPriceBuying-scenario
+    .minInitialPriceBuying) + scenario.minInitialPriceBuying;
+
+
+    PIDAdaptive pricing = new PIDAdaptive.StockoutBuyer
+    (initialPrice:price,p:p,i:i);
+    pricing.pid = new StickyPID.Random(pricing.pid,r,20);
+    return pricing;
+  };
+  scenario.hrQuotaInitializer = OneMarketCompetition.KEYNESIAN_QUOTA;
+
+
+  model.start();
+
+  Market gas = model.markets["gas"];
+  Market labor = model.markets["labor"];
+
+  for (int i = 0; i < 3000; i++) {
+    model.schedule.simulateDay();
+    print('''gas price: ${gas.averageClosingPrice} workers' wages: ${labor
+    .averageClosingPrice}''');
+    print('''gas quantity: ${gas.quantityTraded} workers : ${labor
+    .quantityTraded}''');
+
+  }
+  print('''gas price: ${gas.averageClosingPrice} workers' wages: ${labor
+  .averageClosingPrice}''');
+  print('''gas quantity: ${gas.quantityTraded} workers : ${labor
+  .quantityTraded}''');
+
+
+
+
+  print('''gas price: ${gas.averageClosingPrice} workers' wages: ${labor
+  .averageClosingPrice}''');
+  expect(gas.averageClosingPrice,closeTo(50.0,1.5));
+  expect(gas.quantityTraded,closeTo(50.0,1.5));
+  expect(labor.averageClosingPrice,closeTo(50.0,1.5));
+  expect(labor.quantityTraded,closeTo(50.0,1.5));
+
+
+}
 
 KeynesianInfiniteElasticity(bool marketDayOnly) {
   Model model = new Model.randomSeed();
-  InfiniteElasticLaborKeynesianExperiment experiment = new
-  InfiniteElasticLaborKeynesianExperiment()
+  OneMarketCompetition experiment = new
+  OneMarketCompetition()
     ..minInitialPriceSelling = 2.5
-    ..maxInitialPriceSelling = 2.5;
+    ..maxInitialPriceSelling = 2.5
+    ..laborMarket = new ExogenousBuyerMarket.infinitelyElastic(1.0,
+  goodType:"labor")
+    ..goodMarket = new ExogenousSellerMarket.linear(intercept:3.0,slope:-1.0);
   model.scenario = experiment;
 
   if(marketDayOnly)
-    experiment.salePricingInitialization =
-    InfiniteElasticLaborKeynesianExperiment.FIXED_PRICE;
+    experiment.salesPricingInitialization =
+    OneMarketCompetition.FIXED_PRICE;
   else
-    experiment.salePricingInitialization =
-    InfiniteElasticLaborKeynesianExperiment.PROFIT_MAXIMIZER_PRICING;
+    experiment.salesPricingInitialization =
+    OneMarketCompetition.PROFIT_MAXIMIZER_PRICING;
+
+  experiment.hrPricingInitialization = (SISOPlant plant,
+                                        Firm firm,  Random r,  ZeroKnowledgeTrader seller,
+                                        OneMarketCompetition scenario)=> new FixedValue(1.0);
+  experiment.hrQuotaInitializer = OneMarketCompetition.KEYNESIAN_QUOTA;
+
 
   model.start();
 
@@ -130,6 +211,12 @@ main()
 
     test("Short run Keynes, inelastic w",(){
       KeynesianInfiniteElasticity(false);
+    });
+
+  for(int i=0;i<1;i++)
+
+    test("Learned Keynesian competitive",(){
+      KeynesianLearnedCompetitive();
     });
 
 }
