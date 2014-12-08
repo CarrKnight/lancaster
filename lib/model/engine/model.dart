@@ -384,8 +384,14 @@ class OneMarketCompetition extends Scenario
     scenario
     .minInitialPriceSelling)  + scenario.minInitialPriceSelling;
 
+    double pidMultiplier = r.nextDouble() * (scenario.salesMaxP - scenario
+    .salesMinP) +
+    scenario
+    .salesMinP;
+
+
     PIDMaximizerFacade pricer = new PIDMaximizerFacade.PricingFacade(p,firm,r,
-    initialPrice,20,1.0);
+    initialPrice,20,pidMultiplier);
     return pricer;
   };
 

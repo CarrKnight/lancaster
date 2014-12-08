@@ -15,6 +15,10 @@ KeynesianLearnedCompetitive()
   OneMarketCompetition scenario = new OneMarketCompetition();
   model.scenario = scenario;
 
+  //this is the default
+  // multiplier when using  PROFIT_MAXIMIZER_PRICING
+  scenario.salesMinP = 10.0;
+  scenario.salesMaxP = 10.0;
 
   scenario.hrIntializer = (ZeroKnowledgeTrader sales) {
     sales.predictor = new
@@ -40,13 +44,14 @@ KeynesianLearnedCompetitive()
     .minInitialPriceBuying) + scenario.minInitialPriceBuying;
 
 
-    PIDAdaptive pricing = new PIDAdaptive.StockoutBuyer
+
+    scenario.hrQuotaInitializer = OneMarketCompetition.KEYNESIAN_QUOTA;
+
+    PIDAdaptive pricing = new PIDAdaptive.StockoutQuotaBuyer
     (initialPrice:price,p:p,i:i);
     pricing.pid = new StickyPID.Random(pricing.pid,r,20);
     return pricing;
   };
-  scenario.hrQuotaInitializer = OneMarketCompetition.KEYNESIAN_QUOTA;
-
 
   model.start();
 
@@ -89,6 +94,12 @@ KeynesianInfiniteElasticity(bool marketDayOnly) {
   goodType:"labor")
     ..goodMarket = new ExogenousSellerMarket.linear(intercept:3.0,slope:-1.0);
   model.scenario = experiment;
+
+  //small demand, requires small adjustments, this "P" actually is a
+  // multiplier when using  PROFIT_MAXIMIZER_PRICING
+  experiment.salesMinP = 1.0;
+  experiment.salesMaxP = 1.0;
+
 
   if(marketDayOnly)
     experiment.salesPricingInitialization =
@@ -213,7 +224,7 @@ main()
       KeynesianInfiniteElasticity(false);
     });
 
-  for(int i=0;i<1;i++)
+  for(int i=0;i<5;i++)
 
     test("Learned Keynesian competitive",(){
       KeynesianLearnedCompetitive();

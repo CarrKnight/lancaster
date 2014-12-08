@@ -113,8 +113,21 @@ class PIDAdaptive implements AdaptiveStrategy
                              double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER
                              }) : //target: -outflow,
   // controlled variable = -(inflow+stockouts)
-  this(new SimpleExtractor("outflow",(x)=>-x),
-  new SumOfSimpleExtractors(["inflow","stockouts"],(x)=>-x),
+  this(new SimpleExtractor("outflow",(x)=>x),
+  new SumOfSimpleExtractors(["inflow","stockouts"],(x)=>x),
+  offset:initialPrice, p:p,i:i,d:d);
+
+  /**
+   * pid buyer that counts stockouts and targets quota rather than outflows
+   */
+  PIDAdaptive.StockoutQuotaBuyer({double initialPrice: 0.0,
+                            double p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
+                            double i: PIDController.DEFAULT_INTEGRAL_PARAMETER,
+                            double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER
+                            }) : //target: -outflow,
+  // controlled variable = -(inflow+stockouts)
+  this(new SimpleExtractor("quota",(x)=>x),
+  new SumOfSimpleExtractors(["inflow","stockouts"],(x)=>x),
   offset:initialPrice, p:p,i:i,d:d);
 
   PIDAdaptive.FixedInflowBuyer({double flowTarget:1.0, double initialPrice: 0.0,

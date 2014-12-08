@@ -342,7 +342,7 @@ class PIDMaximizerFacade implements AdaptiveStrategy
       buyer = firm.purchasesDepartments[plant.inputType];
 
     delegate.updateTarget(buyer,seller,plant.function,(buyer as
-    ZeroKnowledgeTrader).quota.value);
+    ZeroKnowledgeTrader).quoting.value);
 
   }
 

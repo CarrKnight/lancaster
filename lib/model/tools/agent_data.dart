@@ -33,11 +33,12 @@ class Data
 
 
   Data.TraderData(Trader trader):
-     this(["outflow","inflow","stockouts","closingPrice","offeredPrice",
+     this(["outflow","inflow","stockouts","quota","closingPrice","offeredPrice",
      "inventory"],(data)=>(s){
        data["outflow"].add(trader.currentOutflow);
        data["inflow"].add(trader.currentInflow);
        data["stockouts"].add(trader.stockouts);
+       data["quota"].add(trader.quota);
        data["closingPrice"].add(trader.lastClosingPrice);
        data["offeredPrice"].add(trader.lastOfferedPrice);
        data["inventory"].add(trader.good);

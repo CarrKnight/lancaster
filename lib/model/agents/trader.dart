@@ -45,6 +45,13 @@ abstract class Trader
    */
   double get  stockouts;
 
+  /**
+   * the maximum the trader is willing to trade. Willing doesn't mean able,
+   * this is an additional constraint due to strategy rather than means. (for
+   * example a seller that could, given the price, sell 100 units a day but
+   * throttles it down to 25 sales a day by imposing a quota of 25).
+   */
+  double get quota;
 
   double predictPrice(double expectedChangeInQuantity);
 
@@ -109,7 +116,7 @@ class DummyTrader implements Trader
   remove(double amount)=>_inventory.remove(amount);
 
 
-
+  double get quota => double.MAX_FINITE;
 
   get good =>  _inventory.amount;
 
@@ -152,7 +159,7 @@ class ZeroKnowledgeTrader implements Trader
   /**
    * how much it is willing to buy/sell?
    */
-  AdaptiveStrategy quota;
+  AdaptiveStrategy quoting;
 
   /**
    * how it trades
@@ -179,7 +186,7 @@ class ZeroKnowledgeTrader implements Trader
 
   final List<DawnEvent> dawnEvents = new List();
 
-  ZeroKnowledgeTrader(Market market,this.pricing,this.quota,
+  ZeroKnowledgeTrader(Market market,this.pricing,this.quoting,
                       this.tradingStrategy,
                       Inventory totalInventory):
   _inventory = totalInventory.getSection(market.goodType),
@@ -210,7 +217,7 @@ class ZeroKnowledgeTrader implements Trader
 
   void trade(Schedule s)
   {
-    tradingStrategy.step(this,market,_data,pricing,quota);
+    tradingStrategy.step(this,market,_data,pricing,quoting);
   }
 
   /**
@@ -221,7 +228,7 @@ class ZeroKnowledgeTrader implements Trader
     //start the datal
     _data.start(schedule);
     //register yourself
-    tradingStrategy.start(schedule,this,market,_data, pricing, quota);
+    tradingStrategy.start(schedule,this,market,_data, pricing, quoting);
     //strategies start
     predictor.start(this,schedule,data);
 
@@ -235,6 +242,9 @@ class ZeroKnowledgeTrader implements Trader
 
   double predictPrice(double expectedChangeInQuantity) => predictor
   .predictPrice(this,expectedChangeInQuantity);
+
+
+  double get quota => quoting.value;
 
   earn(double amount)=>_money.receive(amount);
 
@@ -454,9 +464,9 @@ class SimpleSellerTrading extends TradingStrategy<SellerMarket>
     pricing.adapt(trader,data);
     quota.adapt(trader,data);
     double quoteSize = quota.value;
-    if(quoteSize> 0) //if you have anything to sell
-      market.placeSaleQuote(trader,quoteSize,pricing.value);
     trader.lastOfferedPrice = pricing.value;
+    if(quoteSize> 0) //if you have anything to sell
+      market.placeSaleQuote(trader,quoteSize,trader.lastOfferedPrice);
   }
 
 
