@@ -48,7 +48,7 @@ packages:
   intl:
     description: intl
     source: hosted
-    version: "0.11.10"
+    version: "0.11.11"
   logging:
     description: logging
     source: hosted
@@ -56,7 +56,7 @@ packages:
   matcher:
     description: matcher
     source: hosted
-    version: "0.11.1"
+    version: "0.11.2"
   mockito:
     description:
       ref: null
@@ -79,7 +79,7 @@ packages:
   petitparser:
     description: petitparser
     source: hosted
-    version: "1.3.0"
+    version: "1.3.1"
   pool:
     description: pool
     source: hosted

@@ -16,6 +16,7 @@ abstract class ExogenousCurve
    */
   double quantityAtThisPrice(double price);
 
+
   /**
    * tell the curve this much [quantity] has been sold/bought
    */

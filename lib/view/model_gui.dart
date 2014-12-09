@@ -23,7 +23,7 @@ class ModelGUI {
   ModelGUI() :
     presentation = new ModelPresentation(
         new Model(
-            1,new Scenario.simpleSeller()))
+            1,new SimpleScenario.simpleSeller()))
   {
     print("gui created");
   }

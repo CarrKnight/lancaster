@@ -12,6 +12,8 @@ class LancasterModule extends Module{
     bind(ModelGUI);
     bind(ControlBar);
     bind(MarketView);
+    bind(BeveridgePlot);
+    bind(PriceChart);
   }
 }
 

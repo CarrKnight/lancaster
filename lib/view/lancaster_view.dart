@@ -11,5 +11,8 @@ import 'dart:html';
 
 
 part 'marketview/market_view.dart';
+part 'charts/beveridge_plot.dart';
+part 'charts/price_chart.dart';
+part 'charts/basechart.dart';
 part 'controlbar/model_controlbar.dart';
 part 'model_gui.dart';

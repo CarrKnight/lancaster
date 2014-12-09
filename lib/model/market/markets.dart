@@ -34,6 +34,18 @@ abstract class Market{
   double get quantityTraded;
 
   /**
+   * basically count the inflow of the registered sellers (a proxy for total
+   * production)
+   */
+  double get sellersInflow;
+
+  /**
+   * basically count the inflow of the registered sellers (a proxy for total
+   * consumption)
+   */
+  double get buyersOutflow;
+
+  /**
    * what is the good exchanged here?
    */
   String get goodType;
@@ -194,6 +206,17 @@ class ExogenousSellerMarket extends SellerMarket with OneSideMarketClearer{
 
   double get quantityTraded=> demand.quantityTraded;
 
+  /**
+   * since buyers aren't really agentized assume everything traded is consumed
+   */
+  double get buyersOutflow => quantityTraded;
+
+  /**
+   * sum up all inflow of registered sellers
+   */
+  double get sellersInflow =>
+    sellers.fold(0.0,(prev,e)=>prev+e.currentInflow);
+
 
 
 }
@@ -263,6 +286,19 @@ class ExogenousBuyerMarket extends BuyerMarket with OneSideMarketClearer{
   _moneyExchanged/supply.quantityTraded;
 
   double get quantityTraded=> supply.quantityTraded;
+
+
+  /**
+   * Buyer outflow
+   */
+  double get buyersOutflow =>   buyers.fold(0.0,(prev,b)=>prev+b.currentOutflow);
+
+
+  /**
+   * since buyers aren't really agentized assume everything on the market has
+   * just been produced
+   */
+  double get sellersInflow=> quantityTraded;
 
 
 

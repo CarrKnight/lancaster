@@ -26,7 +26,7 @@ class SimpleMarketPresentation{
   final Market _market;
 
   SimpleMarketPresentation(this._market) {
-    _marketStream = new StreamController(
+    _marketStream = new StreamController.broadcast(
                                            onListen: (){listenedTo = true;},
                                            onCancel: (){listenedTo = false;});
 
@@ -42,7 +42,7 @@ class SimpleMarketPresentation{
 
 
   /**
-   * stream only if it is listened to
+   * stream only if it is listened to.
    */
   _broadcastMarketStatus(Schedule schedule){
     if(listenedTo)
