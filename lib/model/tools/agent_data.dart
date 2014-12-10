@@ -33,16 +33,25 @@ class Data
 
 
   Data.TraderData(Trader trader):
-     this(["outflow","inflow","stockouts","quota","closingPrice","offeredPrice",
-     "inventory"],(data)=>(s){
-       data["outflow"].add(trader.currentOutflow);
-       data["inflow"].add(trader.currentInflow);
-       data["stockouts"].add(trader.stockouts);
-       data["quota"].add(trader.quota);
-       data["closingPrice"].add(trader.lastClosingPrice);
-       data["offeredPrice"].add(trader.lastOfferedPrice);
-       data["inventory"].add(trader.good);
-     });
+  this(["outflow","inflow","stockouts","quota","closingPrice","offeredPrice",
+  "inventory"],(data)=>(s){
+    data["outflow"].add(trader.currentOutflow);
+    data["inflow"].add(trader.currentInflow);
+    data["stockouts"].add(trader.stockouts);
+    data["quota"].add(trader.quota);
+    data["closingPrice"].add(trader.lastClosingPrice);
+    data["offeredPrice"].add(trader.lastOfferedPrice);
+    data["inventory"].add(trader.good);
+  });
+
+
+  Data.MarketData(Market market):
+  this(["price","quantity","seller_inflow","buyer_outflow"],(data)=>(s){
+    data["price"].add(market.averageClosingPrice);
+    data["quantity"].add(market.quantityTraded);
+    data["seller_inflow"].add(market.sellersInflow);
+    data["buyer_outflow"].add(market.buyersOutflow);
+  });
 
 
 
@@ -99,6 +108,49 @@ class Data
   Step get updateStep => _updateStep;
 
 
+
+  void writeCSV(String fileName)
+  {
+    //create string
+    StringBuffer toWrite = new StringBuffer();
+    var rows = _dataMap.values;
+    int rowN = rows.first.length;
+
+    Iterable<String> columns = _dataMap.keys;
+    int columnN = columns.length;
+    //header
+    int j=0;
+    for (String column in columns) {
+      if(j>0)
+        toWrite.write(",");
+      toWrite.write(column); j++;
+    }
+    toWrite.writeln();
+
+
+    for(int i=0; i<rowN; i++) {
+      int j=0;
+      for (String column in columns) {
+        if(j>0)
+          toWrite.write(",");
+        toWrite.write(_dataMap[column][i]);
+        j++;
+      }
+      toWrite.writeln();
+    }
+
+    if(toWrite.length == 0)
+      return;
+
+    //create the file
+    File file = new File(fileName);
+    if(file.existsSync())
+      file.deleteSync();
+    file.createSync(recursive:true);
+    //write the file
+    file.writeAsStringSync(toWrite.toString());
+
+  }
 
 
 }

@@ -24,9 +24,13 @@ abstract class Market{
 
   final TradeStream _tradeStreamer = new TradeStream();
 
+  Data data;
+
 
   void start(Schedule s){
     _tradeStreamer.start(s);
+    data = new Data.MarketData(this);
+    data.start(s);
   }
 
   double get averageClosingPrice;

@@ -1,0 +1,60 @@
+---
+title: "Yet Another Cybernetic Keynesian Model"
+author: "Ernesto Carrella"
+date: "12/10/2014"
+output: html_document
+---
+## Intent
+Here I take the first chapter of Leijonhufvud's "Keynes and the Keynesian" and agentize it. Its fundamental message is that there are two ways to visualize dynamics and disequilibrium in economics. The "Marshallian" way, which we drum into the docile minds of undergraduates to this day, goes as follows:
+
+1. **Very short run**: production (or at least its target) is fixed, only prices can change
+2. **Short run**: production can change (keeping capital fixed)
+3. **Long run**: everything can change 
+
+
+
+
+So if a firm fails to buy enough inputs to meet its production targets or fails to sell all that it produces then it reacts by changing input or output prices.    
+The key to understand Keynes' novelty to Leijonhufvud is that quantity adjustments are faster than price adjustments, so the dynamics go as follows:
+
+1. **Very short run**: prices are fixed, labor hired is the only thing that can change
+2. **Short run**: capital is still fixed, everything else can change.
+3. **Long run**: everything can change  
+ 
+So a firm failing to meet its production targets with the given wage and price will change its targets before trying to change its prices.  
+This is still relatively mild stuff, whenever you assume sticky prices you are assuming something of a Keynesian dynamic.
+
+The point Leijonhufvud was making though was that Keynesian dynamics become self-fulfilling when studied in dysequilibrium when agents aren't perfectly rational. This was Clower's "*deviation-amplifying feedback-loop*" (nobody misses the 60s ways of naming things).  
+A ugly summary would be as follows: imagine that the economy is initially in equilibrium and then a shock lowering demand occurs(thrift? moral panic? financial meltdown?); the new equilibrium would presumably have both lower prices and quantities; firms do not know where the next equilibrium is and need to find it; their initial reaction is to lower production by firing workers (remember, Keynesian dynamics); this however causes the demand to fall further, which in turn prompts firms to fire more workers and so on and so forth; these additional rounds of layoffs are what constituted the Keynesian multiplier.
+
+Now I got this agent-based method that deals pretty much in disequilibrium and lack of knowledge and I thought, I can code this thing up.
+
+##Trial and Error agent
+### The Marshallian Case
+So I published my paper on zero-knowledge traders about 6 months ago, but a super-short summary would be like this.
+Firms hire workers, use them to produce output which they sell to a fixed exogenous demand. They are price-makers so they really need to set 3 variables, $w,p,L$ (wages, output price and workers hired). The world proceeds in market days.  
+The standard Marshallian dynamics would go as follows
+  - Each market day change $w_t$ and $p_t$
+  - Every $T$ market days also change target labor $L^*$ (or change target production $F(L^*)$)
+
+Firms know nothing about competitors, labor supply or output demand, so they proceed by trial and error.
+They set price $p$ trying to sell all they produce so if they produced $F(L_t)$ and sold $q_t$ they try to find the price $p_t$ that zeroes the error:
+$$ e_t = F(L_t) - q_t  = \text{Inflow} - \text{Outflow}$$
+Now because they do not know the the demand function $q=d(p_t)$ and in fact the demand function might change over time, they use a simple PID adaptive rule:
+$$ p_{t_1} = a*e_t + b*\sum_{i=0}^t  e_i + c (e_t - e_{t-1}$$
+Which is a very old and very simple control (yup, we are going the cybernetic way).  
+Wages are set the same way except they the error there is the difference between how many workers you hired and how many workers you targeted to hire
+$$ e_t = L_t - L^*  $$
+
+Now all is left to do is change $L^*$ over time to find the maximum profits. And  that's easy to do, again use a pid controller where the error is:
+$$\e_t = \text{Marginal Benefits} - \text{Marginal Costs} $$
+Again you can feed this into a PID controller, except you don't want to do this every market day because the benefits and costs depend on the $p$ and $w$ discovered by the other two PID controllers and you need to give them time to adapt and discover the "right" prices for a given $L^*$, which is why this PID controller is activated only every $T$ market days.
+
+So this is a nice and easy, adaptive, "zero-knowledge" firm, and it works okay in simple markets. [INSERT ANIMATION HERE] You can make things more complicated (multiple inputs, kalman filters to discover market power, competition noise, etc.) but that's really all we need for this model.
+### The Keynesian Case
+Now Leijonhufvud observation of different dynamics in the Keynesian world is quite easy to adapt into my trial and error agents. You just need to shuffle around the errors and the speed of the controllers a bit:
+   - Each market day, change $L_t$
+   - Each $T$ days change $w_t$ and $p_t$
+Now you change $L_t$ and therefore production $F(L_t)$ directly every day by using the same inflow-outflow PID controller you were using before to adapt $p$, you change $w$ slowly but pretty much using the same error, and you change $p$ slowly trying to make $\text{MB}=\text{MC}$.
+
+And it's not hard to show that you can find 

@@ -12,6 +12,8 @@ import 'package:lancaster/model/lancaster_model.dart';
 
 
 class MockDummyTrader extends Mock implements DummyTrader {
+  get currentInflow => double.NAN;
+  get currentOutflow => double.NAN;
 }
 
 

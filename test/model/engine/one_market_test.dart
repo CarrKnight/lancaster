@@ -5,84 +5,12 @@
 library one_market.test;
 import 'package:unittest/unittest.dart';
 import 'package:lancaster/model/lancaster_model.dart';
+import 'package:lancaster/runs/yackm.dart';
 import 'dart:math';
 
 
 
-KeynesianLearnedCompetitive()
-{
-  Model model = new Model.randomSeed();
-  OneMarketCompetition scenario = new OneMarketCompetition();
-  model.scenario = scenario;
 
-  //this is the default
-  // multiplier when using  PROFIT_MAXIMIZER_PRICING
-  scenario.salesMinP = 10.0;
-  scenario.salesMaxP = 10.0;
-
-  scenario.hrIntializer = (ZeroKnowledgeTrader sales) {
-    sales.predictor = new
-    LastPricePredictor();
-  };
-  scenario.salesInitializer = (ZeroKnowledgeTrader sales) {
-    sales.predictor = new
-    LastPricePredictor();
-  };
-
-  scenario.salesPricingInitialization =
-  OneMarketCompetition.PROFIT_MAXIMIZER_PRICING;
-
-  scenario.hrPricingInitialization = (SISOPlant plant,
-                                      Firm firm,  Random r,  ZeroKnowledgeTrader seller,
-                                      OneMarketCompetition scenario)
-  {
-    double p = r.nextDouble()*(scenario.purchaseMaxP-scenario.purchaseMinP) +
-    scenario.purchaseMinP;
-    double i = r.nextDouble()*(scenario.purchaseMaxI-scenario.purchaseMinI) +
-    scenario.purchaseMinI;
-    double price = r.nextDouble()*(scenario.maxInitialPriceBuying-scenario
-    .minInitialPriceBuying) + scenario.minInitialPriceBuying;
-
-
-
-    scenario.hrQuotaInitializer = OneMarketCompetition.KEYNESIAN_QUOTA;
-
-    PIDAdaptive pricing = new PIDAdaptive.StockoutQuotaBuyer
-    (initialPrice:price,p:p,i:i);
-    pricing.pid = new StickyPID.Random(pricing.pid,r,20);
-    return pricing;
-  };
-
-  model.start();
-
-  Market gas = model.markets["gas"];
-  Market labor = model.markets["labor"];
-
-  for (int i = 0; i < 3000; i++) {
-    model.schedule.simulateDay();
-    print('''gas price: ${gas.averageClosingPrice} workers' wages: ${labor
-    .averageClosingPrice}''');
-    print('''gas quantity: ${gas.quantityTraded} workers : ${labor
-    .quantityTraded}''');
-
-  }
-  print('''gas price: ${gas.averageClosingPrice} workers' wages: ${labor
-  .averageClosingPrice}''');
-  print('''gas quantity: ${gas.quantityTraded} workers : ${labor
-  .quantityTraded}''');
-
-
-
-
-  print('''gas price: ${gas.averageClosingPrice} workers' wages: ${labor
-  .averageClosingPrice}''');
-  expect(gas.averageClosingPrice,closeTo(50.0,1.5));
-  expect(gas.quantityTraded,closeTo(50.0,1.5));
-  expect(labor.averageClosingPrice,closeTo(50.0,1.5));
-  expect(labor.quantityTraded,closeTo(50.0,1.5));
-
-
-}
 
 KeynesianInfiniteElasticity(bool marketDayOnly) {
   Model model = new Model.randomSeed();
@@ -119,7 +47,7 @@ KeynesianInfiniteElasticity(bool marketDayOnly) {
   Market gas = model.markets["gas"];
   Market labor = model.markets["labor"];
 
-  for (int i = 0; i < 3000; i++) {
+  for (int i = 0; i < 5000; i++) {
     model.schedule.simulateDay();
     print('''gas price: ${gas.averageClosingPrice} workers' wages: ${labor
     .averageClosingPrice}''');
@@ -134,8 +62,8 @@ KeynesianInfiniteElasticity(bool marketDayOnly) {
 
   //should have throttled production more
   if(marketDayOnly) {
-    expect(gas.quantityTraded, .5);
-    expect(labor.quantityTraded, .5);
+    expect(gas.quantityTraded, closeTo(.5,.01));
+    expect(labor.quantityTraded, closeTo(.5,.01));
   }
   else
   {
@@ -311,46 +239,14 @@ oneMarketTest(bool learned, bool pidMaximizer, [int competitors=1])
   }
   else
   {
-    expect(averageGas, closeTo(50,5));
-    expect(averageWage, closeTo(50,5));
+    expect(averageGas, closeTo(50,6));
+    expect(averageWage, closeTo(50,6));
   }
 
 
 }
 
 
-learnedCompetitorTest(int competitors)
-{
-  Model model = new Model.randomSeed();
-  OneMarketCompetition scenario = new OneMarketCompetition();
-  scenario.competitors = competitors;
-  //doesn't add slopes when predicting prices
-  scenario.hrIntializer = (ZeroKnowledgeTrader sales) {
-    sales.predictor = new
-    LastPricePredictor();
-  };
-  scenario.salesInitializer = (ZeroKnowledgeTrader sales) {
-    sales.predictor = new
-    LastPricePredictor();
-  };
 
-  model.scenario = scenario;
-  model.start();
-
-  Market gas = model.markets["gas"];
-  Market labor = model.markets["labor"];
-
-  for (int i = 0; i < 3000; i++) {
-    model.schedule.simulateDay();
-  }
-
-  print('''gas price: ${gas.averageClosingPrice} workers' wages: ${labor
-  .averageClosingPrice}''');
-  expect(gas.averageClosingPrice,closeTo(50.0,1.5));
-  expect(gas.quantityTraded,closeTo(50.0,1.5));
-  expect(labor.averageClosingPrice,closeTo(50.0,1.5));
-  expect(labor.quantityTraded,closeTo(50.0,1.5));
-  expect(model.agents.length,competitors);
-}
 
 
