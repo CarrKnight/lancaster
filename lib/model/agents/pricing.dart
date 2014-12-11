@@ -158,7 +158,7 @@ class PIDAdaptive implements AdaptiveStrategy
                              double i: PIDController.DEFAULT_INTEGRAL_PARAMETER,
                              double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER
                              ,int averagePIDPeriod : 20,
-                             double piMultiplier : 10.0}) :
+                             double piMultiplier : 100.0}) :
   // controlled variable = -outflow the minuses to adapt the right way
   this(new PIDMaximizer.ForHumanResources(plant,firm,r,averagePIDPeriod,piMultiplier),
   new SimpleExtractor("inflow"),

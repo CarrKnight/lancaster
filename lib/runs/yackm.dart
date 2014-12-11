@@ -37,8 +37,8 @@ wageName = null])
 
   //this is the default
   // multiplier when using  PROFIT_MAXIMIZER_PRICING
-  scenario.salesMinP = 15.0;
-  scenario.salesMaxP = 15.0;
+  scenario.salesMinP = 100.0;
+  scenario.salesMaxP = 100.0;
 
   scenario.hrIntializer = (ZeroKnowledgeTrader sales) {
     sales.predictor = new

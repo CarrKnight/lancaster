@@ -50,7 +50,19 @@ Now all is left to do is change $L^*$ over time to find the maximum profits. And
 $$\e_t = \text{Marginal Benefits} - \text{Marginal Costs} $$
 Again you can feed this into a PID controller, except you don't want to do this every market day because the benefits and costs depend on the $p$ and $w$ discovered by the other two PID controllers and you need to give them time to adapt and discover the "right" prices for a given $L^*$, which is why this PID controller is activated only every $T$ market days.
 
-So this is a nice and easy, adaptive, "zero-knowledge" firm, and it works okay in simple markets. [INSERT ANIMATION HERE] You can make things more complicated (multiple inputs, kalman filters to discover market power, competition noise, etc.) but that's really all we need for this model.
+So this is a nice and easy, adaptive, "zero-knowledge" firm, and it works okay in simple markets.
+```{r,fig.show='animate'}
+library(animation)
+oopt = ani.options(interval = 0.2, nmax = 10)
+## use a loop to create images one by one
+for (i in 1:ani.options("nmax")) {
+  plot(rnorm(30))
+  ani.pause() ## pause for a while ('interval')
+}
+
+```
+
+You can make things more complicated (multiple inputs, kalman filters to discover market power, competition noise, etc.) but that's really all we need for this model.
 ### The Keynesian Case
 Now Leijonhufvud observation of different dynamics in the Keynesian world is quite easy to adapt into my trial and error agents. You just need to shuffle around the errors and the speed of the controllers a bit:
    - Each market day, change $L_t$

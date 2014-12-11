@@ -202,7 +202,9 @@ class PIDMaximizer implements Extractor
 
   double delta = 1.0;
 
-  Transformer ratioTransformer = (x)=>x;
+  static final  Transformer defaultTransformer = (x)=>sigmoid(x,0.0);
+
+  Transformer ratioTransformer = defaultTransformer; //bound it upward
 
 
   double extract(Data data) {
@@ -212,7 +214,7 @@ class PIDMaximizer implements Extractor
 
   factory PIDMaximizer.ForHumanResources(SISOPlant plant, Firm firm,
                                          Random r,[int averagePIDPeriod = 20, double
-      PImultiplier = 10.0])
+      PImultiplier = 100.0])
   {
 
     PIDMaximizer toReturn = new PIDMaximizer(r,averagePIDPeriod,
@@ -224,7 +226,7 @@ class PIDMaximizer implements Extractor
 
 
   PIDMaximizer(Random random,[int averagePIDPeriod = 20, double
-  PImultiplier = 10.0]):
+  PImultiplier = 100.0]):
   pid = new StickyPID.Random(new PIDController.standardPI(),random,
   averagePIDPeriod)
   {
@@ -265,10 +267,16 @@ class PIDMaximizer implements Extractor
     var costs = marginalCosts(buyer, production,input,delta);
 
 
-    if(costs==0 || !costs.isFinite || !benefits.isFinite)
+    if(costs==0 || !costs.isFinite || !benefits.isFinite || !ratioTransformer
+    (benefits/costs).isFinite )
       return;
 
-    pid.adjust(ratioTransformer(benefits/costs),1.0);
+
+    double efficency = (benefits/costs);
+    pid.adjust(ratioTransformer(efficency),ratioTransformer(1.0));
+    print('''ratio was $efficency which transformed into
+    ${ratioTransformer(efficency)} and the new price is ${pid
+    .manipulatedVariable} ''');
     currentTarget = pid.manipulatedVariable;
   }
 
@@ -318,13 +326,13 @@ class PIDMaximizerFacade implements AdaptiveStrategy
   factory PIDMaximizerFacade.PricingFacade(SISOPlant plant, Firm firm,
                                            Random r,[double initialPrice=1.0,
       int averagePIDPeriod = 20, double
-      PImultiplier = 10.0])
+      PImultiplier = 100.0])
   {
 
     PIDMaximizer delegate = new PIDMaximizer(r,averagePIDPeriod,
     PImultiplier);
     //we are not going to start it, since we can call it from updatePrice
-    delegate.ratioTransformer = (x)=>1/x;
+    delegate.ratioTransformer = (x)=>1/(PIDMaximizer.defaultTransformer(x));
     PIDMaximizerFacade facade = new PIDMaximizerFacade(delegate,
     firm,plant,initialPrice);
     return facade;
@@ -351,6 +359,8 @@ class PIDMaximizerFacade implements AdaptiveStrategy
 
 
 double sigmoid(double x, double center)=> (1.0/(1.0+exp(-(x- center)))) ;
+
+double squareToRoot(double x)=> (x/sqrt(pow(x,2)+1)) ;
 
 double marginalBenefits(Trader seller, SISOProductionFunction production,
                         double input,double delta) {
