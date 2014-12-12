@@ -23,6 +23,12 @@ abstract class AdaptiveStrategy
 
 }
 
+abstract class ControlStrategy extends AdaptiveStrategy
+{
+  double get lastTarget;
+  double get lastControlledVariable ;
+
+}
 
 
 /**
@@ -43,12 +49,13 @@ abstract class HasExtractor{
 
 
 
+
 /**
  * A PID pricer that simply tries to put inflow=outflow. In reality unless
  * stockouts are counted it can only work when decreasing prices
  * rather than increasing them, which is why we need inventory buffers
  */
-class PIDAdaptive implements AdaptiveStrategy
+class PIDAdaptive implements ControlStrategy
 {
 
   /**
@@ -65,6 +72,9 @@ class PIDAdaptive implements AdaptiveStrategy
   Extractor cvExtractor;
 
   Controller pid;
+
+  double lastTarget = double.NAN;
+  double lastControlledVariable = double.NAN;
 
 
   /**
@@ -180,16 +190,22 @@ class PIDAdaptive implements AdaptiveStrategy
 
   void adapt(Trader t,Data data) {
 
-    double target = targetExtractor.extract(data);
-    double controlledVariable = cvExtractor.extract(data);
+    lastTarget = targetExtractor.extract(data);
+    lastControlledVariable = cvExtractor.extract(data);
     //ignore lack of data
-    if(target == null || !target.isFinite || !controlledVariable.isFinite)
+    if(lastTarget == null || !lastTarget.isFinite
+      || !lastControlledVariable.isFinite)
       return;
-    pid.adjust(target, controlledVariable);
+    pid.adjust(lastTarget, lastControlledVariable);
+    print("$lastTarget --- $lastControlledVariable --- ${pid.manipulatedVariable}");
+
   }
 
 
 }
+
+
+
 
 /**
  * The behavior depends on the [_stockingUp] flag.
@@ -200,7 +216,7 @@ class PIDAdaptive implements AdaptiveStrategy
  * [optimalInventory]. It switches back from normal to stockingup
  * if inventory goes below [criticalInventory].
  */
-class BufferInventoryAdaptive implements AdaptiveStrategy
+class BufferInventoryAdaptive implements ControlStrategy
 {
 
 
@@ -309,6 +325,8 @@ class BufferInventoryAdaptive implements AdaptiveStrategy
 
 
 
+
+
   /**
    * set the target extractor in case we aren't stocking up
    */
@@ -345,6 +363,10 @@ class BufferInventoryAdaptive implements AdaptiveStrategy
       throw new ArgumentError(
           "'inventory targets must >0 and critical<optimal");
   }
+
+  double get lastTarget => delegate.lastTarget;
+
+  double get lastControlledVariable=> delegate.lastControlledVariable;
 
 
 }

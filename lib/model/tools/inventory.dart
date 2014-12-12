@@ -89,6 +89,7 @@ class InventoryCrossSection
   double get inflow =>_inflow;
   double get outflow =>_outflow;
 
+
   /**
    * this zeroes inflows and outflows. It is usually called from the owning
    * inventory

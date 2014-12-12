@@ -62,15 +62,15 @@ KeynesianInfiniteElasticity(bool marketDayOnly) {
 
   //should have throttled production more
   if(marketDayOnly) {
-    expect(gas.quantityTraded, closeTo(.5,.01));
-    expect(labor.quantityTraded, closeTo(.5,.01));
+    expect(gas.quantityTraded, closeTo(.5,.011));
+    expect(labor.quantityTraded, closeTo(.5,.011));
   }
   else
   {
     //equilibrium is price = 1, L= 2
-    expect(gas.quantityTraded, 2);
-    expect(gas.averageClosingPrice, 1);
-    expect(labor.quantityTraded,2);
+    expect(gas.quantityTraded, closeTo(2,.011));
+    expect(gas.averageClosingPrice, closeTo(1,.011));
+    expect(labor.quantityTraded, closeTo(2,.011));
   }
 }
 

@@ -70,14 +70,14 @@ class PIDController implements Controller {
 
   PIDController.standardPI():
   this(PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
-      PIDController.DEFAULT_INTEGRAL_PARAMETER,
-      PIDController.DEFAULT_DERIVATIVE_PARAMETER
+  PIDController.DEFAULT_INTEGRAL_PARAMETER,
+  PIDController.DEFAULT_DERIVATIVE_PARAMETER
   );
 
   PIDController(this.proportionalParameter, this.integrativeParameter, this.derivativeParameter);
 
   set offset(double value){_offset=max(0.0,value);
-    _manipulatedVariable = _offset;
+  _manipulatedVariable = _offset;
   }
 
   get offset=> _offset;
@@ -88,8 +88,28 @@ class PIDController implements Controller {
   /**
    * "step" the PID controller. A new CV is computed
    */
+  updateMV() {
+//PID FORMULA
+    double newMV = offset +
+    proportionalParameter * _currentError +
+    integrativeParameter * _sumOfErrors;
+    if (_previousError.isFinite)
+      newMV += derivativeParameter * (_currentError - _previousError);
+
+    //if newMV is <0, windup stop!
+    if (newMV < 0) {
+      if (integrativeParameter != 0) //if the i is not 0
+        _sumOfErrors = _sumOfErrorsNeededForFormulaToBe0();
+      newMV = 0.0;
+    }
+
+    //done!
+    _manipulatedVariable = newMV;
+  }
+
   void adjust(double target, double controlledVariable)
   {
+    //compute error
     assert(target.isFinite);
     assert(controlledVariable.isFinite);
 
@@ -99,22 +119,8 @@ class PIDController implements Controller {
     _currentError = residual;
     _sumOfErrors += _currentError;
 
-    //PID FORMULA
-    double newMV = offset +
-          proportionalParameter * _currentError +
-          integrativeParameter * _sumOfErrors;
-    if(_previousError.isFinite)
-      newMV += derivativeParameter * (_currentError - _previousError);
-
-    //if newMV is <0, windup stop!
-    if(newMV < 0) {
-      if (integrativeParameter != 0) //if the i is not 0
-        _sumOfErrors = _sumOfErrorsNeededForFormulaToBe0();
-      newMV = 0.0;
-    }
-
-    //done!
-    _manipulatedVariable = newMV;
+    //now use the error to update the manipulated vaiable
+    updateMV();
 
   }
 
@@ -125,6 +131,15 @@ class PIDController implements Controller {
     if(_previousError.isFinite)
       numerator-= derivativeParameter * (_currentError-_previousError);
     return numerator/integrativeParameter;
+  }
+
+  void changeSumOfErrorsSoOutputIsX(double x){
+    double numerator = x - offset - (proportionalParameter * _currentError);
+    if(_previousError.isFinite)
+      numerator-= derivativeParameter * (_currentError-_previousError);
+    _sumOfErrors =  numerator/integrativeParameter;
+    updateMV();
+
   }
 
 }
@@ -146,7 +161,7 @@ class StickyPID implements Controller
 
   StickyPID(this.delegate,bool adjustmentChecker())
   {
-   _adjustToday = adjustmentChecker;
+    _adjustToday = adjustmentChecker;
   }
 
   /**
@@ -191,6 +206,44 @@ class StickyPID implements Controller
   void adjust(double target, double controlledVariable) {
     if (_adjustToday())
       delegate.adjust(target, controlledVariable);
+  }
+
+
+}
+
+/**
+ * basically never let the manipulated variable go above
+ */
+class WindupStopFromAbove implements Controller
+{
+  final PIDController delegate;
+
+  /**
+   * a function of target and controlled variable
+   */
+  final Function maximumValue;
+
+
+  WindupStopFromAbove(this.delegate, this.maximumValue);
+
+  set offset(double value)=>delegate.offset=value;
+
+  double get offset => delegate.offset;
+
+  double get manipulatedVariable=>delegate.manipulatedVariable;
+
+  void adjust(double target, double controlledVariable) {
+
+    delegate.adjust(target,controlledVariable);
+    double maximum = maximumValue(target,controlledVariable);
+    if(delegate.manipulatedVariable > maximum +1 ) {
+      delegate.changeSumOfErrorsSoOutputIsX(maximum);
+      print("${delegate.manipulatedVariable} <----> $maximum");
+      assert((delegate.manipulatedVariable - maximum).abs()<.01);
+    }
+
+
+
   }
 
 

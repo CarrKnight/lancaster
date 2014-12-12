@@ -274,9 +274,6 @@ class PIDMaximizer implements Extractor
 
     double efficency = (benefits/costs);
     pid.adjust(ratioTransformer(efficency),ratioTransformer(1.0));
-    print('''ratio was $efficency which transformed into
-    ${ratioTransformer(efficency)} and the new price is ${pid
-    .manipulatedVariable} ''');
     currentTarget = pid.manipulatedVariable;
   }
 

@@ -54,6 +54,13 @@ class Data
   });
 
 
+  Data.AdaptiveStrategyData(ControlStrategy strategy):
+  this(["target","cv","mv"],(data)=>(s){
+    data["target"].add(strategy.lastTarget);
+    data["cv"].add(strategy.lastControlledVariable);
+    data["mv"].add(strategy.value);
+  });
+
 
   bool get  empty{
     //there are no columns or there are no rows in the first column

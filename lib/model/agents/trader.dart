@@ -508,18 +508,22 @@ class SimpleBuyerTrading extends TradingStrategy<BuyerMarket>
  * any additional thing to happen to a trader at dawn (fixed inflows,
  * outflows, cash gains, stuff like that)
  */
-typedef void DawnEvent(Trader trader);
+typedef void DawnEvent(ZeroKnowledgeTrader trader);
 
-DawnEvent FixedInflowEvent(double inflow)=>(Trader trader)=>
+DawnEvent FixedInflowEvent(double inflow)=>(ZeroKnowledgeTrader trader)=>
 trader.receive(inflow);
 
-DawnEvent DepreciationEvent(double depreciationRate)=>(Trader trader)=>
+DawnEvent DepreciationEvent(double depreciationRate)=>(ZeroKnowledgeTrader trader)=>
 trader.remove(depreciationRate*trader.good);
 
 /**
  * reset inventories at dawn. Useful for independent traders.
  */
-DawnEvent ResetInventories(Inventory inventory)=>(Trader trader)=>
+DawnEvent ResetInventories(Inventory inventory)=>(ZeroKnowledgeTrader trader)=>
 inventory.resetCounters();
 
 
+DawnEvent BurnInventories()=>(ZeroKnowledgeTrader trader){
+  trader._inventory.remove(trader.good);
+  trader._inventory._resetCounters();
+};
