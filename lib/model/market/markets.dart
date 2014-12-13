@@ -181,6 +181,22 @@ class ExogenousSellerMarket extends SellerMarket with OneSideMarketClearer{
 
 
 
+
+  factory ExogenousSellerMarket.yesterdayWagesTodayDemand( Model model,
+                                                   String laborType,{
+                                                   String goodType : "gas",
+                                                   String moneyType: "money"})
+  {
+    var budgetDemand = ()=>model.markets[laborType].data.getLatestObservation
+    ("price") *model.markets[laborType].data.getLatestObservation
+    ("quantity") ;
+
+    return new ExogenousSellerMarket(new FixedBudget(budgetDemand),
+    goodType:goodType, moneyType:moneyType);
+
+  }
+
+
   ExogenousSellerMarket(ExogenousCurve this.demand, {String goodType : "gas"
   , String moneyType: "money"}):
   this.goodType = goodType, this.moneyType = moneyType;
@@ -219,7 +235,7 @@ class ExogenousSellerMarket extends SellerMarket with OneSideMarketClearer{
    * sum up all inflow of registered sellers
    */
   double get sellersInflow =>
-    sellers.fold(0.0,(prev,e)=>prev+e.currentInflow);
+  sellers.fold(0.0,(prev,e)=>prev+e.currentInflow);
 
 
 
@@ -251,8 +267,8 @@ class ExogenousBuyerMarket extends BuyerMarket with OneSideMarketClearer{
 
   ExogenousBuyerMarket.
   infinitelyElastic(double price, {
-                               String goodType : "gas",
-                               String moneyType: "money" }):
+  String goodType : "gas",
+  String moneyType: "money" }):
   this(new InfinitelyElasticAsk(price),goodType:goodType,moneyType:moneyType,
   pricePolicy: FIXED_PRICE(price));
 
@@ -515,7 +531,7 @@ class OneSideMarketClearer{
         sold(best.owner, amountTraded, best.pricePerunit,stockouts);
       else
         bought(best.owner,amountTraded,best.pricePerunit,stockouts);
-      curve.recordTrade(amountTraded);
+      curve.recordTrade(amountTraded,best.pricePerunit);
       moneyExchanged += amountTraded * best.pricePerunit;
       //log
       tradeStreamer.log(best.owner, null, amountTraded, price);

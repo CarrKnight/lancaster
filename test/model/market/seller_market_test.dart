@@ -542,8 +542,71 @@ sellerTests() {
   });
 }
 
+budgetTests()
+{
+  test("Budget cumulates fine", (){
+    var budget =new FixedBudget(()=>1000.0)
+    ..cumulative=true;
+
+    expect(budget.budget,0.0);
+    budget.reset();
+    expect(budget.budget,1000.0);
+    budget.reset();
+    expect(budget.budget,2000.0);
+
+
+  });
+  test("Noncumulative budget is noncumulative", (){
+    var budget =new FixedBudget(()=>1000.0)
+      ..cumulative=false;
+
+    expect(budget.budget,0.0);
+    budget.reset();
+    expect(budget.budget,1000.0);
+    budget.reset();
+    expect(budget.budget,1000.0);
+
+
+  });
+
+  test("Expenditure is counted", (){
+    var budget =new FixedBudget(()=>1000.0)
+      ..cumulative=false;
+
+    expect(budget.budget,0.0);
+    budget.reset();
+    expect(budget.budget,1000.0);
+    budget.recordTrade(10.0,10.0);
+    expect(budget.budget,900.0);
+    budget.reset();
+    expect(budget.budget,1000.0);
+
+
+  });
+
+  test("Do you know what you want?", (){
+    var budget =new FixedBudget(()=>1000.0)
+      ..cumulative=false;
+
+    expect(budget.budget,0.0);
+    expect(budget.quantityAtThisPrice(100.0),0.0);
+    expect(budget.quantityAtThisPrice(200.0),0.0);
+    budget.reset();
+    expect(budget.budget,1000.0);
+    budget.reset();
+    expect(budget.budget,1000.0);
+    expect(budget.quantityAtThisPrice(100.0),10.0);
+    expect(budget.quantityAtThisPrice(200.0),5.0);
+
+
+
+  });
+
+}
+
 void main() {
   buyerTests();
+  budgetTests();
   sellerTests();
   infinitelyElasticBuyer();
 

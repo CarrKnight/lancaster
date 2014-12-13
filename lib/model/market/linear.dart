@@ -11,6 +11,7 @@ part of lancaster.model;
 abstract class ExogenousCurve
 {
 
+
   /**
    * how much is sold/bought at this offer price
    */
@@ -20,12 +21,12 @@ abstract class ExogenousCurve
   /**
    * tell the curve this much [quantity] has been sold/bought
    */
-  double recordTrade(double quantity);
+  double recordTrade(double quantity, double price);
 
   /**
    * restore original curve (no quantity traded)
    */
-  double reset();
+  void reset();
 
   double get quantityTraded;
 
@@ -45,12 +46,12 @@ class LinearCurve implements ExogenousCurve
   LinearCurve(this.intercept, this.slope);
 
   double quantityAtThisPrice(double price) =>
-    (intercept + slope * price)-quantityTraded;
+  (intercept + slope * price)-quantityTraded;
 
 
-  double recordTrade(double quantity)=> quantityTraded+=quantity;
+  double recordTrade(double quantity, double price)=> quantityTraded+=quantity;
 
-  double reset()=>quantityTraded = 0.0;
+  void reset(){quantityTraded = 0.0;}
 
 
 }
@@ -73,9 +74,52 @@ class InfinitelyElasticAsk implements ExogenousCurve
   double.MAX_FINITE : 0.0;
 
 
-  double recordTrade(double quantity)=> quantityTraded+=quantity;
+  double recordTrade(double quantity, double price)=> quantityTraded+=quantity;
 
-  double reset()=>quantityTraded = 0.0;
+  void reset(){quantityTraded = 0.0;}
 
+
+}
+
+typedef double ComputeBudget();
+
+/**
+ * basically there is a fixed pool of money that can be spent
+ */
+class FixedBudget implements ExogenousCurve
+{
+
+  /**
+   * if true then money unspent is available the next day
+   */
+  bool cumulative = false;
+
+  final ComputeBudget computeBudget;
+
+  double quantityTraded =0.0;
+
+  double budget = 0.0;
+
+  double recordTrade(double quantity, double price) {
+    budget -= quantity * price;
+    quantityTraded+= quantity; //update counter
+    assert(budget>0);
+  }
+
+  double quantityAtThisPrice(double price) {
+    if(price > 0)
+      return budget/price;
+    else
+      return double.INFINITY;
+  }
+
+  void reset() {
+    quantityTraded = 0.0;
+    if(!cumulative)
+      budget = 0.0;
+    budget += computeBudget();
+  }
+
+  FixedBudget(this.computeBudget);
 
 }
