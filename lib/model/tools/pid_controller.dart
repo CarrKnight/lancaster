@@ -238,7 +238,7 @@ class WindupStopFromAbove implements Controller
     double maximum = maximumValue(target,controlledVariable);
     if(delegate.manipulatedVariable > maximum +1 ) {
       delegate.changeSumOfErrorsSoOutputIsX(maximum);
-      print("${delegate.manipulatedVariable} <----> $maximum");
+  //    print("${delegate.manipulatedVariable} <----> $maximum");
       assert((delegate.manipulatedVariable - maximum).abs()<.01);
     }
 

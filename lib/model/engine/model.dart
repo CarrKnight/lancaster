@@ -298,13 +298,22 @@ class OneMarketCompetition extends Scenario
   };
 
 
-  HrStrategyInitialization hrQuotaInitializer = FIXED_QUOTA;
+  HrStrategyInitialization hrQuotaInitializer = BUY_ALL;
 
 
 
-  static final HrStrategyInitialization FIXED_QUOTA = (SISOPlant plant, Firm firm,
+  static final HrStrategyInitialization BUY_ALL = (SISOPlant plant, Firm firm,
   Random r, ZeroKnowledgeTrader seller,
       OneMarketCompetition scenario) => new FixedValue();
+
+  /**
+   * Useful when Marhsall meets infinitely elastic supply
+   */
+  static final HrStrategyInitialization MARHSALLIAN_QUOTA = (SISOPlant plant,
+  Firm firm,
+  Random r, ZeroKnowledgeTrader seller,
+      OneMarketCompetition scenario)=> new PIDMaximizerFacade(new
+  PIDMaximizer.ForHumanResources(plant,firm,r),firm,plant);
 
 
   static final HrStrategyInitialization KEYNESIAN_QUOTA =  (SISOPlant plant, Firm firm,
@@ -360,9 +369,7 @@ class OneMarketCompetition extends Scenario
     quotaStrategy.cvExtractor = new OtherDataExtractor(seller,
     quotaStrategy.cvExtractor);
 
-    //add windup from above
-    quotaStrategy.pid= new WindupStopFromAbove(quotaStrategy.pid,(t,cv)=>max
-    (-t,-cv));
+
 
 
 
@@ -455,6 +462,8 @@ class OneMarketCompetition extends Scenario
   };
 
 
+  SISOProductionFunction productionFunction = new LinearProductionFunction();
+
 
 
   start(Model model) {
@@ -475,9 +484,8 @@ class OneMarketCompetition extends Scenario
       Firm firm = new Firm();
 
       //build plant
-      LinearProductionFunction function = new LinearProductionFunction();
       SISOPlant plant = new SISOPlant(firm.getSection("labor"),
-      firm.getSection("gas"), function);
+      firm.getSection("gas"), productionFunction);
       firm.addPlant(plant);
 
       model.agents.add(firm);

@@ -57,6 +57,11 @@ class LinearProductionFunction implements SISOProductionFunction
 class ExponentialProductionFunction implements SISOProductionFunction
 {
 
+  /**
+   * how much gets produced even with no input
+   */
+  double freebie =0.0 ;
+
   double exponent;
 
   double multiplier;
@@ -67,7 +72,7 @@ class ExponentialProductionFunction implements SISOProductionFunction
   /**
    * output = [multiplier]*input^[exponent]
    */
-  double production(double input) => pow(input,exponent) * multiplier;
+  double production(double input) => pow(input,exponent) * multiplier + freebie;
 
   /**
    * consume all

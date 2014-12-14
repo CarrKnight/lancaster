@@ -197,7 +197,7 @@ class PIDAdaptive implements ControlStrategy
       || !lastControlledVariable.isFinite)
       return;
     pid.adjust(lastTarget, lastControlledVariable);
-    print("$lastTarget --- $lastControlledVariable --- ${pid.manipulatedVariable}");
+
 
   }
 

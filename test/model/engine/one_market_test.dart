@@ -77,6 +77,7 @@ KeynesianInfiniteElasticity(bool marketDayOnly) {
 main()
 {
 
+
   //one agent working as competitive
   for(int i=0;i<5;i++)
     test("Fake competitive", (){
@@ -158,9 +159,94 @@ main()
       KeynesianLearnedCompetitive();
     });
 
+
+  //todo fails about 1% of the time. Need better PID parameters for the
+  // maximizer
+  for(int i=0; i<5;i++) {
+    test("Decreasing Productivity, fixed wage, Marshallian",
+    ()=>squareRootProductionFixedWage(false));
+
+  }
+
+
+  for(int i=0; i<5;i++) {
+    test("Keynesian Decreasing Productivity, fixed wage, ",
+        ()=>squareRootProductionFixedWage(true));
+
+  }
+
+
 }
 
 
+
+squareRootProductionFixedWage(bool keynesian)
+{
+  Model model = new Model.randomSeed();
+  OneMarketCompetition scenario = new OneMarketCompetition();
+  scenario.competitors = 1;
+  //doesn't add slopes when predicting prices
+  scenario.hrIntializer = (ZeroKnowledgeTrader sales) {
+    sales.predictor = new
+    LastPricePredictor();
+  };
+  scenario.salesInitializer = (ZeroKnowledgeTrader sales) {
+    sales.predictor = new
+    LastPricePredictor();
+  };
+  scenario.productionFunction = new ExponentialProductionFunction(exponent:0.5);
+
+  scenario.goodMarket = new ExogenousSellerMarket.linear(intercept:27.0,
+  slope:-1.0);
+  scenario.laborMarket = new ExogenousBuyerMarket.infinitelyElastic(1.0,
+  goodType:"labor");
+
+  scenario.hrPricingInitialization = (SISOPlant plant,
+                                      Firm firm,  Random r,  ZeroKnowledgeTrader seller,
+                                      OneMarketCompetition scenario)=> new FixedValue(1.0);
+  if(keynesian)
+  {
+    scenario.hrQuotaInitializer = OneMarketCompetition.KEYNESIAN_STOCKOUT_QUOTA;
+    scenario.salesInitializer = (ZeroKnowledgeTrader trader) {
+      trader.predictor = new LastPricePredictor();
+      trader.dawnEvents.add(BurnInventories());
+    };
+    //this is the default
+    // multiplier when using  PROFIT_MAXIMIZER_PRICING
+    scenario.salesMinP = 50.0;
+    scenario.salesMaxP = 50.0;
+    scenario.salesPricingInitialization = OneMarketCompetition.PROFIT_MAXIMIZER_PRICING;
+    scenario.maxInitialPriceSelling=27.0;
+  }
+  else {
+    scenario.hrQuotaInitializer = OneMarketCompetition.MARHSALLIAN_QUOTA;
+    scenario.salesPricingInitialization = OneMarketCompetition.BUFFER_PID;
+  }
+
+  model.scenario = scenario;
+  model.start();
+
+  Market gas = model.markets["gas"];
+  Market labor = model.markets["labor"];
+
+
+  for (int i = 0; i < 3000; i++) {
+    model.schedule.simulateDay();
+    print('''gas : ${gas.quantityTraded} workers' : ${labor
+    .quantityTraded}''');
+    print('''gas price: ${gas.averageClosingPrice} workers' wages: ${labor
+    .averageClosingPrice}''');
+  }
+
+
+  expect(gas.averageClosingPrice, closeTo(18.0, 1.5));
+  expect(gas.quantityTraded, closeTo(9.0, 1.5));
+  expect(labor.averageClosingPrice, closeTo(1.0, 0.0));
+  expect(labor.quantityTraded, closeTo(81.0, 2.5));
+
+
+
+}
 
 
 oneMarketTest(bool learned, bool pidMaximizer, [int competitors=1])

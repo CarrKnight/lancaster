@@ -272,9 +272,10 @@ class PIDMaximizer implements Extractor
       return;
 
 
-    double efficency = (benefits/costs);
-    pid.adjust(ratioTransformer(efficency),ratioTransformer(1.0));
+    double efficiency = (benefits/costs);
+    pid.adjust(ratioTransformer(efficiency),ratioTransformer(1.0));
     currentTarget = pid.manipulatedVariable;
+    print("benefits $benefits and costs $costs");
   }
 
   void start(Schedule s, Firm firm, SISOPlant producer)
@@ -320,6 +321,7 @@ class PIDMaximizerFacade implements AdaptiveStrategy
     delegate.pid.offset = initialPrice;
   }
 
+  //todo rename
   factory PIDMaximizerFacade.PricingFacade(SISOPlant plant, Firm firm,
                                            Random r,[double initialPrice=1.0,
       int averagePIDPeriod = 20, double
