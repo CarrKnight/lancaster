@@ -69,4 +69,10 @@ Now Leijonhufvud observation of different dynamics in the Keynesian world is qui
    - Each $T$ days change $w_t$ and $p_t$
 Now you change $L_t$ and therefore production $F(L_t)$ directly every day by using the same inflow-outflow PID controller you were using before to adapt $p$, you change $w$ slowly but pretty much using the same error, and you change $p$ slowly trying to make $\text{MB}=\text{MC}$.
 
-And it's not hard to show that you can find 
+And it's not hard to show that you can get to the equilibrium again, given enough time.
+[insert animation 2]
+
+##Trial and Error Macroeconomy
+Now, from a micro perspective the difference between the 2 dynamics is purely academic. Both work.  
+In this section the demand is not exogenous though, it is equal to the salary paid by the producer. 
+

@@ -180,15 +180,33 @@ class ExogenousSellerMarket extends SellerMarket with OneSideMarketClearer{
   this(new LinearCurve(intercept,slope),goodType:goodType,moneyType:moneyType);
 
 
-
-
-  factory ExogenousSellerMarket.yesterdayWagesTodayDemand( Model model,
+  /**
+   * demand = w*L of the previous day
+   */
+  factory ExogenousSellerMarket.linkedToWagesFromModel( Model model,
                                                    String laborType,{
                                                    String goodType : "gas",
                                                    String moneyType: "money"})
   {
     var budgetDemand = ()=>model.markets[laborType].data.getLatestObservation
     ("price") *model.markets[laborType].data.getLatestObservation
+    ("quantity") ;
+
+    return new ExogenousSellerMarket(new FixedBudget(budgetDemand),
+    goodType:goodType, moneyType:moneyType);
+
+  }
+
+  /**
+   * demand = w*L of the previous day
+   */
+  factory ExogenousSellerMarket.linkedToWagesFromData( Data laborData,
+                                                        {
+                                                        String goodType : "gas",
+                                                        String moneyType: "money"})
+  {
+    var budgetDemand = ()=>laborData.getLatestObservation
+    ("price") *laborData.getLatestObservation
     ("quantity") ;
 
     return new ExogenousSellerMarket(new FixedBudget(budgetDemand),
@@ -524,7 +542,8 @@ class OneSideMarketClearer{
       if (maxDemandForThisPrice <= 0) //if the best price gets no sales, we are done
         break;
 
-      var amountTraded = min(maxDemandForThisPrice, best.amount);
+      double amountTraded = min(maxDemandForThisPrice, best.amount);
+      assert(amountTraded.isFinite);
       double stockouts = max(maxDemandForThisPrice - best.amount,0.0);
       //trade!
       if(bookIsForSales)

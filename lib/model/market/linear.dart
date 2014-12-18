@@ -103,7 +103,7 @@ class FixedBudget implements ExogenousCurve
   double recordTrade(double quantity, double price) {
     budget -= quantity * price;
     quantityTraded+= quantity; //update counter
-    assert(budget>0);
+    assert(budget>=0);
   }
 
   double quantityAtThisPrice(double price) {
@@ -117,7 +117,9 @@ class FixedBudget implements ExogenousCurve
     quantityTraded = 0.0;
     if(!cumulative)
       budget = 0.0;
-    budget += computeBudget();
+    double newBudget = computeBudget();
+    if(newBudget.isFinite)
+      budget += newBudget;
   }
 
   FixedBudget(this.computeBudget);

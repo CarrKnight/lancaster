@@ -604,10 +604,257 @@ budgetTests()
 
 }
 
+
+
+
+//like the seller tests, but this time the budget is read from the results
+// of another market
+budgetTestsEmbedded()
+{
+
+  test("Clears one embedded ", () {
+
+    Schedule schedule = new Schedule(); //the scheduler
+
+    //fake budget: 1000
+    Data laborData = new Data(["price","quantity"],(data)=>(s){
+      data["price"].add(10.0);
+      data["quantity"].add(90.0);
+    });
+    laborData.start(schedule);
+    //create a q=101-p demand market
+    ExogenousSellerMarket market = new ExogenousSellerMarket.
+    linkedToWagesFromData(laborData);
+    market.start(schedule);
+
+    DummyTrader seller = new DummyTrader();
+    market.sellers.add(seller);
+    seller.receive(10.0); //seller has 10 units of gas it can sell
+    //try to sell 10 units for 90$ (that's exactly on the slope)
+    schedule.schedule(Phase.PLACE_QUOTES, (s) => market.placeSaleQuote(seller, 10.0, 90.0));
+
+    //execute day
+    schedule.simulateDay();
+
+    //it will not clear because it takes a day for the budget to go from
+    // wages to consumption
+    expect(seller.good, 10);
+    expect(true,seller.stockouts.isNaN);
+    expect(seller.money, 0);
+
+
+    //should be able to have sold everything
+    schedule.schedule(Phase.PLACE_QUOTES, (s) => market.placeSaleQuote(seller, 10.0, 90.0));
+    schedule.simulateDay();
+
+    expect(seller.good, 0);
+    expect(seller.stockouts, 0);
+    expect(seller.money, 900);
+
+    expect(market.quantityTraded, 10.0);
+    expect(market.averageClosingPrice, 90.0);
+  });
+
+
+  test("Counts stockouts correctly, embedded ", () {
+
+    Schedule schedule = new Schedule(); //the scheduler
+
+    //fake budget: 1000
+    Data laborData = new Data(["price","quantity"],(data)=>(s){
+      data["price"].add(10.0);
+      data["quantity"].add(90.0);
+    });
+    laborData.start(schedule);
+    //create a q=101-p demand market
+    ExogenousSellerMarket market = new ExogenousSellerMarket.
+    linkedToWagesFromData(laborData);
+    market.start(schedule);
+
+
+    DummyTrader seller = new DummyTrader();
+    market.sellers.add(seller);
+    schedule.simulateDay();
+
+    seller.receive(2.0); //seller has 10 units of gas it can sell
+    //try to sell 10 units for 90$ (that's exactly on the slope)
+    schedule.schedule(Phase.PLACE_QUOTES, (s) => market.placeSaleQuote(seller,
+    2.0, 90.0));
+
+    //execute day
+    schedule.simulateDay();
+
+    expect(seller.good, 0);
+    expect(seller.stockouts, 8);
+    expect(seller.money, 180);
+
+    expect(market.quantityTraded, 2.0);
+    expect(market.averageClosingPrice, 90.0);
+  });
+
+  test("clears partial quote, embedded ", () {
+
+    Schedule schedule = new Schedule(); //the scheduler
+
+    //fake budget: 1000
+    Data laborData = new Data(["price","quantity"],(data)=>(s){
+      data["price"].add(10.0);
+      data["quantity"].add(90.0);
+    });
+    laborData.start(schedule);
+    //create a q=101-p demand market
+    ExogenousSellerMarket market = new ExogenousSellerMarket.
+    linkedToWagesFromData(laborData);
+    market.start(schedule);
+
+
+    DummyTrader seller = new DummyTrader();
+    market.sellers.add(seller);
+    schedule.simulateDay();
+
+    seller.receive(20.0); //seller has 10 units of gas it can sell
+    //try to sell 10 units for 90$ (that's exactly on the slope)
+    schedule.schedule(Phase.PLACE_QUOTES, (s) => market.placeSaleQuote(seller,
+    20.0, 90.0));
+
+    //execute day
+    schedule.simulateDay();
+
+    expect(seller.good, 10);
+    expect(seller.money, 900);
+    expect(seller.stockouts, 0.0);
+    expect(market.quantityTraded, 10.0);
+    expect(market.averageClosingPrice, 90.0);
+  });
+
+
+  test("best offer wins, embedded ", () {
+
+    Schedule schedule = new Schedule(); //the scheduler
+
+    //fake budget: 1900
+    Data laborData = new Data(["price","quantity"],(data)=>(s){
+      data["price"].add(10.0);
+      data["quantity"].add(190.0);
+    });
+    laborData.start(schedule);
+    //create a q=101-p demand market
+    ExogenousSellerMarket market = new ExogenousSellerMarket.
+    linkedToWagesFromData(laborData);
+    market.start(schedule);
+
+
+    DummyTrader seller1 = new DummyTrader();
+    DummyTrader seller2 = new DummyTrader();
+    market.sellers.add(seller1);
+    market.sellers.add(seller2);
+    schedule.simulateDay();
+
+    seller1.receive(10.0); //both sellers has 10 units of gas it can sell
+    seller2.receive(10.0);
+    //seller 2 sells at 190$, seller 1 at 191$
+    schedule.schedule(Phase.PLACE_QUOTES, (s) => market.placeSaleQuote(seller2, 10.0, 190.0));
+    schedule.schedule(Phase.PLACE_QUOTES, (s) => market.placeSaleQuote(seller1, 10.0, 191.0));
+
+
+    //execute day
+    schedule.simulateDay();
+    //seller 1 sold nothing
+    expect(seller1.good, 10);
+    expect(seller1.money, 0);
+    //seller 2 sold everything
+    expect(seller2.good, 0);
+    expect(seller2.money, 1900);
+    //market results
+    expect(market.quantityTraded, 10.0);
+    expect(market.averageClosingPrice, 190.0);
+  });
+
+
+  test("two seller share, embedded ", () {
+
+    Schedule schedule = new Schedule(); //the scheduler
+
+    //fake budget: 1900
+    Data laborData = new Data(["price","quantity"],(data)=>(s){
+      data["price"].add(10.0);
+      data["quantity"].add(190.0);
+    });
+    laborData.start(schedule);
+    //create a q=101-p demand market
+    ExogenousSellerMarket market = new ExogenousSellerMarket.
+    linkedToWagesFromData(laborData);
+    market.start(schedule);
+
+
+    DummyTrader seller1 = new DummyTrader();
+    DummyTrader seller2 = new DummyTrader();
+    market.sellers.add(seller1);
+    market.sellers.add(seller2);
+    schedule.simulateDay();
+
+
+    seller1.receive(5.0); //they both have 5 units
+    seller2.receive(5.0);
+    //they should both sell
+    schedule.schedule(Phase.PLACE_QUOTES, (s) => market.placeSaleQuote(seller2, 5.0, 190.0));
+    schedule.schedule(Phase.PLACE_QUOTES, (s) => market.placeSaleQuote(seller1, 5.0, 190.0));
+
+    //execute day
+    schedule.simulateDay();
+    //seller 1 sold everthing
+    expect(seller1.good, 0);
+    expect(seller1.money, 190 * 5.0);
+    //seller 2 sold everything
+    expect(seller2.good, 0);
+    expect(seller2.money, 190 * 5.0);
+
+    //market results
+    expect(market.quantityTraded, 10.0);
+    expect(market.averageClosingPrice, 190.0);
+  });
+
+
+
+  test("two seller share, embedded ", () {
+
+    Schedule schedule = new Schedule(); //the scheduler
+
+    //fake budget: 1900
+    Data laborData = new Data(["price","quantity"],(data)=>(s){
+      data["price"].add(10.0);
+      data["quantity"].add(190.0);
+    });
+    laborData.start(schedule);
+    //create a q=101-p demand market
+    ExogenousSellerMarket market = new ExogenousSellerMarket.
+    linkedToWagesFromData(laborData);
+    market.start(schedule);
+
+
+    DummyTrader seller = new MockDummyTrader();
+    market.sellers.add(seller);
+    schedule.simulateDay();
+
+
+    seller.receive(10.0); //seller has 10 units of gas it can sell
+    //try to sell 10 units for 90$ (that's exactly on the slope)
+    schedule.schedule(Phase.PLACE_QUOTES, (s) => market.placeSaleQuote(seller, 10.0, 90.0));
+
+    //execute day
+    schedule.simulateDay();
+    //seller 1 sold everthing
+    verify(seller.notifyOfTrade(any, any,any));
+
+  });
+
+}
+
 void main() {
   buyerTests();
   budgetTests();
   sellerTests();
+  budgetTestsEmbedded();
   infinitelyElasticBuyer();
 
 }

@@ -45,6 +45,8 @@ class Schedule
   }
 
   void _schedule(Phase p, Step s, bool repeating){
+    assert(s != null);
+    assert(p != null);
     _stepsByPhase[p].addLast(new ScheduledStep(s,repeating));
   }
 
