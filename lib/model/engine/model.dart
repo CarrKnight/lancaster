@@ -216,7 +216,7 @@ class SimpleFirmScenario extends Scenario
 
 
 typedef AdaptiveStrategy  HrStrategyInitialization(SISOPlant plant, Firm firm,
-Random r, ZeroKnowledgeTrader seller, OneMarketCompetition scenario);
+                                                   Random r, ZeroKnowledgeTrader seller, OneMarketCompetition scenario);
 
 typedef AdaptiveStrategy SalesStrategyInitialization(SISOPlant plant, Firm firm,
                                                      Random r,
@@ -263,9 +263,9 @@ class OneMarketCompetition extends Scenario
 
   static final HrStrategyInitialization MARGINAL_MAXIMIZER_HR = (SISOPlant plant,
                                                                  Firm firm,
-                                                             Random r,
-                                                             ZeroKnowledgeTrader seller,
-                                                             OneMarketCompetition scenario)
+                                                                 Random r,
+                                                                 ZeroKnowledgeTrader seller,
+                                                                 OneMarketCompetition scenario)
   {
     double p = r.nextDouble() * (scenario.purchaseMaxP - scenario.purchaseMinP) +
     scenario.purchaseMinP;
@@ -303,17 +303,28 @@ class OneMarketCompetition extends Scenario
 
 
   static final HrStrategyInitialization BUY_ALL = (SISOPlant plant, Firm firm,
-  Random r, ZeroKnowledgeTrader seller,
-      OneMarketCompetition scenario) => new FixedValue();
+                                                   Random r, ZeroKnowledgeTrader seller,
+                                                   OneMarketCompetition scenario) => new FixedValue();
 
   /**
    * Useful when Marhsall meets infinitely elastic supply
    */
-  static final HrStrategyInitialization MARHSALLIAN_QUOTA = (SISOPlant plant,
+  static final HrStrategyInitialization MARSHALLIAN_QUOTA =
+  MARSHALLIAN_QUOTAS(1.0);
+  /**
+   * confusing? function that returns the function that creates the hr
+   * strategy. Useful, even though not intuitive
+   */
+  static HrStrategyInitialization MARSHALLIAN_QUOTAS(double initialTarget)
+=>(SISOPlant plant,
   Firm firm,
   Random r, ZeroKnowledgeTrader seller,
-      OneMarketCompetition scenario)=> new PIDMaximizerFacade(new
-  PIDMaximizer.ForHumanResources(plant,firm,r),firm,plant);
+  OneMarketCompetition scenario) {
+    PIDMaximizer delegate = new PIDMaximizer.ForHumanResources(plant, null, r);
+   return new PIDMaximizerFacade(delegate, firm, plant,initialTarget);
+  };
+
+
 
 
   static final HrStrategyInitialization KEYNESIAN_QUOTA =  (SISOPlant plant, Firm firm,
@@ -348,9 +359,9 @@ class OneMarketCompetition extends Scenario
 
 
   static final HrStrategyInitialization KEYNESIAN_STOCKOUT_QUOTA =  (SISOPlant
-                                                                plant, Firm firm,
-                                                            Random r, ZeroKnowledgeTrader seller,
-                                                            OneMarketCompetition scenario)
+                                                                     plant, Firm firm,
+                                                                     Random r, ZeroKnowledgeTrader seller,
+                                                                     OneMarketCompetition scenario)
   {
 
     double p = r.nextDouble() * (scenario.purchaseMaxP - scenario.purchaseMinP) +
@@ -396,9 +407,9 @@ class OneMarketCompetition extends Scenario
 
 
   static final SalesStrategyInitialization BUFFER_PID = (SISOPlant plant, Firm firm,
-                                                      Random r,
-                                                      OneMarketCompetition
-                                                      scenario)
+                                                         Random r,
+                                                         OneMarketCompetition
+                                                         scenario)
   {
     double p = r.nextDouble() * (scenario.salesMaxP - scenario.salesMinP) +
     scenario
@@ -416,8 +427,8 @@ class OneMarketCompetition extends Scenario
 
 
   static final SalesStrategyInitialization
-    PROFIT_MAXIMIZER_PRICING = (SISOPlant p,Firm firm,Random r,
-                                OneMarketCompetition scenario)
+  PROFIT_MAXIMIZER_PRICING = (SISOPlant p,Firm firm,Random r,
+                              OneMarketCompetition scenario)
   {
     double initialPrice = r.nextDouble() * (scenario.maxInitialPriceSelling -
     scenario
@@ -439,10 +450,10 @@ class OneMarketCompetition extends Scenario
 
   static final SalesStrategyInitialization ALL_OWNED = (SISOPlant plant, Firm
   firm,
-                                                         Random r,
-                                                         OneMarketCompetition
-                                                         scenario)
- => new AllOwned();
+                                                        Random r,
+                                                        OneMarketCompetition
+                                                        scenario)
+  => new AllOwned();
 
 
   /**

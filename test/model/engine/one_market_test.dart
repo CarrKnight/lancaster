@@ -74,9 +74,15 @@ KeynesianInfiniteElasticity(bool marketDayOnly) {
   }
 }
 
+
 main()
 {
 
+  for(int i=0; i<5;i++) {
+    test("Marshallian Macro, ",
+        ()=>fixedWageMacro());
+
+  }
 
   //one agent working as competitive
   for(int i=0;i<5;i++)
@@ -176,9 +182,66 @@ main()
   }
 
 
+
+
+
 }
 
 
+
+fixedWageMacro()
+{
+  Model model = new Model.randomSeed();
+  OneMarketCompetition scenario = new OneMarketCompetition();
+  scenario.competitors = 1;
+  //doesn't add slopes when predicting prices
+  scenario.hrIntializer = (ZeroKnowledgeTrader sales) {
+    sales.predictor = new
+    LastPricePredictor();
+  };
+  scenario.salesInitializer = (ZeroKnowledgeTrader sales) {
+    sales.predictor = new
+    LastPricePredictor();
+  };
+  //F = Sqrt(L)-5
+  scenario.productionFunction = new ExponentialProductionFunction(exponent:0.5)
+  ..freebie = -5.0;
+  scenario.laborMarket = new ExogenousBuyerMarket.infinitelyElastic(1.0,
+  goodType:"labor");
+  //demand = total wages yesterday
+  scenario.goodMarket = new ExogenousSellerMarket.linkedToWagesFromModel
+  (model,"labor");
+
+  //fixed wages = 1
+  scenario.hrPricingInitialization = (SISOPlant plant,
+                                      Firm firm,  Random r,  ZeroKnowledgeTrader seller,
+                                      OneMarketCompetition scenario)=> new FixedValue(1.0);
+  //marshallian
+  scenario.hrQuotaInitializer = OneMarketCompetition.MARSHALLIAN_QUOTAS(50.0);
+  scenario.salesPricingInitialization = OneMarketCompetition.BUFFER_PID;
+
+  model.scenario = scenario;
+  model.start();
+
+  Market gas = model.markets["gas"];
+  Market labor = model.markets["labor"];
+
+
+  for (int i = 0; i < 10000; i++) {
+    model.schedule.simulateDay();
+    print('''gas : ${gas.quantityTraded} workers' : ${labor
+    .quantityTraded}''');
+    print('''gas price: ${gas.averageClosingPrice} workers' wages: ${labor
+    .averageClosingPrice}''');
+  }
+
+
+  expect(gas.averageClosingPrice, closeTo(20.0, 1.5));
+  expect(gas.quantityTraded, closeTo(5.0, 0.5));
+  expect(labor.averageClosingPrice, closeTo(1.0, 0.0));
+  expect(labor.quantityTraded, closeTo(100.0, 2.5));
+
+}
 
 squareRootProductionFixedWage(bool keynesian)
 {
@@ -213,13 +276,13 @@ squareRootProductionFixedWage(bool keynesian)
     };
     //this is the default
     // multiplier when using  PROFIT_MAXIMIZER_PRICING
-    scenario.salesMinP = 50.0;
-    scenario.salesMaxP = 50.0;
+    scenario.salesMinP = 100.0;
+    scenario.salesMaxP = 100.0;
     scenario.salesPricingInitialization = OneMarketCompetition.PROFIT_MAXIMIZER_PRICING;
     scenario.maxInitialPriceSelling=27.0;
   }
   else {
-    scenario.hrQuotaInitializer = OneMarketCompetition.MARHSALLIAN_QUOTA;
+    scenario.hrQuotaInitializer = OneMarketCompetition.MARSHALLIAN_QUOTA;
     scenario.salesPricingInitialization = OneMarketCompetition.BUFFER_PID;
   }
 
@@ -230,7 +293,7 @@ squareRootProductionFixedWage(bool keynesian)
   Market labor = model.markets["labor"];
 
 
-  for (int i = 0; i < 3000; i++) {
+  for (int i = 0; i < 10000; i++) {
     model.schedule.simulateDay();
     print('''gas : ${gas.quantityTraded} workers' : ${labor
     .quantityTraded}''');

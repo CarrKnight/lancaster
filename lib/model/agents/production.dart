@@ -72,7 +72,8 @@ class ExponentialProductionFunction implements SISOProductionFunction
   /**
    * output = [multiplier]*input^[exponent]
    */
-  double production(double input) => pow(input,exponent) * multiplier + freebie;
+  double production(double input) => max(pow(input,exponent) * multiplier +
+  freebie,0.0);
 
   /**
    * consume all

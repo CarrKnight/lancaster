@@ -103,7 +103,7 @@ class FixedBudget implements ExogenousCurve
   double recordTrade(double quantity, double price) {
     budget -= quantity * price;
     quantityTraded+= quantity; //update counter
-    assert(budget>=0);
+    assert(budget>=-1);
   }
 
   double quantityAtThisPrice(double price) {

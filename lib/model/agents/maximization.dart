@@ -219,7 +219,8 @@ class PIDMaximizer implements Extractor
 
     PIDMaximizer toReturn = new PIDMaximizer(r,averagePIDPeriod,
     PImultiplier);
-    firm.startWhenPossible((f,s)=> toReturn.start(s,f,plant));
+    if(firm!=null)
+      firm.startWhenPossible((f,s)=> toReturn.start(s,f,plant));
     return toReturn;
 
   }
@@ -319,6 +320,7 @@ class PIDMaximizerFacade implements AdaptiveStrategy
                      [double initialPrice=1.0])
   {
     delegate.pid.offset = initialPrice;
+    delegate.currentTarget = initialPrice;
   }
 
   //todo rename
@@ -350,6 +352,7 @@ class PIDMaximizerFacade implements AdaptiveStrategy
 
     delegate.updateTarget(buyer,seller,plant.function,(buyer as
     ZeroKnowledgeTrader).quoting.value);
+    print("new target $value");
 
   }
 
