@@ -358,34 +358,34 @@ class OneMarketCompetition extends Scenario
   };
 
 
-  static final HrStrategyInitialization KEYNESIAN_STOCKOUT_QUOTA =  (SISOPlant
-                                                                     plant, Firm firm,
-                                                                     Random r, ZeroKnowledgeTrader seller,
-                                                                     OneMarketCompetition scenario)
-  {
+  static final HrStrategyInitialization KEYNESIAN_STOCKOUT_QUOTA =
+  KEYNESIAN_STOCKOUT_QUOTAS(1.0);
 
-    double p = r.nextDouble() * (scenario.purchaseMaxP - scenario.purchaseMinP) +
-    scenario.purchaseMinP;
-    double i = r.nextDouble() * (scenario.purchaseMaxI - scenario
-    .purchaseMinI)  + scenario.purchaseMinI;
-
-
-    //here price really is people to hire
-    PIDAdaptive quotaStrategy =
-    new PIDAdaptive.StockoutSeller(initialPrice:1.0,p:p,d:0.0,
-    i:i);
-    //we want to change L given the seller results rather than our own
-    quotaStrategy.targetExtractor = new OtherDataExtractor(seller,
-    quotaStrategy.targetExtractor);
-    quotaStrategy.cvExtractor = new OtherDataExtractor(seller,
-    quotaStrategy.cvExtractor);
+  static HrStrategyInitialization KEYNESIAN_STOCKOUT_QUOTAS(double
+                                                            initialTarget) {
+    return (SISOPlant
+            plant, Firm firm,
+            Random r, ZeroKnowledgeTrader seller,
+            OneMarketCompetition scenario) {
+      double p = r.nextDouble() * (scenario.purchaseMaxP - scenario.purchaseMinP) +
+      scenario.purchaseMinP;
+      double i = r.nextDouble() * (scenario.purchaseMaxI - scenario
+      .purchaseMinI) + scenario.purchaseMinI;
 
 
+      //here price really is people to hire
+      PIDAdaptive quotaStrategy =
+      new PIDAdaptive.StockoutSeller(initialPrice:initialTarget, p:p, d:0.0,
+      i:i);
+      //we want to change L given the seller results rather than our own
+      quotaStrategy.targetExtractor = new OtherDataExtractor(seller,
+      quotaStrategy.targetExtractor);
+      quotaStrategy.cvExtractor = new OtherDataExtractor(seller,
+      quotaStrategy.cvExtractor);
 
-
-
-    return quotaStrategy;
-  };
+      return quotaStrategy;
+    };
+  }
 
 
   SalesStrategyInitialization salesPricingInitialization = BUFFER_PID;

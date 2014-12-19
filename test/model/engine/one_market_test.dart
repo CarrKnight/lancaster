@@ -80,7 +80,13 @@ main()
 
   for(int i=0; i<5;i++) {
     test("Marshallian Macro, ",
-        ()=>fixedWageMacro());
+        ()=>fixedWageMacro(false));
+
+  }
+
+  for(int i=0; i<5;i++) {
+    test("Keynesian Macro, ",
+        ()=>fixedWageMacro(true));
 
   }
 
@@ -189,7 +195,7 @@ main()
 
 
 
-fixedWageMacro()
+fixedWageMacro(bool keynesian)
 {
   Model model = new Model.randomSeed();
   OneMarketCompetition scenario = new OneMarketCompetition();
@@ -216,10 +222,26 @@ fixedWageMacro()
   scenario.hrPricingInitialization = (SISOPlant plant,
                                       Firm firm,  Random r,  ZeroKnowledgeTrader seller,
                                       OneMarketCompetition scenario)=> new FixedValue(1.0);
-  //marshallian
-  scenario.hrQuotaInitializer = OneMarketCompetition.MARSHALLIAN_QUOTAS(50.0);
-  scenario.salesPricingInitialization = OneMarketCompetition.BUFFER_PID;
 
+  if(keynesian){
+    scenario.hrQuotaInitializer = OneMarketCompetition
+    .KEYNESIAN_STOCKOUT_QUOTAS(50.0);
+    scenario.salesInitializer = (ZeroKnowledgeTrader trader) {
+      trader.predictor = new LastPricePredictor();
+      trader.dawnEvents.add(BurnInventories());
+    };
+    //this is the default
+    // multiplier when using  PROFIT_MAXIMIZER_PRICING
+    scenario.salesMinP = 100.0;
+    scenario.salesMaxP = 100.0;
+    scenario.salesPricingInitialization = OneMarketCompetition.PROFIT_MAXIMIZER_PRICING;
+    scenario.maxInitialPriceSelling=27.0;
+  }
+  else {
+    //marshallian
+    scenario.hrQuotaInitializer = OneMarketCompetition.MARSHALLIAN_QUOTAS(50.0);
+    scenario.salesPricingInitialization = OneMarketCompetition.BUFFER_PID;
+  }
   model.scenario = scenario;
   model.start();
 
