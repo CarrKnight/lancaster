@@ -62,8 +62,15 @@ class BeveridgePlot implements ShadowRootAware{
 
 
     config = new ChartConfig([priceSeries], [0]);
+    LinearScale newScale = new LinearScale();
+    newScale.domain = [0.0,100.0];
+    newScale.clamp = true;
+ //   config.getDimensionAxis(0).scale =newScale;
+   // config.getDimensionAxis(1).scale =newScale;
     chartLocation = querySelector('.price-chart');
     _drawChart();
+    print("Chart drawn!" );
+
 
 
   }

@@ -7,6 +7,7 @@ import 'package:lancaster/presentation/lancaster_presentation.dart';
 import 'package:angular/angular.dart';
 import 'package:observe/observe.dart';
 import 'package:charted/charts/charts.dart';
+import 'package:charted/scale/scale.dart';
 import 'dart:html';
 
 

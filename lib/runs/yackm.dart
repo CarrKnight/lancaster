@@ -116,9 +116,9 @@ wageName = null])
   }
 
   if(gasName!=null)
-    gas.data.writeCSV(gasName);
+    writeCSV(gas.data.backingMap,gasName);
   if(wageName!=null)
-    labor.data.writeCSV(wageName);
+    writeCSV(labor.data.backingMap,wageName);
 
 }
 
@@ -172,13 +172,14 @@ wageName = null, String gasPIDName = null, String wagePIDName = null])
   }
 
   if(gasName!=null)
-    gas.data.writeCSV(gasName);
+    writeCSV(gas.data.backingMap,gasName);
   if(wageName!=null)
-    labor.data.writeCSV(wageName);
+    writeCSV(labor.data.backingMap,wageName);
   if(gasPIDName!=null)
-    gasPID.writeCSV(gasPIDName);
+    writeCSV(gasPID.backingMap,gasPIDName);
   if(wagePIDName!=null)
-    wagePID.writeCSV(wagePIDName);
+    writeCSV(wagePID.backingMap,wagePIDName);
+
 }
 
 
@@ -213,4 +214,49 @@ String getOutputPathForFile(String file){
   return "${findRootFolder()}${Platform.pathSeparator}docs${Platform
   .pathSeparator}yackm${Platform.pathSeparator}rawdata${Platform
   .pathSeparator}$file";
+}
+
+
+
+void writeCSV(Map<String,List<double>> _dataMap, String fileName)
+{
+  //create string
+  StringBuffer toWrite = new StringBuffer();
+  var rows = _dataMap.values;
+  int rowN = rows.first.length;
+
+  Iterable<String> columns = _dataMap.keys;
+  int columnN = columns.length;
+  //header
+  int j=0;
+  for (String column in columns) {
+    if(j>0)
+      toWrite.write(",");
+    toWrite.write(column); j++;
+  }
+  toWrite.writeln();
+
+
+  for(int i=0; i<rowN; i++) {
+    int j=0;
+    for (String column in columns) {
+      if(j>0)
+        toWrite.write(",");
+      toWrite.write(_dataMap[column][i]);
+      j++;
+    }
+    toWrite.writeln();
+  }
+
+  if(toWrite.length == 0)
+    return;
+
+  //create the file
+  File file = new File(fileName);
+  if(file.existsSync())
+    file.deleteSync();
+  file.createSync(recursive:true);
+  //write the file
+  file.writeAsStringSync(toWrite.toString());
+
 }

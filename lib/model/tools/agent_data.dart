@@ -116,48 +116,10 @@ class Data
 
 
 
-  void writeCSV(String fileName)
-  {
-    //create string
-    StringBuffer toWrite = new StringBuffer();
-    var rows = _dataMap.values;
-    int rowN = rows.first.length;
-
-    Iterable<String> columns = _dataMap.keys;
-    int columnN = columns.length;
-    //header
-    int j=0;
-    for (String column in columns) {
-      if(j>0)
-        toWrite.write(",");
-      toWrite.write(column); j++;
-    }
-    toWrite.writeln();
+  Map<String,List<double>> get backingMap => _dataMap;
 
 
-    for(int i=0; i<rowN; i++) {
-      int j=0;
-      for (String column in columns) {
-        if(j>0)
-          toWrite.write(",");
-        toWrite.write(_dataMap[column][i]);
-        j++;
-      }
-      toWrite.writeln();
-    }
 
-    if(toWrite.length == 0)
-      return;
-
-    //create the file
-    File file = new File(fileName);
-    if(file.existsSync())
-      file.deleteSync();
-    file.createSync(recursive:true);
-    //write the file
-    file.writeAsStringSync(toWrite.toString());
-
-  }
 
 
 }
