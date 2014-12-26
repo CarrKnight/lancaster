@@ -17,9 +17,7 @@ part of lancaster.view;
     selector: 'priceplot',
     templateUrl: 'packages/lancaster/view/charts/plot.html',
     cssUrl: 'packages/lancaster/view/charts/plot.css',
-    publishAs: 'priceplot',
-    useShadowDom: false
-)
+    publishAs: 'priceplot')
 class PriceChart implements ShadowRootAware{
 
   /**
@@ -61,7 +59,7 @@ class PriceChart implements ShadowRootAware{
     formatter:(x)=>"$x\$")],
     observationRows);
     config = new ChartConfig([priceSeries], [0]);
-    chartLocation = querySelector('.price-chart');
+    chartLocation = HTML.querySelector('.price-chart');
     _drawChart();
 
 
@@ -88,8 +86,8 @@ class PriceChart implements ShadowRootAware{
    * handy though because when this is called we know the html is ready to be
    * selected
    */
-  void onShadowRoot(ShadowRoot shadowRoot){
-    chartLocation=querySelector('.price-chart');
+  void onShadowRoot(HTML.ShadowRoot shadowRoot){
+    chartLocation=HTML.querySelector('.price-chart');
     _drawChart();
   }
 

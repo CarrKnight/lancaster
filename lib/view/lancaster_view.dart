@@ -8,7 +8,12 @@ import 'package:angular/angular.dart';
 import 'package:observe/observe.dart';
 import 'package:charted/charts/charts.dart';
 import 'package:charted/scale/scale.dart';
-import 'dart:html';
+import 'package:charted/charted.dart' ;
+import 'package:charted/svg/svg.dart' ;
+import 'package:charted/selection/selection.dart';
+import 'dart:html' as HTML;
+import 'dart:math' as MATH;
+import 'dart:collection';
 
 
 part 'marketview/market_view.dart';

@@ -11,9 +11,7 @@ part of lancaster.view;
 @Component(
     selector: 'model-gui',
     templateUrl: 'packages/lancaster/view/modelgui.html',
-    publishAs: 'gui',
-    useShadowDom: false
-      )
+    publishAs: 'gui')
 class ModelGUI {
 
   final ModelPresentation presentation;
