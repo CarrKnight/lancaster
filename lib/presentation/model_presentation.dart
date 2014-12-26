@@ -25,6 +25,15 @@ class ModelPresentation
     _model.start();
     _initializePresentations();
   }
+
+
+  factory ModelPresentation.SimpleSeller(Model model) {
+    ModelPresentation presentation = new ModelPresentation(model);
+    presentation.gasPresentation = new SimpleMarketPresentation.seller(model
+    .markets["gas"]);
+    presentation.gasPresentation.start(model.schedule);
+    return presentation;
+  }
   /**
    *
    * the presentation object of the gas market

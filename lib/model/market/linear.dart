@@ -49,6 +49,10 @@ class LinearCurve implements ExogenousCurve
   (intercept + slope * price)-quantityTraded;
 
 
+  double hypotheticalQuantityAtThisPrice(double price)
+  =>(intercept + slope * price);
+
+
   double recordTrade(double quantity, double price)=> quantityTraded+=quantity;
 
   void reset(){quantityTraded = 0.0;}

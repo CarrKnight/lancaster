@@ -19,7 +19,7 @@ class ModelGUI {
   final String comma = "ahahah";
 
   ModelGUI() :
-    presentation = new ModelPresentation(
+    presentation = new ModelPresentation.SimpleSeller(
         new Model(
             1,new SimpleScenario.simpleSeller()))
   {

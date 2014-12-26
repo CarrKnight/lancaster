@@ -19,6 +19,10 @@ class SimpleMarketPresentation{
   bool listenedTo = false;
 
 
+
+  /**
+   * the broadcaster to turn market events into stream views can read
+   */
   StreamController<MarketEvent> _marketStream;
 
 
@@ -31,6 +35,24 @@ class SimpleMarketPresentation{
                                            onCancel: (){listenedTo = false;});
 
   }
+
+  factory SimpleMarketPresentation.seller(ExogenousSellerMarket market)
+  {
+    SimpleMarketPresentation toReturn = new SimpleMarketPresentation(market);
+    toReturn.curveRepository.addCurve(market.demand,"Demand");
+    return toReturn;
+
+  }
+
+  factory SimpleMarketPresentation.buyer(ExogenousBuyerMarket market)
+  {
+    SimpleMarketPresentation toReturn = new SimpleMarketPresentation(market);
+    toReturn.curveRepository.addCurve(market.supply,"supply");
+    return toReturn;
+
+  }
+
+  final CurveRepository curveRepository = new CurveRepository();
 
 
   /**
@@ -55,6 +77,8 @@ class SimpleMarketPresentation{
 
   Stream<TradeEvent> get tradeStream => _market.tradeStream;
   Stream<MarketEvent> get marketStream => _marketStream.stream;
+
+
 
 }
 

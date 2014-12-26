@@ -127,8 +127,15 @@ class BeveridgePlot implements ShadowRootAware{
 
   Selection clipPath;
   Selection areaMask;
+  SvgLine liner;
 
   static const CLIP_PATH_ID = "clippath";
+
+  static final List<String> COLORS = ["rgb(86,180,233)",
+  "rgb(240,228,66)",
+  "rgb(0,114,178)",
+  "rgb(204,94,0)",
+  "rgb(0,158,115)"];
   /**
    * builds a clip-path to avoid drawing out of boundaries and a background
    * area to color
@@ -144,12 +151,14 @@ class BeveridgePlot implements ShadowRootAware{
     //Set rect's position and size…
       ..attr("x", padding)
       ..attr("y", padding)
+      ..attr("pointer-events", "all")
       ..attr("width", w - 2 * padding )
       ..attr("height", h - 2* padding);
 
     //just a rect to color the area
     areaMask = svg.append("rect")               //Make a new clipPath
       ..attr("id", "areamask")
+      ..attr("pointer-events", "all")
       ..attr("clip-path","url(#$CLIP_PATH_ID)")
       ..attr("fill", "rgb(0,255, 255) ")
       ..attr("opacity", "0.1")
@@ -160,10 +169,51 @@ class BeveridgePlot implements ShadowRootAware{
 
     //todo move this to css
     //highlight
-    areaMask.on("mouseover",(d,i,e)=> areaMask.transition().attr(
+    areaMask.on("mouseover",(d,i,e)=> areaMask.attr(
         "opacity","0.2"));
-    areaMask.on("mouseout",(d,i,e)=> areaMask.transition().attr(
+    areaMask.on("mouseout",(d,i,e)=> areaMask.attr(
         "opacity","0.1"));
+
+  }
+
+  /**
+   * build things like fixed demand and supply curves
+   */
+  void _buildBackgroundCurves(Selection svg)
+  {
+    //line uniting the points
+    liner = new SvgLine();
+    liner.xAccessor = (d,i) => xScale.apply(d[0]);
+    liner.yAccessor = (d,i)=>yScale.apply(d[1]);
+    liner.defined = (List<double> d,i,e)=> d[0].isFinite && d[1].isFinite;
+
+    //draw curves
+    Selection curves = svg.append("g");
+    curves.attr("pointer-events","all");
+    curves.attr("clip-path","url(#clippath)");
+    int i=0;
+    print(_presentation.curveRepository.curves);
+    for(ExogenousCurve curve in _presentation.curveRepository.curves )
+    {
+      Selection pathContainer = curves.append("g");
+      pathContainer.attr("pointer-events","all");
+      DataSelection path =  pathContainer.selectAll("path")
+      .data([_presentation.curveRepository.curveToPath(curve,
+      0.0,100.0,0.0,100.0)]);
+      path.enter
+      .append("path")
+        ..attr("class","selectable line")
+        ..attrWithCallback("d",(d,i,e)=>liner.path(d,i,e))
+        ..attr('stroke', COLORS[i])
+        ..attr('stroke-width', "2")
+        ..attr("fill","none");
+
+      i++;
+    }
+
+
+
+
   }
 
 
@@ -205,10 +255,10 @@ class BeveridgePlot implements ShadowRootAware{
   void _updateCircles(Selection circles)
   {
     circles
-    .transition()
+    //   .transition()
       ..attrWithCallback("cx",(MarketEvent datum, i, c)=>xScale.apply(datum.quantity))
       ..attrWithCallback("cy",(MarketEvent datum, i, c)=>yScale.apply(datum.price))
-      ..attr("r",5)
+      ..attr("r",8)
       ..attrWithCallback("opacity",(datum, i, c)=>MATH.pow((i+1)/(dataset.length+1), 2));
 
 
@@ -228,6 +278,8 @@ class BeveridgePlot implements ShadowRootAware{
 
     //we need to put the circles in a group, so we can attach clip-path to it
     Selection circles = svg.append("g");
+    circles.attr("pointer-events","all");
+
     circles.attr("id","beveridge_data");
     circles.attr("clip-path","url(#clippath)");
 
@@ -274,11 +326,14 @@ class BeveridgePlot implements ShadowRootAware{
     _buildAxesAndScale(svg);
     //background
     _buildChartBackground(svg);
+    //draw the curves
+    _buildBackgroundCurves(svg);
+
+
     //circles
     _drawCircles(svg);
     //set yourself up to listen to the stream of data
     _listenToPresentation(svg);
-
 
 
 

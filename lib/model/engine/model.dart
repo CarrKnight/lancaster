@@ -59,6 +59,8 @@ abstract class Scenario{
 
 typedef void ModelInitialization(Model model);
 
+
+
 /**
  * calls a function when start is called. Useful for small stuff
  */

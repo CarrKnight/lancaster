@@ -16,3 +16,5 @@ import 'package:lancaster/model/lancaster_model.dart';
 
 part 'market_presentation.dart';
 part 'model_presentation.dart';
+part 'utilities/curve_to_path.dart';
+part 'utilities/curves_repository.dart';
