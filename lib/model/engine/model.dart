@@ -61,6 +61,48 @@ typedef void ModelInitialization(Model model);
 
 
 
+
+
+class SimpleSellerScenario extends Scenario
+{
+
+  double dailyFlow;
+
+  ModelInitialization initializer;
+
+
+  void start(Model model)=>initializer(model);
+
+
+  SimpleSellerScenario.buffer({minInitialPrice : 100.0,
+                       maxInitialPrice:100, this.dailyFlow : 40.0,
+                       intercept:100.0,slope:-1.0,minP:0.05,maxP:.5,minI:0.05,
+                       maxI:.5,int seed:1,int competitors:1})
+  {
+    initializer = (Model model) {
+      ExogenousSellerMarket market = new ExogenousSellerMarket.linear(intercept:intercept,
+      slope:slope);
+      market.start(model.schedule);
+
+      Random random = new Random(seed);
+      model.markets["gas"] = market;
+      //initial price 0
+      for (int i = 0; i < competitors; i++) {
+        double p = random.nextDouble() * (maxP - minP) + minP;
+        double i = random.nextDouble() * (maxI - minI) + minI;
+        double initialPrice = random.nextDouble() *
+        (maxInitialPrice - minInitialPrice) + minInitialPrice;
+        ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader.PIDBufferSellerFixedInflow(dailyFlow,
+        market, initialPrice:initialPrice, p:p, i:i);
+        model.agents.add(seller);
+        seller.start(model.schedule);
+      }
+    };
+  }
+
+}
+
+
 /**
  * calls a function when start is called. Useful for small stuff
  */
@@ -75,33 +117,6 @@ class SimpleScenario extends Scenario{
 
   void start(Model model)=>initializer(model);
 
-  SimpleScenario.simpleSeller({minInitialPrice : 100.0,
-                              maxInitialPrice:100, dailyFlow : 40.0,
-                              intercept:100.0,slope:-1.0,minP:0.05,maxP:.5,minI:0.05,
-                              maxI:.5,int seed:1,int competitors:1}):
-  this((Model model){
-    ExogenousSellerMarket market = new ExogenousSellerMarket.linear(intercept:intercept,
-    slope:slope);
-    market.start(model.schedule);
-
-    Random random = new Random(seed);
-    model.markets["gas"]=market;
-    //initial price 0
-    for(int i=0; i< competitors; i++) {
-      double p = random.nextDouble() * (maxP - minP) + minP;
-      double i = random.nextDouble() * (maxI - minI) + minI;
-      double initialPrice = random.nextDouble() *
-      (maxInitialPrice - minInitialPrice) + minInitialPrice;
-      ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader.PIDBufferSellerFixedInflow(dailyFlow,
-      market, initialPrice:initialPrice, p:p, i:i);
-      model.agents.add(seller);
-      seller.start(model.schedule);
-    }
-
-
-
-
-  });
 
 
 
@@ -318,12 +333,12 @@ class OneMarketCompetition extends Scenario
    * strategy. Useful, even though not intuitive
    */
   static HrStrategyInitialization MARSHALLIAN_QUOTAS(double initialTarget)
-=>(SISOPlant plant,
-  Firm firm,
-  Random r, ZeroKnowledgeTrader seller,
-  OneMarketCompetition scenario) {
+  =>(SISOPlant plant,
+     Firm firm,
+     Random r, ZeroKnowledgeTrader seller,
+     OneMarketCompetition scenario) {
     PIDMaximizer delegate = new PIDMaximizer.ForHumanResources(plant, null, r);
-   return new PIDMaximizerFacade(delegate, firm, plant,initialTarget);
+    return new PIDMaximizerFacade(delegate, firm, plant,initialTarget);
   };
 
 

@@ -27,10 +27,11 @@ class ModelPresentation
   }
 
 
-  factory ModelPresentation.SimpleSeller(Model model) {
+  factory ModelPresentation.SimpleSeller(Model model,
+                                         SimpleSellerScenario scenario) {
     ModelPresentation presentation = new ModelPresentation(model);
     presentation.gasPresentation = new SimpleMarketPresentation.seller(model
-    .markets["gas"]);
+    .markets["gas"],scenario.dailyFlow);
     presentation.gasPresentation.start(model.schedule);
     return presentation;
   }

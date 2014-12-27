@@ -43,7 +43,7 @@ part 'agents/firm.dart';
  *    \_)(_/\_/\_/(__\_)(__\_)(____) (__) (____/
  */
 part 'market/markets.dart';
-part 'market/linear.dart';
+part 'market/curves.dart';
 
 /***
  *     ____  __    __   __    ____

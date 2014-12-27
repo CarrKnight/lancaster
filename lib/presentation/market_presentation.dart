@@ -36,10 +36,12 @@ class SimpleMarketPresentation{
 
   }
 
-  factory SimpleMarketPresentation.seller(ExogenousSellerMarket market)
+  factory SimpleMarketPresentation.seller(ExogenousSellerMarket market,
+                                          double dailyFlow)
   {
     SimpleMarketPresentation toReturn = new SimpleMarketPresentation(market);
     toReturn.curveRepository.addCurve(market.demand,"Demand");
+    toReturn.curveRepository.addCurve(new FixedSupply(dailyFlow), "Supply");
     return toReturn;
 
   }

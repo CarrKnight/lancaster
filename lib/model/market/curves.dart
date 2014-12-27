@@ -129,3 +129,37 @@ class FixedBudget implements ExogenousCurve
   FixedBudget(this.computeBudget);
 
 }
+
+
+/**
+ * basically there is a fixed pool of goods that can be bought/sold
+ */
+class FixedSupply implements ExogenousCurve
+{
+
+  double dailyQuantity = 100.0;
+
+
+  FixedSupply(this.dailyQuantity);
+
+  double quantityTraded =0.0;
+
+
+  double recordTrade(double quantity, double price) {
+    quantityTraded+= quantity; //update counter
+    assert(dailyQuantity>=quantityTraded);
+  }
+
+  double quantityAtThisPrice(double price) {
+    if(price > 0)
+      return max(dailyQuantity-quantityTraded,0.0);
+    else
+      return 0.0;
+  }
+
+  void reset() {
+    quantityTraded = 0.0;
+  }
+
+
+}

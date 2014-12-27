@@ -14,7 +14,7 @@ main()
 
   test("instantiate a presentation",(){
     //original model
-    Model model = new Model(1,new SimpleScenario.simpleSeller());
+    Model model = new Model(1,new SimpleSellerScenario.buffer());
     //presentation
     ModelPresentation presentation = new ModelPresentation(model);
     //should have a presentation object!
@@ -24,7 +24,7 @@ main()
 
   test("streams fine",(){
     //original model
-    Model model = new Model(1,new SimpleScenario.simpleSeller());
+    Model model = new Model(1,new SimpleSellerScenario.buffer());
     //presentation
     ModelPresentation presentation = new ModelPresentation(model);
 

@@ -14,16 +14,17 @@ part of lancaster.view;
     publishAs: 'gui')
 class ModelGUI {
 
-  final ModelPresentation presentation;
+  ModelPresentation presentation;
 
   final String comma = "ahahah";
 
-  ModelGUI() :
-    presentation = new ModelPresentation.SimpleSeller(
-        new Model(
-            1,new SimpleScenario.simpleSeller()))
+
+
+  ModelGUI()
   {
-    print("gui created");
+    SimpleSellerScenario scenario =new SimpleSellerScenario.buffer();
+    this.presentation = new ModelPresentation.SimpleSeller(
+        new Model(1,scenario),scenario);
   }
 
 

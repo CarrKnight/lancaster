@@ -44,8 +44,21 @@ List<List<double>> convertFixedBudgetToPath(FixedBudget curve,
                                             double maxQuantity)
 {
 
-  //horizontal, easy.
+  //easy slope
   return [[curve.budget/minPrice,minPrice],[curve.budget/maxPrice,maxPrice]];
+
+}
+
+
+List<List<double>> convertFixedQuantityToPath(FixedSupply curve,
+                                            double minPrice,
+                                            double maxPrice,
+                                            double minQuantity,
+                                            double maxQuantity)
+{
+
+  //vertical easy
+  return [[curve.dailyQuantity,minPrice],[curve.dailyQuantity,maxPrice]];
 
 }
 
@@ -76,6 +89,10 @@ List<List<double>> getCurvePath(ExogenousCurve curve,
 
   if(curve is LinearCurve)
     return convertLinearCurveToPath(curve,minPrice,maxPrice,minQuantity,
+    maxQuantity);
+
+  if(curve is FixedSupply)
+    return convertFixedQuantityToPath(curve,minPrice,maxPrice,minQuantity,
     maxQuantity);
 
 
