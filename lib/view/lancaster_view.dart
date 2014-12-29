@@ -13,6 +13,7 @@ import 'package:charted/svg/svg.dart' ;
 import 'package:charted/selection/selection.dart';
 import 'dart:html' as HTML;
 import 'dart:math' as MATH;
+import 'dart:async';
 import 'dart:collection';
 
 
@@ -20,5 +21,6 @@ part 'marketview/market_view.dart';
 part 'charts/beveridge_plot.dart';
 part 'charts/price_chart.dart';
 part 'charts/basechart.dart';
+part 'charts/tooltip.dart';
 part 'controlbar/model_controlbar.dart';
 part 'model_gui.dart';

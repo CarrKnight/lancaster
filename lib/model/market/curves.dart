@@ -148,6 +148,7 @@ class FixedSupply implements ExogenousCurve
   double recordTrade(double quantity, double price) {
     quantityTraded+= quantity; //update counter
     assert(dailyQuantity>=quantityTraded);
+    return quantityTraded;
   }
 
   double quantityAtThisPrice(double price) {

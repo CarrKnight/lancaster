@@ -79,7 +79,7 @@ packages:
   petitparser:
     description: petitparser
     source: hosted
-    version: "1.3.2"
+    version: "1.3.3"
   pool:
     description: pool
     source: hosted

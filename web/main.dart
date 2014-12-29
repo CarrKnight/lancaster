@@ -14,6 +14,7 @@ class LancasterModule extends Module{
     bind(MarketView);
     bind(BeveridgePlot);
     bind(PriceChart);
+    bind(Tooltip);
   }
 }
 

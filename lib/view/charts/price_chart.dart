@@ -38,7 +38,7 @@ class PriceChart implements ShadowRootAware{
   ChartArea area;
   ObservableList<List<num>> observationRows = toObservable([[0,0.0]]);
 
-  Element chartLocation;
+  HTML.Element chartLocation;
 
 
   @NgOneWay('presentation')

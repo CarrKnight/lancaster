@@ -195,18 +195,26 @@ class BeveridgePlot implements ShadowRootAware{
     print(_presentation.curveRepository.curves);
     for(ExogenousCurve curve in _presentation.curveRepository.curves )
     {
+      String name = _presentation.curveRepository.getName(curve);
       Selection pathContainer = curves.append("g");
       pathContainer.attr("pointer-events","all");
       DataSelection path =  pathContainer.selectAll("path")
       .data([_presentation.curveRepository.curveToPath(curve,
-      0.0,100.0,0.0,100.0)]);
-      path.enter
+                                                       0.0,100.0,0.0,100.0)]);
+      var line = path.enter
       .append("path")
         ..attr("class","selectable line")
+        ..attr("tooltip",name)
         ..attrWithCallback("d",(d,i,e)=>liner.path(d,i,e))
         ..attr('stroke', COLORS[i])
         ..attr('stroke-width', "2")
         ..attr("fill","none");
+      HTML.Element lineElement = line.first;
+
+
+      //add tooltip
+      Tooltip tooltip = new Tooltip(lineElement);
+      tooltip.message = _presentation.curveRepository.getName(curve);
 
       i++;
     }
@@ -252,6 +260,11 @@ class BeveridgePlot implements ShadowRootAware{
 
   static const CIRCLES_ID = "beveridge_data";
 
+  /**
+   * a map circle to tooltips
+   */
+  List<Tooltip> dataToolTip = new List<Tooltip>();
+
   void _updateCircles(Selection circles)
   {
     circles
@@ -259,17 +272,26 @@ class BeveridgePlot implements ShadowRootAware{
       ..attrWithCallback("cx",(MarketEvent datum, i, c)=>xScale.apply(datum.quantity))
       ..attrWithCallback("cy",(MarketEvent datum, i, c)=>yScale.apply(datum.price))
       ..attr("r",8)
-      ..attrWithCallback("opacity",(datum, i, c)=>MATH.pow((i+1)/(dataset.length+1), 2));
+      ..attrWithCallback("opacity",(datum, i, c)=>MATH.pow((i+1)/(dataset.length+1), 2))
+    ;
 
 
 
-    //highlight them a bit
 
-    circles.on("mouseover",null); //remove previous one
-    circles.on("mouseover",(d,i, element)
-    {
-      print(d);
-    });
+    //if this is the first time you arrange them:
+    if(!dataToolTip.isEmpty) {
+      for (Tooltip t in dataToolTip) {
+        t.killTooltip();
+      }
+      dataToolTip.clear();
+    }
+    circles.each((MarketEvent d, i, e)
+                               {
+                                 Tooltip t = new Tooltip(e);
+                                 t.message="price: ${d.price}, day: ${d.day}";
+                               });
+
+
 
   }
 
@@ -300,6 +322,10 @@ class BeveridgePlot implements ShadowRootAware{
 
     return circles;
   }
+
+  //flag, starts false and becomes true when the chart is built
+  bool ready = false;
+  bool get loading => !ready;
 
   /**
    * this get actually called twice, but it runs only once. We need the
@@ -337,7 +363,7 @@ class BeveridgePlot implements ShadowRootAware{
 
 
 
-
+    ready=true;
 
 
   }
@@ -359,7 +385,7 @@ class BeveridgePlot implements ShadowRootAware{
       //update circles
       _updateCircles(
       //find it by id
-          svg.select("#beveridge_data").selectAll("circle").data(dataset)
+      svg.select("#beveridge_data").selectAll("circle").data(dataset)
       );
 
     });
