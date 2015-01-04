@@ -11,22 +11,14 @@ part of lancaster.view;
 @Component(
     selector: 'marketview',
     templateUrl: 'packages/lancaster/view/marketview/marketview.html',
-    publishAs: 'market',
-    useShadowDom: false
-)
-class MarketView{ //AttachAware
+    publishAs: 'market')
+class MarketView{
 
   /**
    * the presentation object which is our interface to the model itself
    */
   SimpleMarketPresentation _presentation;
 
-
-
-  
-  
- 
- 
 
 
   double price = double.NAN;
@@ -37,10 +29,6 @@ class MarketView{ //AttachAware
     _presentation.marketStream.listen((event){
       price = event.price;
       quantity = event.quantity;
-      double price1 = event.price; 
-      if(!price1.isFinite)
-        price1=0.0;
-      print([event.day,  price1]);
     });
   }
 

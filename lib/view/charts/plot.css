@@ -41,8 +41,12 @@
 
 .selectable:hover
 {
-    fill: orange;
     stroke : orange;
-    stroke-width : 3;
+    stroke-width : 4;
 
+}
+
+.selectable circle:hover
+{
+    fill: orange;
 }

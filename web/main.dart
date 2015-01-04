@@ -13,7 +13,7 @@ class LancasterModule extends Module{
     bind(ControlBar);
     bind(MarketView);
     bind(BeveridgePlot);
-    bind(PriceChart);
+    bind(TimeSeriesChart);
     bind(Tooltip);
   }
 }

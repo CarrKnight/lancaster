@@ -13,6 +13,7 @@ library lancaster.presentation;
 
 import 'dart:async';
 import 'package:lancaster/model/lancaster_model.dart';
+import 'dart:collection';
 
 part 'market_presentation.dart';
 part 'model_presentation.dart';

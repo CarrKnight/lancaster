@@ -11,14 +11,30 @@ part of lancaster.view;
 
 
 /**
- * for now just a simple list of trades + ugly chart
+ * supposedly a time series chart with some degree of customizability
  */
 @Component(
     selector: 'priceplot',
     templateUrl: 'packages/lancaster/view/charts/plot.html',
-    cssUrl: 'packages/lancaster/view/charts/plot.css',
-    publishAs: 'priceplot')
-class PriceChart implements ShadowRootAware{
+    cssUrl: 'packages/lancaster/view/charts/plot.css'
+    )
+class TimeSeriesChart implements ShadowRootAware {
+
+
+  /***
+   *     _  _   __    ___  __  ___    __ _  _  _  _  _  ____  ____  ____  ____
+   *    ( \/ ) / _\  / __)(  )/ __)  (  ( \/ )( \( \/ )(  _ \(  __)(  _ \/ ___)
+   *    / \/ \/    \( (_ \ )(( (__   /    /) \/ (/ \/ \ ) _ ( ) _)  )   /\___ \
+   *    \_)(_/\_/\_/ \___/(__)\___)  \_)__)\____/\_)(_/(____/(____)(__\_)(____/
+   */
+
+
+  static const dataSize = 5;
+  static const int w = 600;
+  static const int h = 300;
+  static const int padding = 30;
+  static const int xTicks = 10;
+  static const int yTicks = 5;
 
   /**
    * the presentation object which is our interface to the model itself
@@ -26,59 +42,236 @@ class PriceChart implements ShadowRootAware{
   SimpleMarketPresentation _presentation;
 
 
+  /**
+   * all the ys of the series (I am assuming they keep the same x, which is
+   * just their order)
+   */
+  final Map<String, List<double>> _observations = new HashMap();
+
 
   /**
-   * in a perfect world this chart would be in the presentation folder.
-   * Unfortunately as soon as there is a dependency on html the tests don't run
-   * so there is no benefit in putting this in the presentation layer
+   * The HTML node that contains all this. Set when shadow dom attaches
    */
-  ChartSeries priceSeries;
-  ChartData data;
-  ChartConfig config;
-  ChartArea area;
-  ObservableList<List<num>> observationRows = toObservable([[0,0.0]]);
-
   HTML.Element chartLocation;
 
 
+  /**
+   * the svg node that contains everything
+   */
+  HTML.Element svgNode;
+
+  /**
+   * the presentation object
+   */
   @NgOneWay('presentation')
-  set presentation(SimpleMarketPresentation presentation)
-  {
+  set presentation(SimpleMarketPresentation presentation) {
     _presentation = presentation;
     _buildChart();
+  }
+
+
+  /***
+   *      __   _  _  __  ____
+   *     / _\ ( \/ )(  )/ ___)
+   *    /    \ )  (  )( \___ \
+   *    \_/\_/(_/\_)(__)(____/
+   */
+
+  int minimumDays = 100;
+
+  /**
+   * whenever there are more days observed then [minimumDays], then increase
+   * [minimumDays] by this much.
+   */
+  static final DAY_SCALE_INCREASE = 100;
+
+  LinearScale xScale;
+  LinearScale yScale;
+  SvgAxis xAxis;
+  SvgAxis yAxis;
+  Selection yAxisContainer;
+  Selection xAxisContainer;
+
+
+  void _buildAxesAndScale(Selection axisGroup) {
+    //create the scales so we can easily translate coordinates to pixels
+    xScale = new LinearScale()
+      ..domain = [0, DAY_SCALE_INCREASE]
+      ..range = [padding, w - padding];
+
+
+    yScale = new LinearScale()
+      ..domain = [0, 100]
+      ..range = [h - padding, padding];
+
+
+    xAxis = new SvgAxis()
+      ..orientation = ORIENTATION_BOTTOM
+      ..scale = xScale
+      ..suggestedTickCount = xTicks;
+
+    xAxisContainer = axisGroup.append("g")
+      ..attr('transform', "translate(0,${h - padding})")
+      ..attr("class", "axis");
+    xAxis.axis(xAxisContainer);
+
+    yAxis = new SvgAxis()
+      ..orientation = ORIENTATION_LEFT
+      ..scale = yScale
+      ..suggestedTickCount = yTicks;
+
+    yAxisContainer = axisGroup.append("g")
+      ..attr('transform', "translate(${padding},0)")
+      ..attr("class", "axis");
+    yAxis.axis(yAxisContainer);
+  }
+
+  updateScales(int day, double maxY)
+  {
+    yScale.domain[1] = MATH.max(yScale.domain[1],maxY);
+    if(xScale.domain[1]<day)
+      xScale.domain[1]+=DAY_SCALE_INCREASE;
+  }
+
+
+  /***
+   *     ____   __  ____  _  _  ____
+   *    (  _ \ / _\(_  _)/ )( \/ ___)
+   *     ) __//    \ )(  ) __ (\___ \
+   *    (__)  \_/\_/(__) \_)(_/(____/
+   */
+
+
+  /**
+   * utility class to draw svg lines
+   */
+  SvgLine line ;
+
+  /**
+   * for each curve, the html element containing the path
+   */
+  final Map<String, PathElement> lines = new Map();
+
+
+  /**
+   * utility method creates an svg path node and adds a tooltip to it
+   */
+  PathElement createPathNode(String name) {
+    print("creating a line");
+    PathElement line = new PathElement();
+    svgNode.append(line);
+    line.classes = ["selectable", "line"];
+    line.setAttribute("stroke", BeveridgePlot.COLORS[lines.length]);
+    line.setAttribute("stroke-width", "3");
+    line.setAttribute("fill", "none");
+    //give it a toolTip
+    Tooltip tooltip = new Tooltip(line);
+    tooltip.message = name;
+    return line;
+  }
+
+  void updatePaths() {
+
+    print("$_observations");
+    for (String data in _observations.keys) {
+      //put the path in if it doesn't exist
+      PathElement path = lines.putIfAbsent(data, () => createPathNode(data));
+      //draw it
+      path.setAttribute("d", generatePathString(_observations[data], xScale,
+                                                yScale));
+    }
+    print("$lines");
+
+
+  }
+
+
+  /**
+   * an adaptation of the SVGLine (charted library) path generator to work
+   * without the trappings of the original
+   */
+  static String generatePathString(List<double> obs, Scale xScale,
+                                   Scale yScale) {
+    List<String> segments = [];
+    List<MATH.Point> points = [];
+
+
+    for (int i = 0; i < obs.length; i++) {
+      //if valid
+      var observation = obs[i];
+      if (observation >= 0 && observation.isFinite) {
+        points.add(new MATH.Point(xScale.apply(i), yScale.apply(observation)));
+        //an invalid observation is a break, draw what you got
+      }
+      else if (points.isNotEmpty) {
+        segments.add("M ${points.map((pt) => '${pt.x},${pt.y} ').join('L')}");
+      }
+    }
+//one last segment, if needed
+    if (points.isNotEmpty) {
+      segments.add("M ${points.map((pt) => '${pt.x},${pt.y} ').join('L')}");
+    }
+
+    return segments.join();
+
+
+  }
+
+
+  void _buildChart() {
+
+    /**
+     * if either is null, wait for the other!
+     */
+    if(chartLocation == null || _presentation == null)
+      return;
+
+    //create svg node
+    svgNode = new SvgElement.tag("svg");
+    svgNode.setAttribute("width",w.toString());
+    svgNode.setAttribute("height",h.toString());
+    //add node to location
+    chartLocation.append(svgNode);
+
+    //now create an svg group for axes
+    _buildAxesAndScale(new SelectionScope.element(svgNode).append("g"));
+
+    //now create the paths
+    updatePaths();
+
     _listenToModel();
-  }
-
-
-  void _buildChart(){
-    priceSeries = new ChartSeries("price", [1], new LineChartRenderer());
-    data = new ChartData([new ChartColumnSpec(label:'Day',
-    type:ChartColumnSpec.TYPE_NUMBER),
-    new ChartColumnSpec(label:'Price',
-    type:ChartColumnSpec.TYPE_NUMBER,
-    formatter:(x)=>"$x\$")],
-    observationRows);
-    config = new ChartConfig([priceSeries], [0]);
-    chartLocation = HTML.querySelector('.price-chart');
-    _drawChart();
 
 
   }
 
 
+  void _listenToModel() {
+    _observations["Price"] = [];
+    _presentation.marketStream.listen((event) {
 
+      print("new event!");
+      double maxY = 0.0;
+      _observations["Price"].add(event.price);
 
-  void _listenToModel(){
-    _presentation.marketStream.listen((event){
-      double price1 = event.price;
-      if(!price1.isFinite)
-        price1=0.0;
-      print([event.day,  price1]);
-      observationRows.add([event.day,  price1]);
+      _presentation.additionalData.forEach((String name, DataGatherer dg)
+                                           {
+                                             List<double> column =
+                                             _observations.putIfAbsent(name,
+                                                                       ()=>[]);
+
+                                             var datum = dg();
+                                             maxY = MATH.max(0.0,datum);
+                                             column.add(datum);
+                                             assert(column.length ==
+                                                    _observations["Price"]
+                                                    .length);
+                                           });
+
+      //update the plot
+      updateScales(_observations["Price"].length, maxY);
+      updatePaths();
     });
   }
-
-
 
 
   /**
@@ -86,19 +279,13 @@ class PriceChart implements ShadowRootAware{
    * handy though because when this is called we know the html is ready to be
    * selected
    */
-  void onShadowRoot(HTML.ShadowRoot shadowRoot){
-    chartLocation=HTML.querySelector('.price-chart');
-    _drawChart();
+  void onShadowRoot(HTML.ShadowRoot shadowRoot) {
+    chartLocation = shadowRoot.querySelector('.price-chart');
+
+    _buildChart();
   }
 
-  void _drawChart(){
-    //draw it only once
-    if(area != null || chartLocation == null || priceSeries == null)
-      return;
-    area = new ChartArea(chartLocation,
-    data, config, autoUpdate:true, dimensionAxesCount:1);
-    area.draw();
-  }
+
 
 
 

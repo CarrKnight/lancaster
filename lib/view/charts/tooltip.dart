@@ -32,18 +32,18 @@ class Tooltip {
 
   Tooltip(this.element) {
     StreamSubscription onListen =
-    element.onMouseEnter.listen((_) => _createTemplate());
+    element.onMouseEnter.listen((HTML.MouseEvent event) =>
+    _createTemplate(event));
     StreamSubscription onLeave =
     element.onMouseLeave.listen((_) => _destroyTemplate());
   }
 
-  void _createTemplate() {
+  void _createTemplate(HTML.MouseEvent event) {
     print("tooltip!");
     assert(message != null);
 
     tooltipElem = new HTML.DivElement();
     tooltipElem.classes = [ "tooltip"];
-
 
 
     HTML.SpanElement textSpan = new HTML.SpanElement()
@@ -64,16 +64,13 @@ class Tooltip {
       ..width = "${textSpan.attributes["width"]}px";
 
     // position the tooltip.
-    var topRight = element.getBoundingClientRect().topRight;
-    var lowLeft = element.getBoundingClientRect().bottomLeft;
-
 
     tooltipElem.style
       ..position = "absolute"
-      ..top = "${(topRight.y + lowLeft.y)/2 + 10}px"
-      ..left = "${(topRight.x+ lowLeft.x)/2 + 10}px";
+      ..top = "${event.page.y - 10}px"
+      ..left = "${event.page.x + 10}px";
 
-    print("pos topRight: ${topRight}");
+    print("pos y: ${event.page.y} x:  ${event.page.x} ");
 
 
     // Add the tooltip to the document body. We add it here because we need to position it

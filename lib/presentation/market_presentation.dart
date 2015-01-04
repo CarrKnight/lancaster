@@ -6,6 +6,7 @@
 part of lancaster.presentation;
 
 
+typedef  double DataGatherer();
 
 /**
  * presentation class: creates series object and text logs for the view to show.
@@ -25,11 +26,12 @@ class SimpleMarketPresentation{
    */
   StreamController<MarketEvent> _marketStream;
 
+  final Map<String,DataGatherer> additionalData;
 
 
   final Market _market;
 
-  SimpleMarketPresentation(this._market) {
+  SimpleMarketPresentation(this._market,[this.additionalData=null]) {
     _marketStream = new StreamController.broadcast(
                                            onListen: (){listenedTo = true;},
                                            onCancel: (){listenedTo = false;});
@@ -37,9 +39,11 @@ class SimpleMarketPresentation{
   }
 
   factory SimpleMarketPresentation.seller(ExogenousSellerMarket market,
-                                          double dailyFlow)
+                                          double dailyFlow,
+                                          DataGatherer equilibriumPrice)
   {
-    SimpleMarketPresentation toReturn = new SimpleMarketPresentation(market);
+    SimpleMarketPresentation toReturn =
+    new SimpleMarketPresentation(market,{"Equilibrium": equilibriumPrice});
     toReturn.curveRepository.addCurve(market.demand,"Demand");
     toReturn.curveRepository.addCurve(new FixedSupply(dailyFlow), "Supply");
     return toReturn;
@@ -69,10 +73,19 @@ class SimpleMarketPresentation{
    * stream only if it is listened to.
    */
   _broadcastMarketStatus(Schedule schedule){
+
+    //create additional data, if needed
+    Map<String,double> addendum=null;
+    if(additionalData != null) {
+      addendum = new HashMap();
+      additionalData.forEach((name, gatherer) => addendum[name] = gatherer());
+    }
+
     if(listenedTo)
       _marketStream.add(new MarketEvent( schedule.day,
                                         _market.averageClosingPrice,
-                                        _market.quantityTraded));
+                                        _market.quantityTraded,
+                                         addendum));
 
   }
 
@@ -92,7 +105,9 @@ class MarketEvent{
 
   final double quantity;
 
-  MarketEvent(this.day, this.price, this.quantity);
+  final Map<String,double> additionalData;
 
+  MarketEvent(this.day, this.price, this.quantity,
+              [this.additionalData = null]);
 
 }

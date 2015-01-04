@@ -23,15 +23,25 @@ class ModelPresentation
    */
   ModelPresentation(this._model) {
     _model.start();
-    _initializePresentations();
+    var market = _model.markets["gas"];
+    if(market != null) {
+      gasPresentation = new SimpleMarketPresentation(market);
+      gasPresentation.start(_model.schedule);
+    }
   }
 
+  ModelPresentation._internal(this._model)
+  {
+    _model.start();
+  }
 
   factory ModelPresentation.SimpleSeller(Model model,
                                          SimpleSellerScenario scenario) {
-    ModelPresentation presentation = new ModelPresentation(model);
-    presentation.gasPresentation = new SimpleMarketPresentation.seller(model
-    .markets["gas"],scenario.dailyFlow);
+    ModelPresentation presentation = new ModelPresentation._internal(model);
+    presentation.gasPresentation =
+    new SimpleMarketPresentation.seller(model.markets["gas"],
+                                        scenario.dailyFlow,
+                                            ()=>scenario.equilibriumPrice);
     presentation.gasPresentation.start(model.schedule);
     return presentation;
   }
@@ -41,13 +51,7 @@ class ModelPresentation
    */
   SimpleMarketPresentation gasPresentation;
 
-  _initializePresentations(){
-    var market = _model.markets["gas"];
-    if(market != null) {
-      gasPresentation = new SimpleMarketPresentation(market);
-      gasPresentation.start(_model.schedule);
-    }
-  }
+
 
 
   /**

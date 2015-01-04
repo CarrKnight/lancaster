@@ -43,4 +43,32 @@ main()
 
   });
 
+  test("streams additional data fine",(){
+    //original model
+    var simpleSellerScenario = new SimpleSellerScenario.buffer(intercept:200.0,
+                                                               slope:-2.0,
+                                                               dailyFlow:10.0);
+    Model model = new Model(1, simpleSellerScenario);
+    //presentation
+    ModelPresentation presentation = new ModelPresentation.SimpleSeller(model,
+                                                                        simpleSellerScenario);
+
+
+    //three days should give me 3 events!
+    Function listener = (MarketEvent e){
+      print("called now!");
+      expect(e.additionalData["Equilibrium"],180.0);
+
+    };
+    listener = expectAsync(listener,count:3);
+    presentation.gasPresentation.marketStream.listen(listener);
+
+    model.schedule.simulateDay();
+    model.schedule.simulateDay();
+    model.schedule.simulateDay();
+
+
+
+  });
+
 }

@@ -11,8 +11,7 @@ part of lancaster.view;
 @Component(
     selector: 'beveridgeplot',
     templateUrl: 'packages/lancaster/view/charts/plot.html',
-    cssUrl: 'packages/lancaster/view/charts/plot.css',
-    publishAs: 'beveridge')
+    cssUrl: 'packages/lancaster/view/charts/plot.css')
 class BeveridgePlot implements ShadowRootAware{
 
   /***

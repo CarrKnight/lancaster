@@ -53,6 +53,7 @@ class Model {
 
 abstract class Scenario{
 
+
   void start(Model model);
 }
 
@@ -70,18 +71,23 @@ class SimpleSellerScenario extends Scenario
 
   ModelInitialization initializer;
 
+  final double intercept;
+
+  final double slope;
 
   void start(Model model)=>initializer(model);
 
 
   SimpleSellerScenario.buffer({minInitialPrice : 100.0,
-                       maxInitialPrice:100, this.dailyFlow : 40.0,
-                       intercept:100.0,slope:-1.0,minP:0.05,maxP:.5,minI:0.05,
-                       maxI:.5,int seed:1,int competitors:1})
+                              maxInitialPrice:100, this.dailyFlow : 40.0,
+                              this.intercept:100.0,this.slope:-1.0,minP:0.05,
+                              maxP:.5,
+                              minI:0.05,
+                              maxI:.5,int seed:1,int competitors:1})
   {
     initializer = (Model model) {
       ExogenousSellerMarket market = new ExogenousSellerMarket.linear(intercept:intercept,
-      slope:slope);
+                                                                      slope:slope);
       market.start(model.schedule);
 
       Random random = new Random(seed);
@@ -91,14 +97,17 @@ class SimpleSellerScenario extends Scenario
         double p = random.nextDouble() * (maxP - minP) + minP;
         double i = random.nextDouble() * (maxI - minI) + minI;
         double initialPrice = random.nextDouble() *
-        (maxInitialPrice - minInitialPrice) + minInitialPrice;
+                              (maxInitialPrice - minInitialPrice) + minInitialPrice;
         ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader.PIDBufferSellerFixedInflow(dailyFlow,
-        market, initialPrice:initialPrice, p:p, i:i);
+                                                                                        market, initialPrice:initialPrice, p:p, i:i);
         model.agents.add(seller);
         seller.start(model.schedule);
       }
     };
   }
+
+
+  double get equilibriumPrice=> intercept + slope *dailyFlow;
 
 }
 
@@ -127,7 +136,7 @@ class SimpleScenario extends Scenario{
                              maxI:.5,int seed:1,int competitors:1}):
   this((Model model){
     ExogenousBuyerMarket market = new ExogenousBuyerMarket.linear(intercept:intercept,
-    slope:slope);
+                                                                  slope:slope);
     market.start(model.schedule);
     model.markets["gas"]=market;
     //initial price 0
@@ -136,10 +145,10 @@ class SimpleScenario extends Scenario{
       double p = random.nextDouble() * (maxP - minP) + minP;
       double i = random.nextDouble() * (maxI - minI) + minI;
       double initialPrice = random.nextDouble() *
-      (maxInitialPrice - minInitialPrice) + minInitialPrice;
+                            (maxInitialPrice - minInitialPrice) + minInitialPrice;
 
       ZeroKnowledgeTrader buyer = new ZeroKnowledgeTrader.PIDBuyer(market,
-      flowTarget:dailyTarget,initialPrice:initialPrice,p:p,i:i);
+                                                                   flowTarget:dailyTarget,initialPrice:initialPrice,p:p,i:i);
       model.agents.add(buyer);
       buyer.start(model.schedule);
 
@@ -192,10 +201,10 @@ class SimpleFirmScenario extends Scenario
     double p = random.nextDouble() * (purchaseMaxP - purchaseMinP) + purchaseMinP;
     double i = random.nextDouble() * (purchaseMaxI - purchaseMinI) + purchaseMinI;
     double initialPrice = random.nextDouble() *
-    (maxInitialPriceBuying - minInitialPriceBuying) + minInitialPriceBuying;
+                          (maxInitialPriceBuying - minInitialPriceBuying) + minInitialPriceBuying;
     ZeroKnowledgeTrader hr = new ZeroKnowledgeTrader.PIDBuyer(laborMarket,
-    flowTarget:workerTarget,initialPrice:initialPrice,p:p,i:i,d:0.0,
-    givenInventory:mainFirm);
+                                                              flowTarget:workerTarget,initialPrice:initialPrice,p:p,i:i,d:0.0,
+                                                              givenInventory:mainFirm);
     mainFirm.addPurchasesDepartment(hr);
 
     //build sales market
@@ -208,7 +217,7 @@ class SimpleFirmScenario extends Scenario
     p = random.nextDouble() * (salesMaxP - salesMinP) + salesMinP;
     i = random.nextDouble() * (salesMaxI - salesMinI) + salesMinI;
     initialPrice = random.nextDouble() *
-    (maxInitialPriceSelling - minInitialPriceSelling) + minInitialPriceSelling;
+                   (maxInitialPriceSelling - minInitialPriceSelling) + minInitialPriceSelling;
     ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader.PIDBufferSeller(
         market, initialPrice:initialPrice, p:p, i:i,givenInventory:mainFirm);
     mainFirm.addSalesDepartment(seller);
@@ -217,7 +226,7 @@ class SimpleFirmScenario extends Scenario
     //build plant
     LinearProductionFunction function = new LinearProductionFunction();
     SISOPlant plant = new SISOPlant(mainFirm.getSection("labor"),
-    mainFirm.getSection("gas"),function);
+                                    mainFirm.getSection("gas"),function);
     mainFirm.addPlant(plant);
 
     model.agents.add(mainFirm);
@@ -285,14 +294,14 @@ class OneMarketCompetition extends Scenario
                                                                  OneMarketCompetition scenario)
   {
     double p = r.nextDouble() * (scenario.purchaseMaxP - scenario.purchaseMinP) +
-    scenario.purchaseMinP;
+               scenario.purchaseMinP;
     double i = r.nextDouble() * (scenario.purchaseMaxI - scenario
     .purchaseMinI)  + scenario.purchaseMinI;
     double initialPrice = r.nextDouble() *
-    (scenario.maxInitialPriceBuying - scenario.minInitialPriceBuying) +
-    scenario.minInitialPriceBuying;
+                          (scenario.maxInitialPriceBuying - scenario.minInitialPriceBuying) +
+                          scenario.minInitialPriceBuying;
     AdaptiveStrategy s = new PIDAdaptive.MaximizerBuyer(plant,firm,r,
-    initialPrice:initialPrice,p:p,i:i,d:0.0);
+                                                        initialPrice:initialPrice,p:p,i:i,d:0.0);
     return s;
   };
 
@@ -303,14 +312,14 @@ class OneMarketCompetition extends Scenario
                                                             OneMarketCompetition scenario)
   {
     double p = r.nextDouble() * (scenario.purchaseMaxP - scenario.purchaseMinP) +
-    scenario.purchaseMinP;
+               scenario.purchaseMinP;
     double i = r.nextDouble() * (scenario.purchaseMaxI - scenario
     .purchaseMinI)  + scenario.purchaseMinI;
     double initialPrice = r.nextDouble() *
-    (scenario.maxInitialPriceBuying - scenario.minInitialPriceBuying) +
-    scenario.minInitialPriceBuying;
+                          (scenario.maxInitialPriceBuying - scenario.minInitialPriceBuying) +
+                          scenario.minInitialPriceBuying;
     AdaptiveStrategy s = new PIDAdaptive.PIDMaximizerBuyer(plant,firm,r,
-    initialPrice:initialPrice,p:p,i:i,d:0.0);
+                                                           initialPrice:initialPrice,p:p,i:i,d:0.0);
     return s;
   };
 
@@ -350,7 +359,7 @@ class OneMarketCompetition extends Scenario
   {
 
     double p = r.nextDouble() * (scenario.purchaseMaxP - scenario.purchaseMinP) +
-    scenario.purchaseMinP;
+               scenario.purchaseMinP;
     double i = r.nextDouble() * (scenario.purchaseMaxI - scenario
     .purchaseMinI)  + scenario.purchaseMinI;
 
@@ -359,17 +368,17 @@ class OneMarketCompetition extends Scenario
     //here price really is people to hire
     BufferInventoryAdaptive quotaStrategy =
     new BufferInventoryAdaptive.simpleSeller(optimalInventory:optimalInventory,
-    criticalInventory:optimalInventory/10.0,initialPrice:1.0,p:p,d:0.0,
-    i:i);
+                                             criticalInventory:optimalInventory/10.0,initialPrice:1.0,p:p,d:0.0,
+                                             i:i);
     //we want to change L given the seller results rather than our own
     quotaStrategy.targetExtractingStockingUp = new OtherDataExtractor(seller,
-    quotaStrategy.targetExtractingStockingUp);
+                                                                      quotaStrategy.targetExtractingStockingUp);
     quotaStrategy.originalTargetExtractor = new OtherDataExtractor(seller,
-    quotaStrategy.originalTargetExtractor);
+                                                                   quotaStrategy.originalTargetExtractor);
     quotaStrategy.inventoryExtractor = new OtherDataExtractor(seller,
-    quotaStrategy.inventoryExtractor);
+                                                              quotaStrategy.inventoryExtractor);
     quotaStrategy.delegate.cvExtractor = new OtherDataExtractor(seller,
-    quotaStrategy.delegate.cvExtractor);
+                                                                quotaStrategy.delegate.cvExtractor);
 
     return quotaStrategy;
   };
@@ -385,7 +394,7 @@ class OneMarketCompetition extends Scenario
             Random r, ZeroKnowledgeTrader seller,
             OneMarketCompetition scenario) {
       double p = r.nextDouble() * (scenario.purchaseMaxP - scenario.purchaseMinP) +
-      scenario.purchaseMinP;
+                 scenario.purchaseMinP;
       double i = r.nextDouble() * (scenario.purchaseMaxI - scenario
       .purchaseMinI) + scenario.purchaseMinI;
 
@@ -393,12 +402,12 @@ class OneMarketCompetition extends Scenario
       //here price really is people to hire
       PIDAdaptive quotaStrategy =
       new PIDAdaptive.StockoutSeller(initialPrice:initialTarget, p:p, d:0.0,
-      i:i);
+                                     i:i);
       //we want to change L given the seller results rather than our own
       quotaStrategy.targetExtractor = new OtherDataExtractor(seller,
-      quotaStrategy.targetExtractor);
+                                                             quotaStrategy.targetExtractor);
       quotaStrategy.cvExtractor = new OtherDataExtractor(seller,
-      quotaStrategy.cvExtractor);
+                                                         quotaStrategy.cvExtractor);
 
       return quotaStrategy;
     };
@@ -429,16 +438,16 @@ class OneMarketCompetition extends Scenario
                                                          scenario)
   {
     double p = r.nextDouble() * (scenario.salesMaxP - scenario.salesMinP) +
-    scenario
-    .salesMinP;
+               scenario
+               .salesMinP;
     double i = r.nextDouble() * (scenario.salesMaxI - scenario.salesMinI) +
-    scenario
-    .salesMinI;
+               scenario
+               .salesMinI;
     double initialPrice = r.nextDouble() *
-    (scenario.maxInitialPriceSelling - scenario.minInitialPriceSelling) +
-    scenario.minInitialPriceSelling;
+                          (scenario.maxInitialPriceSelling - scenario.minInitialPriceSelling) +
+                          scenario.minInitialPriceSelling;
     return new BufferInventoryAdaptive.simpleSeller(initialPrice:initialPrice,
-    p:p,d:0.0,i:i);
+                                                    p:p,d:0.0,i:i);
   };
 
 
@@ -448,17 +457,17 @@ class OneMarketCompetition extends Scenario
                               OneMarketCompetition scenario)
   {
     double initialPrice = r.nextDouble() * (scenario.maxInitialPriceSelling -
-    scenario
-    .minInitialPriceSelling)  + scenario.minInitialPriceSelling;
+                                            scenario
+                                            .minInitialPriceSelling)  + scenario.minInitialPriceSelling;
 
     double pidMultiplier = r.nextDouble() * (scenario.salesMaxP - scenario
     .salesMinP) +
-    scenario
-    .salesMinP;
+                           scenario
+                           .salesMinP;
 
 
     PIDMaximizerFacade pricer = new PIDMaximizerFacade.PricingFacade(p,firm,r,
-    initialPrice,20,pidMultiplier);
+                                                                     initialPrice,20,pidMultiplier);
     return pricer;
   };
 
@@ -513,7 +522,7 @@ class OneMarketCompetition extends Scenario
 
       //build plant
       SISOPlant plant = new SISOPlant(firm.getSection("labor"),
-      firm.getSection("gas"), productionFunction);
+                                      firm.getSection("gas"), productionFunction);
       firm.addPlant(plant);
 
       model.agents.add(firm);
@@ -532,9 +541,9 @@ class OneMarketCompetition extends Scenario
       //build hr
       (maxInitialPriceBuying - minInitialPriceBuying) + minInitialPriceBuying;
       ZeroKnowledgeTrader hr = new ZeroKnowledgeTrader(laborMarket,
-      hrPricingInitialization(plant, firm, random, seller,this),
-      hrQuotaInitializer(plant, firm, random, seller,this),
-      new SimpleBuyerTrading(), firm);
+                                                       hrPricingInitialization(plant, firm, random, seller,this),
+                                                       hrQuotaInitializer(plant, firm, random, seller,this),
+                                                       new SimpleBuyerTrading(), firm);
       hrIntializer(hr);
       firm.addPurchasesDepartment(hr);
 
