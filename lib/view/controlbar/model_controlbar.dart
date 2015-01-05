@@ -17,8 +17,33 @@ class ControlBar
    */
   ModelPresentation _presentation;
 
+  /**
+   * A timer to use to make the model step on its own
+   */
+  Timer stepper;
+
+  static final  stepTime = const Duration(milliseconds: 10);
 
 
+  String playLabel = "Start";
+
+  void startOrPause()
+  {
+    if(stepper==null)
+    {
+      //start
+      playLabel = "Pause";
+      stepper = new Timer.periodic(stepTime,(timer)=>step());
+    }
+    else
+    {
+      //pause
+      stepper.cancel();
+      stepper = null;
+      playLabel = "Start";
+
+    }
+  }
 
   @NgOneWayOneTime('model-presentation')
   set presentation(ModelPresentation presentation)

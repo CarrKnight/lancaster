@@ -91,9 +91,26 @@ class TimeSeriesChart implements ShadowRootAware {
   SvgAxis yAxis;
   Selection yAxisContainer;
   Selection xAxisContainer;
+  Selection axisGroup;
 
+  drawXAxis() {
+    xAxisContainer = axisGroup.append("g")
+      ..attr("id", "xaxis")
+      ..attr('transform', "translate(0,${h - padding})")
+      ..attr("class", "axis");
+    xAxis.axis(xAxisContainer);
+  }
+
+  drawYAxis() {
+    yAxisContainer = axisGroup.append("g")
+      ..attr("id", "yaxis")
+      ..attr('transform', "translate(${padding},0)")
+      ..attr("class", "axis");
+    yAxis.axis(yAxisContainer);
+  }
 
   void _buildAxesAndScale(Selection axisGroup) {
+    this.axisGroup=axisGroup;
     //create the scales so we can easily translate coordinates to pixels
     xScale = new LinearScale()
       ..domain = [0, DAY_SCALE_INCREASE]
@@ -110,27 +127,31 @@ class TimeSeriesChart implements ShadowRootAware {
       ..scale = xScale
       ..suggestedTickCount = xTicks;
 
-    xAxisContainer = axisGroup.append("g")
-      ..attr('transform', "translate(0,${h - padding})")
-      ..attr("class", "axis");
-    xAxis.axis(xAxisContainer);
+    drawXAxis();
 
     yAxis = new SvgAxis()
       ..orientation = ORIENTATION_LEFT
       ..scale = yScale
       ..suggestedTickCount = yTicks;
 
-    yAxisContainer = axisGroup.append("g")
-      ..attr('transform', "translate(${padding},0)")
-      ..attr("class", "axis");
-    yAxis.axis(yAxisContainer);
+    drawYAxis();
   }
 
   updateScales(int day, double maxY)
   {
-    yScale.domain[1] = MATH.max(yScale.domain[1],maxY);
-    if(xScale.domain[1]<day)
-      xScale.domain[1]+=DAY_SCALE_INCREASE;
+    if(maxY>=yScale.domain[1])
+    {
+      yScale.domain[1] = maxY;
+      yAxisContainer.remove();
+      drawYAxis();
+    }
+
+    if(xScale.domain[1]<=day) {
+      xScale.domain[1] += DAY_SCALE_INCREASE;
+      xAxisContainer.remove();
+      drawXAxis();
+    }
+
   }
 
 

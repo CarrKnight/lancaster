@@ -287,7 +287,9 @@ class BeveridgePlot implements ShadowRootAware{
     circles.each((MarketEvent d, i, e)
                                {
                                  Tooltip t = new Tooltip(e);
-                                 t.message="price: ${d.price}, day: ${d.day}";
+                                 t.message="price: ${d.price
+                                 .toStringAsFixed(2)}, day: ${d
+                                 .day.toInt()}";
                                });
 
 
