@@ -42,12 +42,6 @@ class TimeSeriesChart implements ShadowRootAware {
   SimpleMarketPresentation _presentation;
 
 
-  /**
-   * all the ys of the series (I am assuming they keep the same x, which is
-   * just their order)
-   */
-  final Map<String, List<double>> _observations = new HashMap();
-
 
   /**
    * The HTML node that contains all this. Set when shadow dom attaches
@@ -193,12 +187,11 @@ class TimeSeriesChart implements ShadowRootAware {
 
   void updatePaths() {
 
-    print("$_observations");
-    for (String data in _observations.keys) {
+    for (String data in observations.keys) {
       //put the path in if it doesn't exist
       PathElement path = lines.putIfAbsent(data, () => createPathNode(data));
       //draw it
-      path.setAttribute("d", generatePathString(_observations[data], xScale,
+      path.setAttribute("d", generatePathString(observations[data], xScale,
                                                 yScale));
     }
     print("$lines");
@@ -206,6 +199,7 @@ class TimeSeriesChart implements ShadowRootAware {
 
   }
 
+  Map<String, List<double>> get observations => _presentation.dailyObservations;
 
   /**
    * an adaptation of the SVGLine (charted library) path generator to work
@@ -267,29 +261,19 @@ class TimeSeriesChart implements ShadowRootAware {
 
 
   void _listenToModel() {
-    _observations["Price"] = [];
     _presentation.marketStream.listen((event) {
 
-      print("new event!");
-      double maxY = 0.0;
-      _observations["Price"].add(event.price);
+      //we don't care so much about the values of the event, what we care
+      // about is that presentation layer has updated its daily observations
 
-      _presentation.additionalData.forEach((String name, DataGatherer dg)
-                                           {
-                                             List<double> column =
-                                             _observations.putIfAbsent(name,
-                                                                       ()=>[]);
+      //find the maximum Y today
+      double maxY =_presentation.dailyObservations.values.fold(
+          0.0,(prev,column)=>MATH.max(prev,column.last));
 
-                                             var datum = dg();
-                                             maxY = MATH.max(0.0,datum);
-                                             column.add(datum);
-                                             assert(column.length ==
-                                                    _observations["Price"]
-                                                    .length);
-                                           });
+
 
       //update the plot
-      updateScales(_observations["Price"].length, maxY);
+      updateScales(event.day, maxY);
       updatePaths();
     });
   }

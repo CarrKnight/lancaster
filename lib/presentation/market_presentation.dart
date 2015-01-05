@@ -26,15 +26,27 @@ class SimpleMarketPresentation{
    */
   StreamController<MarketEvent> _marketStream;
 
-  final Map<String,DataGatherer> additionalData;
+  /**
+   * functions called at the end of the day to fill time-series observations
+   */
+  final Map<String,DataGatherer> additionalDataGatherers;
 
+  /**
+   * a storage/log of all the market events. Useful for plots and such
+   */
+  final List<MarketEvent> marketEvents = new List();
+  /**
+   * Storage for everything observed. Views can plot this (the x, the day, is
+   * just the i of the list)
+   */
+  final Map<String, List<double>> dailyObservations = new HashMap();
 
   final Market _market;
 
-  SimpleMarketPresentation(this._market,[this.additionalData=null]) {
+  SimpleMarketPresentation(this._market,[this.additionalDataGatherers=null]) {
     _marketStream = new StreamController.broadcast(
-                                           onListen: (){listenedTo = true;},
-                                           onCancel: (){listenedTo = false;});
+        onListen: (){listenedTo = true;},
+        onCancel: (){listenedTo = false;});
 
   }
 
@@ -74,18 +86,28 @@ class SimpleMarketPresentation{
    */
   _broadcastMarketStatus(Schedule schedule){
 
-    //create additional data, if needed
-    Map<String,double> addendum=null;
-    if(additionalData != null) {
-      addendum = new HashMap();
-      additionalData.forEach((name, gatherer) => addendum[name] = gatherer());
-    }
 
-    if(listenedTo)
-      _marketStream.add(new MarketEvent( schedule.day,
+    //fill observation
+    //price first
+    List<double> column = dailyObservations.putIfAbsent("Price", ()=>[]);
+    column.add(_market.averageClosingPrice);
+    //call all the gatherers to fill the matrix
+    if(additionalDataGatherers != null)
+      additionalDataGatherers.forEach((name,value){
+        column = dailyObservations.putIfAbsent(name,()=>[]);
+        column.add(value());
+      });
+
+    //create the event
+    MarketEvent event =new MarketEvent( schedule.day,
                                         _market.averageClosingPrice,
-                                        _market.quantityTraded,
-                                         addendum));
+                                        _market.quantityTraded);
+    //add it to the log
+    marketEvents.add(event);
+
+    //stream event
+    if(listenedTo)
+      _marketStream.add(event);
 
   }
 
@@ -105,9 +127,6 @@ class MarketEvent{
 
   final double quantity;
 
-  final Map<String,double> additionalData;
-
-  MarketEvent(this.day, this.price, this.quantity,
-              [this.additionalData = null]);
+  MarketEvent(this.day, this.price, this.quantity);
 
 }

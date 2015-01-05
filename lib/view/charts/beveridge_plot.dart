@@ -63,6 +63,13 @@ class BeveridgePlot implements ShadowRootAware{
       dataset.add(new MarketEvent(-1,-10.0,-10.0));
 
     _presentation = presentation;
+
+    //add real data if it exists
+    for(MarketEvent event in _presentation.marketEvents)
+    {
+      dataset.removeFirst();
+      dataset.addLast(event);
+    }
     _buildChart();
   }
 
