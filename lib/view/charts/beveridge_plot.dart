@@ -23,10 +23,10 @@ class BeveridgePlot implements ShadowRootAware{
 
 
   static const dataSize = 5;
-  static const double aspectRatio=6.0/8.0;
+  static const double aspectRatio=9.0/16.0;
   static const int padding = 30;
-  static const int xTicks = 10;
-  static const int yTicks = 5;
+  int xTicks = 10;
+  int yTicks = 5;
   int width;
   int height;
 
@@ -59,11 +59,13 @@ class BeveridgePlot implements ShadowRootAware{
   @NgOneWay('presentation')
   set presentation(SimpleMarketPresentation presentation)
   {
+    _presentation = presentation;
+
+
     //reset local data by filling it with garbage
     for(int i=0;i<dataSize; i++)
       dataset.add(new MarketEvent(-1,-10.0,-10.0));
 
-    _presentation = presentation;
 
     //add real data if it exists
     for(MarketEvent event in _presentation.marketEvents)
@@ -71,6 +73,7 @@ class BeveridgePlot implements ShadowRootAware{
       dataset.removeFirst();
       dataset.addLast(event);
     }
+
     _buildChart();
   }
 
@@ -408,16 +411,51 @@ class BeveridgePlot implements ShadowRootAware{
    * handy though because when this is called we know the html is ready to be
    * selected
    */
+
+
   void onShadowRoot(HTML.ShadowRoot shadowRoot){
     chartLocation=shadowRoot.querySelector('.price-chart');
-    width = chartLocation.borderEdge.width;
-    height = (width*aspectRatio).round();
+    _recomputeMetrics();
     _buildChart();
+
+    HTML.window.onResize.listen((event)=>resize());
+
   }
 
 
+  resize()
+  {
+    print("resize!");
+    //you need to redraw everything!
+    _recomputeMetrics();
+
+    //remove previous svg
+    chartLocation.firstChild.remove();
+    //redraw it!
+    _reset();
+    _buildChart();
+  }
+
+  _recomputeMetrics() {
+    width = chartLocation.borderEdge.width;
+    height = (width * aspectRatio).round();
+    xTicks = MATH.max(width/50, 2);
+    yTicks = MATH.max(width/50, 2);
+  }
 
 
+  _reset(){
+    xScale=null;
+    yScale=null;
+    xAxis=null;
+    yAxis=null;
+    yAxisContainer=null;
+    xAxisContainer=null;
+    clipPath=null;
+    areaMask=null;
+    liner=null;
+    dataToolTip.clear();
+  }
 
 
 }

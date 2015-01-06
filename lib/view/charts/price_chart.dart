@@ -30,10 +30,10 @@ class TimeSeriesChart implements ShadowRootAware {
 
 
   static const dataSize = 5;
-  static const double aspectRatio=6.0/8.0;
+  static const double aspectRatio=9.0/16.0;
   static const int padding = 30;
-  static const int xTicks = 10;
-  static const int yTicks = 5;
+  static int xTicks = 10;
+  static int yTicks = 5;
   int width;
   int height;
 
@@ -288,22 +288,30 @@ class TimeSeriesChart implements ShadowRootAware {
    * handy though because when this is called we know the html is ready to be
    * selected
    */
+
   void onShadowRoot(HTML.ShadowRoot shadowRoot) {
     chartLocation = shadowRoot.querySelector('.price-chart');
-    width = chartLocation.borderEdge.width;
-    height = (width*aspectRatio).round();
+    recomputeMetrics();
     _buildChart();
 
     //start listening for resizes
     HTML.window.onResize.listen((event)=>resize());
   }
 
+  recomputeMetrics() {
+    width = chartLocation.borderEdge.width;
+    height = (width * aspectRatio).round();
+    xTicks = MATH.max(width/50, 2);
+    yTicks = MATH.max(width/50, 2);
+  }
+
+
   void resize()
   {
     print("resize!");
     //you need to redraw everything!
-    width = chartLocation.borderEdge.width;
-    height = (width*aspectRatio).round();
+    recomputeMetrics();
+
 
     chartLocation.firstChild.remove();
     //redraw it!
