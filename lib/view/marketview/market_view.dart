@@ -11,6 +11,7 @@ part of lancaster.view;
 @Component(
     selector: 'marketview',
     templateUrl: 'packages/lancaster/view/marketview/marketview.html',
+    cssUrl: 'packages/lancaster/view/marketview/marketview.css',
     publishAs: 'market')
 class MarketView{
 

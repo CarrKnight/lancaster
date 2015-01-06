@@ -30,11 +30,12 @@ class TimeSeriesChart implements ShadowRootAware {
 
 
   static const dataSize = 5;
-  static const int w = 600;
-  static const int h = 300;
+  static const double aspectRatio=6.0/8.0;
   static const int padding = 30;
   static const int xTicks = 10;
   static const int yTicks = 5;
+  int width;
+  int height;
 
   /**
    * the presentation object which is our interface to the model itself
@@ -90,7 +91,7 @@ class TimeSeriesChart implements ShadowRootAware {
   drawXAxis() {
     xAxisContainer = axisGroup.append("g")
       ..attr("id", "xaxis")
-      ..attr('transform', "translate(0,${h - padding})")
+      ..attr('transform', "translate(0,${height - padding})")
       ..attr("class", "axis");
     xAxis.axis(xAxisContainer);
   }
@@ -108,12 +109,12 @@ class TimeSeriesChart implements ShadowRootAware {
     //create the scales so we can easily translate coordinates to pixels
     xScale = new LinearScale()
       ..domain = [0, DAY_SCALE_INCREASE]
-      ..range = [padding, w - padding];
+      ..range = [padding, width - padding];
 
 
     yScale = new LinearScale()
       ..domain = [0, 100]
-      ..range = [h - padding, padding];
+      ..range = [height - padding, padding];
 
 
     xAxis = new SvgAxis()
@@ -243,8 +244,8 @@ class TimeSeriesChart implements ShadowRootAware {
 
     //create svg node
     svgNode = new SvgElement.tag("svg");
-    svgNode.setAttribute("width",w.toString());
-    svgNode.setAttribute("height",h.toString());
+    svgNode.setAttribute("width",width.toString());
+    svgNode.setAttribute("height",height.toString());
     //add node to location
     chartLocation.append(svgNode);
 
@@ -259,23 +260,26 @@ class TimeSeriesChart implements ShadowRootAware {
 
   }
 
+  bool listening = false;
 
   void _listenToModel() {
-    _presentation.marketStream.listen((event) {
+    if(!listening)
+      _presentation.marketStream.listen((event) {
 
-      //we don't care so much about the values of the event, what we care
-      // about is that presentation layer has updated its daily observations
+        listening = true;
+        //we don't care so much about the values of the event, what we care
+        // about is that presentation layer has updated its daily observations
 
-      //find the maximum Y today
-      double maxY =_presentation.dailyObservations.values.fold(
-          0.0,(prev,column)=>MATH.max(prev,column.last));
+        //find the maximum Y today
+        double maxY =_presentation.dailyObservations.values.fold(
+            0.0,(prev,column)=>MATH.max(prev,column.last));
 
 
 
-      //update the plot
-      updateScales(event.day, maxY);
-      updatePaths();
-    });
+        //update the plot
+        updateScales(event.day, maxY);
+        updatePaths();
+      });
   }
 
 
@@ -286,12 +290,43 @@ class TimeSeriesChart implements ShadowRootAware {
    */
   void onShadowRoot(HTML.ShadowRoot shadowRoot) {
     chartLocation = shadowRoot.querySelector('.price-chart');
-
+    width = chartLocation.borderEdge.width;
+    height = (width*aspectRatio).round();
     _buildChart();
+
+    //start listening for resizes
+    HTML.window.onResize.listen((event)=>resize());
+  }
+
+  void resize()
+  {
+    print("resize!");
+    //you need to redraw everything!
+    width = chartLocation.borderEdge.width;
+    height = (width*aspectRatio).round();
+
+    chartLocation.firstChild.remove();
+    //redraw it!
+    _reset();
+    _buildChart();
+
   }
 
 
 
+  void _reset()
+  {
+    xScale=null;
+    yScale=null;
+    xAxis=null;
+    yAxis=null;
+    yAxisContainer=null;
+    xAxisContainer=null;
+    axisGroup=null;
+    line=null;
+    lines.clear();
+    svgNode = null;
+  }
 
 
 }

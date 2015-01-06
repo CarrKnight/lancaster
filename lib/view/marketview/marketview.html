@@ -15,10 +15,18 @@
             quantity = {{quantity}}
         </li>
     </ul>
-    <h2> Price-Quantity plot </h2>
-    <beveridgeplot presentation = "presentation"></beveridgeplot>
-    <p></p>
-    <h2> Price time series </h2>
-    <priceplot presentation = "presentation"></priceplot>
+    <div id="parent">
+        <div id="one">
+            <h2> Price-Quantity plot </h2>
+            <beveridgeplot presentation = "presentation"></beveridgeplot>
+        </div >
+        <div id="two">
+            <h2> Price time series </h2>
+            <priceplot presentation = "presentation"></priceplot>
+        </div>
+    </div>
+    <div style="clear: both"></div> <!-- This goes after the last floated element - no floating elements are allowed on either side of this. -->
+
+
 </div>
 

@@ -23,11 +23,12 @@ class BeveridgePlot implements ShadowRootAware{
 
 
   static const dataSize = 5;
-  static const int w=600;
-  static const int h=300;
+  static const double aspectRatio=6.0/8.0;
   static const int padding = 30;
   static const int xTicks = 10;
   static const int yTicks = 5;
+  int width;
+  int height;
 
   /***
    *     ____  _  _  __ _  ____   __   _  _  ____  __ _  ____  __   __    ____
@@ -95,12 +96,12 @@ class BeveridgePlot implements ShadowRootAware{
     //create the scales so we can easily translate coordinates to pixels
     xScale = new LinearScale()
       ..domain = [0,100]
-      ..range = [padding,w-padding];
+      ..range = [padding,width-padding];
 
 
     yScale = new LinearScale()
       ..domain = [0,100]
-      ..range = [h-padding,padding];
+      ..range = [height-padding,padding];
 
 
     xAxis = new SvgAxis()
@@ -109,7 +110,7 @@ class BeveridgePlot implements ShadowRootAware{
       ..suggestedTickCount=xTicks;
 
     xAxisContainer = axisGroup.append("g")
-      ..attr('transform', "translate(0,${h - padding})")
+      ..attr('transform', "translate(0,${height - padding})")
       ..attr("class","axis");
     xAxis.axis(xAxisContainer);
 
@@ -158,8 +159,8 @@ class BeveridgePlot implements ShadowRootAware{
       ..attr("x", padding)
       ..attr("y", padding)
       ..attr("pointer-events", "all")
-      ..attr("width", w - 2 * padding )
-      ..attr("height", h - 2* padding);
+      ..attr("width", width - 2 * padding )
+      ..attr("height", height - 2* padding);
 
     //just a rect to color the area
     areaMask = svg.append("rect")               //Make a new clipPath
@@ -170,8 +171,8 @@ class BeveridgePlot implements ShadowRootAware{
       ..attr("opacity", "0.1")
       ..attr("x", padding)
       ..attr("y", padding)
-      ..attr("width", w - padding )
-      ..attr("height", h - padding);
+      ..attr("width", width - padding )
+      ..attr("height", height - padding);
 
     //todo move this to css
     //highlight
@@ -333,7 +334,6 @@ class BeveridgePlot implements ShadowRootAware{
 
   //flag, starts false and becomes true when the chart is built
   bool ready = false;
-  bool get loading => !ready;
 
   /**
    * this get actually called twice, but it runs only once. We need the
@@ -353,8 +353,8 @@ class BeveridgePlot implements ShadowRootAware{
     //create the svg uber node
     Selection svg = new SelectionScope.element(chartLocation)
     .append("svg:svg") //notice that charted for a few nodes has to do name:name
-      ..attr("width",w)
-      ..attr("height",h);
+      ..attr("width",width)
+      ..attr("height",height);
 
     //build the axis
     _buildAxesAndScale(svg);
@@ -410,6 +410,8 @@ class BeveridgePlot implements ShadowRootAware{
    */
   void onShadowRoot(HTML.ShadowRoot shadowRoot){
     chartLocation=shadowRoot.querySelector('.price-chart');
+    width = chartLocation.borderEdge.width;
+    height = (width*aspectRatio).round();
     _buildChart();
   }
 
