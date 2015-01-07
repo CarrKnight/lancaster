@@ -369,7 +369,7 @@ class OneMarketCompetition extends Scenario
     BufferInventoryAdaptive quotaStrategy =
     new BufferInventoryAdaptive.simpleSeller(optimalInventory:optimalInventory,
                                              criticalInventory:optimalInventory/10.0,initialPrice:1.0,p:p,d:0.0,
-                                             i:i);
+                                             i:i,columnName: "quota");
     //we want to change L given the seller results rather than our own
     quotaStrategy.targetExtractingStockingUp = new OtherDataExtractor(seller,
                                                                       quotaStrategy.targetExtractingStockingUp);

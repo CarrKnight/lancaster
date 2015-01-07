@@ -6,6 +6,8 @@ part of lancaster.model;
  * This is open source on MIT license. Isn't this jolly?
  */
 
+
+
 /**
  * This is a port of the DataStorage.java
  * Basically a map String--->double storing end of the day observations + a step to update itself
@@ -13,8 +15,17 @@ part of lancaster.model;
 class Data
 {
 
-  //for each name a list of observations
+  /**
+   * where the observation is actually stored
+   */
   Map<String,List<double>> _dataMap;
+
+  /**
+   * basically you might want to add columns over time, when you do add one
+   * supply a gather that gets called at the end of the day to record it for
+   * posterity
+   */
+  Map<String,DataGatherer> pluginGatherers = new HashMap();
 
   /**
    * the update step
@@ -77,7 +88,11 @@ class Data
   void start(Schedule schedule){
     assert(!_started); //should really schedule it only once!
     _started = true;
-    schedule.scheduleRepeating(Phase.CLEANUP,_updateStep);
+    schedule.scheduleRepeating(Phase.CLEANUP,(s){
+      _updateStep(s);
+      //also plugin gatherers
+      pluginGatherers.forEach((name,gatherer)=>_dataMap[name].add(gatherer()));
+    });
   }
 
 
@@ -119,6 +134,26 @@ class Data
   Map<String,List<double>> get backingMap => _dataMap;
 
 
+  /**
+   * add an additional column on the spot. The column [name] must be unique
+   * and not already used by something else. [dg] is called at data-gathering
+   * time together with the other variables collected. If this is called
+   * after some days have passed, the column gets filled with enough [filler]
+   * to have equal length as the other columns
+   */
+  void addColumn(String name, DataGatherer dg, [double filler=double.NAN])
+  {
+    int rows = _dataMap.length == 0 ? 0 : _dataMap.values.first.length;
+
+    if(_dataMap[name]!= null)
+      throw new Exception("$name column already exists");
+    //create new column
+    List<double> column = new List.generate(rows,(i)=>filler,growable:true);
+    //plug it in
+    _dataMap[name] = column;
+    //register data gatherer
+    pluginGatherers[name]=dg;
+  }
 
 
 
@@ -200,6 +235,12 @@ class SimpleExtractor implements Extractor
   }
 
 }
+
+/**
+ * very easy function with no argument returning gatherer
+ */
+typedef  double DataGatherer();
+
 
 /**
  * multiple "optimized" extractor. Sums up all the extractors. Transforms

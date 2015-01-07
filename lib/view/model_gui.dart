@@ -16,9 +16,6 @@ class ModelGUI {
 
   ModelPresentation presentation;
 
-  final String comma = "ahahah";
-
-
 
   ModelGUI()
   {

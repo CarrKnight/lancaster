@@ -6,7 +6,6 @@
 part of lancaster.presentation;
 
 
-typedef  double DataGatherer();
 
 /**
  * presentation class: creates series object and text logs for the view to show.

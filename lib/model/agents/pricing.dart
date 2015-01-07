@@ -71,130 +71,180 @@ class PIDAdaptive implements ControlStrategy
    */
   Extractor cvExtractor;
 
+  /**
+   * the controller itself that does all the adaptation
+   */
   Controller pid;
 
   double lastTarget = double.NAN;
   double lastControlledVariable = double.NAN;
 
+  /**
+   * The first time adapt is called this strategy plug in its target and cv
+   * in the data of the trader. Once that is done, this flag is set to false.
+   */
+  bool _columnToSet = true;
+
+  /**
+   * the data in the trader will be plugin as [columName]_target and
+   * [columnName]_cv
+   */
+  String columnName;
 
   /**
    * constructor
    */
   PIDAdaptive(this.targetExtractor,this.cvExtractor,
-             {double p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
-             double i: PIDController.DEFAULT_INTEGRAL_PARAMETER,
-             double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER,
-             double offset: 0.0}):
+              {double p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
+              double i: PIDController.DEFAULT_INTEGRAL_PARAMETER,
+              double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER,
+              double offset: 0.0, this.columnName : "pricer"}):
   pid = new PIDController(p,i,d){
     pid.offset = offset;
   }
 
 
   PIDAdaptive.DefaultSeller({double initialPrice: 0.0,
-                           double p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
-                           double i: PIDController.DEFAULT_INTEGRAL_PARAMETER,
-                           double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER
-                           }) : //target: -inflows,
+                            double p:
+                            PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
+                            double i:
+                            PIDController.DEFAULT_INTEGRAL_PARAMETER,
+                            double d:
+                            PIDController.DEFAULT_DERIVATIVE_PARAMETER,
+                            String columnName: "pricer"
+                            }) : //target: -inflows,
   // controlled variable = -outflow the minuses to adapt the right way
   this(new SimpleExtractor("inflow",(x)=>-x),
-  new SimpleExtractor("outflow",(x)=>-x),
-  offset:initialPrice, p:p,i:i,d:d);
+       new SimpleExtractor("outflow",(x)=>-x),
+       offset:initialPrice, p:p,i:i,d:d,columnName:columnName);
 
 
   /**
    * pid seller that counts stockouts
    */
   PIDAdaptive.StockoutSeller({double initialPrice: 0.0,
-                            double p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
-                            double i: PIDController.DEFAULT_INTEGRAL_PARAMETER,
-                            double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER
-                            }) : //target: -inflows,
+                             double p:
+                             PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
+                             double i:
+                             PIDController.DEFAULT_INTEGRAL_PARAMETER,
+                             double d:
+                             PIDController.DEFAULT_DERIVATIVE_PARAMETER,
+                             String columnName: "pricer"
+                             }) : //target: -inflows,
   // controlled variable = -outflow - stockouts
   this(new SimpleExtractor("inflow",(x)=>-x),
-  new SumOfSimpleExtractors(["outflow","stockouts"],(x)=>-x),
-  offset:initialPrice, p:p,i:i,d:d);
+       new SumOfSimpleExtractors(["outflow","stockouts"],(x)=>-x),
+       offset:initialPrice, p:p,i:i,d:d,columnName:columnName);
 
   /**
    * pid buyer that counts stockouts
    */
   PIDAdaptive.StockoutBuyer({double initialPrice: 0.0,
-                             double p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
-                             double i: PIDController.DEFAULT_INTEGRAL_PARAMETER,
-                             double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER
-                             }) : //target: -outflow,
+                            double p:
+                            PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
+                            double i:
+                            PIDController.DEFAULT_INTEGRAL_PARAMETER,
+                            double d:
+                            PIDController.DEFAULT_DERIVATIVE_PARAMETER,
+                            String columnName: "pricer"
+                            }) : //target: -outflow,
   // controlled variable = -(inflow+stockouts)
   this(new SimpleExtractor("outflow",(x)=>x),
-  new SumOfSimpleExtractors(["inflow","stockouts"],(x)=>x),
-  offset:initialPrice, p:p,i:i,d:d);
+       new SumOfSimpleExtractors(["inflow","stockouts"],(x)=>x),
+       offset:initialPrice, p:p,i:i,d:d,columnName:columnName);
 
   /**
    * pid buyer that counts stockouts and targets quota rather than outflows
    */
   PIDAdaptive.StockoutQuotaBuyer({double initialPrice: 0.0,
-                            double p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
-                            double i: PIDController.DEFAULT_INTEGRAL_PARAMETER,
-                            double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER
-                            }) : //target: -outflow,
+                                 double p:
+                                 PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
+                                 double i:
+                                 PIDController.DEFAULT_INTEGRAL_PARAMETER,
+                                 double d:
+                                 PIDController.DEFAULT_DERIVATIVE_PARAMETER,
+                                 String columnName: "pricer"
+                                 }) : //target: -outflow,
   // controlled variable = -(inflow+stockouts)
   this(new SimpleExtractor("quota",(x)=>x),
-  new SumOfSimpleExtractors(["inflow","stockouts"],(x)=>x),
-  offset:initialPrice, p:p,i:i,d:d);
+       new SumOfSimpleExtractors(["inflow","stockouts"],(x)=>x),
+       offset:initialPrice, p:p,i:i,d:d,columnName:columnName);
 
   PIDAdaptive.FixedInflowBuyer({double flowTarget:1.0, double initialPrice: 0.0,
-                              double p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
-                              double i: PIDController.DEFAULT_INTEGRAL_PARAMETER,
-                              double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER
-                              }) :
+                               double p:
+                               PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
+                               double i:
+                               PIDController.DEFAULT_INTEGRAL_PARAMETER,
+                               double d:
+                               PIDController.DEFAULT_DERIVATIVE_PARAMETER,
+                               String columnName: "pricer"}) :
   // controlled variable = -outflow the minuses to adapt the right way
   this(new FixedExtractor(flowTarget),
-  new SimpleExtractor("inflow"),
-  offset:initialPrice, p:p,i:i,d:d);
+       new SimpleExtractor("inflow"),
+       offset:initialPrice, p:p,i:i,d:d,columnName:columnName);
 
   PIDAdaptive.MaximizerBuyer(SISOPlant plant, Firm firm, Random r,
-                            {double initialPrice: 0.0,
-                            double p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
-                            double i: PIDController.DEFAULT_INTEGRAL_PARAMETER,
-                            double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER
-                            }) :
+                             {double initialPrice: 0.0,
+                             double p:
+                             PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
+                             double i:
+                             PIDController.DEFAULT_INTEGRAL_PARAMETER,
+                             double d:
+                             PIDController.DEFAULT_DERIVATIVE_PARAMETER,
+                             String columnName: "pricer"}) :
   // controlled variable = -outflow the minuses to adapt the right way
   this(new MarginalMaximizer.forHumanResources(plant,firm,r),
-  new SimpleExtractor("inflow"),
-  offset:initialPrice, p:p,i:i,d:d);
+       new SimpleExtractor("inflow"),
+       offset:initialPrice, p:p,i:i,d:d,columnName: columnName);
 
 
   PIDAdaptive.PIDMaximizerBuyer(SISOPlant plant, Firm firm, Random r,
-                             {double initialPrice: 0.0,
-                             double p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
-                             double i: PIDController.DEFAULT_INTEGRAL_PARAMETER,
-                             double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER
-                             ,int averagePIDPeriod : 20,
-                             double piMultiplier : 100.0}) :
+                                {double initialPrice: 0.0,
+                                double p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
+                                double i: PIDController.DEFAULT_INTEGRAL_PARAMETER,
+                                double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER
+                                ,int averagePIDPeriod : 20,
+                                double piMultiplier : 100.0,
+                                String columnName: "pricer"}) :
   // controlled variable = -outflow the minuses to adapt the right way
   this(new PIDMaximizer.ForHumanResources(plant,firm,r,averagePIDPeriod,piMultiplier),
-  new SimpleExtractor("inflow"),
-  offset:initialPrice, p:p,i:i,d:d);
+       new SimpleExtractor("inflow"),
+       offset:initialPrice, p:p,i:i,d:d,columnName:columnName);
 
 
-  PIDAdaptive.FixedInventoryBuyer({double inventoryTarget:1.0, double initialPrice: 0.0,
-                                 double p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
-                                 double i: PIDController.DEFAULT_INTEGRAL_PARAMETER,
-                                 double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER
-                                 }) :
+  PIDAdaptive.FixedInventoryBuyer({double inventoryTarget:1.0,
+                                  double initialPrice: 0.0,
+                                  double p:
+                                  PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
+                                  double i:
+                                  PIDController.DEFAULT_INTEGRAL_PARAMETER,
+                                  double d:
+                                  PIDController.DEFAULT_DERIVATIVE_PARAMETER,
+                                  String columnName: "pricer"
+                                  }) :
   // controlled variable = -outflow the minuses to adapt the right way
   this(new FixedExtractor(inventoryTarget),
-  new SimpleExtractor("inventory"),
-  offset:initialPrice, p:p,i:i,d:d);
+       new SimpleExtractor("inventory"),
+       offset:initialPrice, p:p,i:i,d:d,columnName:columnName);
 
 
   double get value => pid.manipulatedVariable;
 
   void adapt(Trader t,Data data) {
 
+    if(_columnToSet)
+    {
+      data.addColumn("${columnName}_target",()=>this.lastTarget);
+      data.addColumn("${columnName}_cv",()=>this.lastControlledVariable);
+      _columnToSet = false;
+    }
+
+
     lastTarget = targetExtractor.extract(data);
     lastControlledVariable = cvExtractor.extract(data);
     //ignore lack of data
     if(lastTarget == null || !lastTarget.isFinite
-      || !lastControlledVariable.isFinite)
+       || !lastControlledVariable.isFinite)
       return;
     pid.adjust(lastTarget, lastControlledVariable);
 
@@ -247,11 +297,11 @@ class BufferInventoryAdaptive implements ControlStrategy
   double _criticalInventory;
 
   BufferInventoryAdaptive(this.targetExtractingStockingUp,
-                         this.inventoryExtractor,
-                         this.delegate,
-                         {double optimalInventory:100.0,
-                         criticalInventory:10.0}
-                         )
+                          this.inventoryExtractor,
+                          this.delegate,
+                          {double optimalInventory:100.0,
+                          criticalInventory:10.0}
+                          )
   {
     assert(targetExtractingStockingUp != null);
     assert(inventoryExtractor != null);
@@ -260,25 +310,27 @@ class BufferInventoryAdaptive implements ControlStrategy
     originalTargetExtractor = delegate.targetExtractor;
     assert(originalTargetExtractor != null);
     if( optimalInventory < 0 ||
-    criticalInventory < 0 ||
-    criticalInventory >=optimalInventory )
+        criticalInventory < 0 ||
+        criticalInventory >=optimalInventory )
       throw new ArgumentError(
           "'inventory targets must >0 and critical<optimal");
   }
 
 
   BufferInventoryAdaptive.simpleSeller({double initialPrice:100.0,
-                                      double optimalInventory:100.0,
-                                      double criticalInventory:10.0,
-                                      double p:
-                                      PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
-                                      double i:
-                                      PIDController.DEFAULT_INTEGRAL_PARAMETER,
-                                      double d:
-                                      PIDController.DEFAULT_DERIVATIVE_PARAMETER}):
+                                       double optimalInventory:100.0,
+                                       double criticalInventory:10.0,
+                                       double p:
+                                       PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
+                                       double i:
+                                       PIDController.DEFAULT_INTEGRAL_PARAMETER,
+                                       double d:
+                                       PIDController.DEFAULT_DERIVATIVE_PARAMETER,
+                                       String columnName: "pricer"}):
   this(
       defaultTargetWhenStockingUp,  new SimpleExtractor("inventory"),
-      new PIDAdaptive.DefaultSeller(p:p,i:i,d:d, initialPrice:initialPrice),
+      new PIDAdaptive.DefaultSeller(p:p,i:i,d:d, initialPrice:initialPrice,
+                                    columnName:columnName),
       optimalInventory:optimalInventory,
       criticalInventory:criticalInventory);
 
@@ -315,6 +367,10 @@ class BufferInventoryAdaptive implements ControlStrategy
       delegate.targetExtractor = targetExtractingStockingUp;
     else
       delegate.targetExtractor = originalTargetExtractor;
+
+    if(delegate._columnToSet)
+      data.addColumn("${delegate.columnName}_stockingup",
+                           ()=>this._stockingUp ? 1.0 : 0.0);
 
     delegate.adapt(t,data);
   }
