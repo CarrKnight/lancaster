@@ -84,7 +84,9 @@ class Tooltip {
 
 
   void killTooltip(){
-    onEnter.cancel();
-    onLeave.cancel();
+    if(onEnter != null)
+      onEnter.cancel();
+    if(onLeave != null)
+      onLeave.cancel();
   }
 }

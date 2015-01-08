@@ -37,12 +37,7 @@ class BeveridgePlot implements ShadowRootAware{
    *    (__)  \____/\_)__)(____/\_/\_/\_)(_/(____)\_)__) (__)\_/\_/\____/(____/
    */
 
-  /**
-   * here we store the latest market events. It gets initially filled at
-   * constructor time and then updated by listening to the market stream from
-   * presentatino
-   */
-  ListQueue<MarketEvent> dataset = new ListQueue();
+
 
 
   /**
@@ -62,17 +57,7 @@ class BeveridgePlot implements ShadowRootAware{
     _presentation = presentation;
 
 
-    //reset local data by filling it with garbage
-    for(int i=0;i<dataSize; i++)
-      dataset.add(new MarketEvent(-1,-10.0,-10.0));
 
-
-    //add real data if it exists
-    for(MarketEvent event in _presentation.marketEvents)
-    {
-      dataset.removeFirst();
-      dataset.addLast(event);
-    }
 
     _buildChart();
   }
@@ -245,18 +230,6 @@ class BeveridgePlot implements ShadowRootAware{
   /**
    * turn dataset into a format that charted can plot with ease
    */
-  List<List<List<MarketEvent>>> _segments(){
-
-
-    var toReturn = [];
-    for(int i=0; i<dataset.length-1;i++)
-    {
-      toReturn.add([dataset.elementAt(i),dataset.elementAt(i+1)]);
-    }
-    return toReturn;
-
-
-  }
 
 
 
@@ -273,62 +246,101 @@ class BeveridgePlot implements ShadowRootAware{
   /**
    * a map circle to tooltips
    */
-  List<Tooltip> dataToolTip = new List<Tooltip>();
+  LinkedHashMap<BeveridgeDatum,CircleElement> drawnCircles = new LinkedHashMap();
+  LinkedHashMap<BeveridgeDatum,Tooltip> dataToolTip = new LinkedHashMap();
 
-  void _updateCircles(Selection circles)
+  /**
+   * deletes the circle associated with this datum
+   */
+  void _deleteOldestDatum()
   {
-    circles
-    //   .transition()
-      ..attrWithCallback("cx",(MarketEvent datum, i, c)=>xScale.apply(datum.quantity))
-      ..attrWithCallback("cy",(MarketEvent datum, i, c)=>yScale.apply(datum.price))
-      ..attr("r",8)
-      ..attrWithCallback("opacity",(datum, i, c)=>MATH.pow((i+1)/(dataset.length+1), 2))
-    ;
+
+    //should be coordinated
+    //  assert(identical(dataToolTip.keys.first,drawnCircles.keys.first));
+    BeveridgeDatum toDelete = dataToolTip.keys.first;
+
+    dataToolTip.remove(toDelete).killTooltip();
+    drawnCircles.remove(toDelete).remove();
+  }
+
+  /**
+   * creates a new circle for this new datum. Doesn't set it up properly
+   * though, that happens at _updateCircles() anyway.
+   */
+  void _addDatum(BeveridgeDatum toAdd)
+  {
+
+    //create circle
+    CircleElement circle = new CircleElement();
+    drawnCircles[toAdd]=circle;
+    //add it to the group
+    circles.append(circle);
+    circle.classes.addAll(["selectable", "datapoints"]);
 
 
-
-
-    //if this is the first time you arrange them:
-    if(!dataToolTip.isEmpty) {
-      for (Tooltip t in dataToolTip) {
-        t.killTooltip();
-      }
-      dataToolTip.clear();
-    }
-    circles.each((MarketEvent d, i, e)
-                               {
-                                 Tooltip t = new Tooltip(e);
-                                 t.message="price: ${d.price
-                                 .toStringAsFixed(2)}, day: ${d
-                                 .day.toInt()}";
-                               });
-
-
+    //create appropriate tooltip
+    //create tooltip
+    Tooltip t = new Tooltip(circle);
+    t.message= toAdd.message;
+    dataToolTip[toAdd]=t;
 
   }
 
-  Selection _drawCircles(Selection svg)
+
+  void _updateCircles()
+  {
+
+
+    //now draw them again!
+    int i=0;
+    drawnCircles.forEach(( event,circle){
+
+      //set it up
+      circle.setAttribute("cx",(xScale.apply(event.x)).toString());
+      circle.setAttribute("cy",yScale.apply(event.y).toString());
+      circle.setAttribute("r",event.r.toString());
+      //linked hash set should be able to deal with this!
+      circle.setAttribute("opacity",MATH.pow((i+1)/(drawnCircles.length+1), 2)
+      .toString());
+
+      i++;
+    });
+
+  }
+
+  GElement circles;
+
+  GElement _initializeCircles(SvgElement svg)
   {
 
     //we need to put the circles in a group, so we can attach clip-path to it
-    Selection circles = svg.append("g");
-    circles.attr("pointer-events","all");
+    circles =     svg.append(new GElement());
 
-    circles.attr("id","beveridge_data");
-    circles.attr("clip-path","url(#clippath)");
+    circles.setAttribute("pointer-events","all");
+
+    circles.setAttribute("id","beveridge_data");
+    circles.setAttribute("clip-path","url(#clippath)");
 
 
-    circles = circles
-    .selectAll("circle")
-    .data(dataset)
-    .enter
-    .append("circle");
+    //initialize dataset
+    //reset local data by filling it with garbage
+    for(int i=0;i<dataSize; i++)
+      _addDatum(new BeveridgeDatum(-10.0,-10.0,0,""));
 
-    circles.attr("class","selectable datapoints");
+
+
+    //add real data if it exists
+    for(MarketEvent event in _presentation.marketEvents)
+    {
+      _deleteOldestDatum();
+      _addDatum(new BeveridgeDatum(event.quantity,event.price,8,"price: ${event
+      .price.toStringAsFixed(2)}, day: ${event.day.toInt()}"));
+    }
+
 
 
     //place them
-    _updateCircles(circles);
+    _updateCircles();
 
 
 
@@ -353,11 +365,13 @@ class BeveridgePlot implements ShadowRootAware{
     if(chartLocation == null || _presentation == null)
       return;
 
-    //create the svg uber node
-    Selection svg = new SelectionScope.element(chartLocation)
-    .append("svg:svg") //notice that charted for a few nodes has to do name:name
-      ..attr("width",width)
-      ..attr("height",height);
+
+    SvgElement svgNode = chartLocation.append(new SvgElement.tag("svg"));
+    svgNode.setAttribute("width",width.toString());
+    svgNode.setAttribute("height",height.toString());
+
+    //need a selection for charted
+    Selection svg = new SelectionScope.element(svgNode).append("g");
 
     //build the axis
     _buildAxesAndScale(svg);
@@ -368,9 +382,9 @@ class BeveridgePlot implements ShadowRootAware{
 
 
     //circles
-    _drawCircles(svg);
+    _initializeCircles(svgNode);
     //set yourself up to listen to the stream of data
-    _listenToPresentation(svg);
+    _listenToPresentation();
 
 
 
@@ -382,7 +396,7 @@ class BeveridgePlot implements ShadowRootAware{
 
 
 
-  void _listenToPresentation(Selection svg){
+  void _listenToPresentation(){
     _presentation.marketStream.listen((event){
       print([event.day,  event.price]);
 
@@ -390,14 +404,13 @@ class BeveridgePlot implements ShadowRootAware{
       if(!event.quantity.isFinite || !event.price.isFinite)
         return;
 
-      dataset.removeFirst();
-      dataset.addLast(event);
+      //delete oldest, add new
+      _deleteOldestDatum();
+      _addDatum(new BeveridgeDatum(event.quantity,event.price,8,"price: ${event
+      .price.toStringAsFixed(2)}, day: ${event.day.toInt()}"));
 
       //update circles
-      _updateCircles(
-      //find it by id
-      svg.select("#beveridge_data").selectAll("circle").data(dataset)
-      );
+      _updateCircles();
 
     });
 
@@ -460,4 +473,25 @@ class BeveridgePlot implements ShadowRootAware{
 
 }
 
+/**
+ * the data type we store to turn into drawing
+ */
+class BeveridgeDatum
+{
+
+  final double x;
+
+  final double y;
+
+  final int r;
+
+  /**
+   * tooltip
+   */
+  final String message;
+
+  BeveridgeDatum(this.x, this.y, this.r,this.message);
+
+
+}
 
