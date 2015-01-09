@@ -19,7 +19,9 @@ import 'dart:svg';
 
 
 part 'marketview/market_view.dart';
+part 'charts/base_beveridge.dart';
 part 'charts/beveridge_plot.dart';
+part 'charts/beveridge_zk.dart';
 part 'charts/price_chart.dart';
 part 'charts/tooltip.dart';
 part 'controlbar/model_controlbar.dart';

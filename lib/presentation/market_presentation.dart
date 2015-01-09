@@ -11,7 +11,7 @@ part of lancaster.presentation;
  * presentation class: creates series object and text logs for the view to show.
  * It needs a schedule
  */
-class SimpleMarketPresentation{
+class SimpleMarketPresentation extends Presentation<MarketEvent>{
 
   /**
    * this boolean is useful to ignore events unless you have listeners
@@ -110,15 +110,17 @@ class SimpleMarketPresentation{
 
   }
 
-
+  /**
+   * "bonus" stream, useful as a log maybe. Not used so far
+   */
   Stream<TradeEvent> get tradeStream => _market.tradeStream;
-  Stream<MarketEvent> get marketStream => _marketStream.stream;
+  Stream<MarketEvent> get stream => _marketStream.stream;
 
 
 
 }
 
-class MarketEvent{
+class MarketEvent extends PresentationEvent{
 
   final double price;
 

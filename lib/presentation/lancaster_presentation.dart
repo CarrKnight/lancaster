@@ -18,5 +18,6 @@ import 'dart:collection';
 part 'market_presentation.dart';
 part 'model_presentation.dart';
 part 'zk_presentation.dart';
+part 'presentations.dart';
 part 'utilities/curve_to_path.dart';
 part 'utilities/curves_repository.dart';

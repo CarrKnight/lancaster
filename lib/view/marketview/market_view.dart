@@ -27,7 +27,7 @@ class MarketView{
   double quantity = double.NAN;
 
   void _listenToModel(){
-    _presentation.marketStream.listen((event){
+    _presentation.stream.listen((event){
       price = event.price;
       quantity = event.quantity;
     });

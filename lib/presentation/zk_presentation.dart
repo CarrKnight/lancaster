@@ -9,7 +9,7 @@ part of lancaster.presentation;
 /**
  * presentation class for a zero knowledge trader/department
  */
-class ZKPresentation {
+class ZKPresentation extends Presentation<ZKEvent> {
 
   /**
    * Useful only for plotting, keep track of where vertical lines should go
@@ -78,12 +78,12 @@ class ZKPresentation {
 
     //stream event
     if(streamer.hasListener)
-      streamer.add(new ZKEvent(trader,this));
+      streamer.add(new ZKEvent(trader,this,schedule.day));
 
   }
 
 
-  Stream<ZKEvent> get zkStream => streamer.stream;
+  Stream<ZKEvent> get stream => streamer.stream;
 
 
 
@@ -92,13 +92,15 @@ class ZKPresentation {
 /**
  * event to fire every-time the presentation is ready with new data
  */
-class ZKEvent
+class ZKEvent extends PresentationEvent
 {
   final ZeroKnowledgeTrader trader;
 
   final ZKPresentation presentation;
 
-  ZKEvent(this.trader,this.presentation);
+  final int day;
+
+  ZKEvent(this.trader,this.presentation,this.day);
 
 
 }

@@ -33,7 +33,7 @@ main()
       print("called now!");
     };
     listener = expectAsync(listener,count:3);
-    presentation.gasPresentation.marketStream.listen(listener);
+    presentation.gasPresentation.stream.listen(listener);
 
     model.schedule.simulateDay();
     model.schedule.simulateDay();
@@ -58,7 +58,7 @@ main()
     };
 
     listener = expectAsync(listener,count:3);
-    presentation.gasPresentation.marketStream.listen(listener);
+    presentation.gasPresentation.stream.listen(listener);
 
     model.schedule.simulateDay();
     model.schedule.simulateDay();

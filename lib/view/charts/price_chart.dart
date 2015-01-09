@@ -264,7 +264,7 @@ class TimeSeriesChart implements ShadowRootAware {
 
   void _listenToModel() {
     if(!listening)
-      _presentation.marketStream.listen((event) {
+      _presentation.stream.listen((event) {
 
         listening = true;
         //we don't care so much about the values of the event, what we care
