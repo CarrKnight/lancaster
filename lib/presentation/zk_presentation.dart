@@ -12,18 +12,6 @@ part of lancaster.presentation;
 class ZKPresentation extends Presentation<ZKEvent> {
 
   /**
-   * Useful only for plotting, keep track of where vertical lines should go
-   */
-  final Map<String, double> verticalLines = new HashMap();
-  final Map<String, DataGatherer> verticalLineGatherers = new HashMap();
-
-  /**
-   * Useful only for plotting, keep track of where horizontal lines should go
-   */
-  final Map<String, double> horizontalLines= new HashMap();
-  final Map<String, DataGatherer> horizontalLineGatherers= new HashMap();
-
-  /**
    * Useful only for plotting, keep track of additional time serieses
    */
   final Map<String, List<double>> additionalObservations = new HashMap();
@@ -54,6 +42,7 @@ class ZKPresentation extends Presentation<ZKEvent> {
 
 
 
+
   /**
    * start streaming prices and quantities to the view
    */
@@ -70,10 +59,11 @@ class ZKPresentation extends Presentation<ZKEvent> {
 
 
     //fill curves
-    horizontalLineGatherers.forEach((name,dg)=>horizontalLines[name]=dg());
-    verticalLineGatherers.forEach((name,dg)=>verticalLines[name]=dg());
+
     additionalObservers.forEach((name,dg)
-                                =>additionalObservations[name].add(dg()));
+                                =>additionalObservations.putIfAbsent(name,
+                                                                         ()=>[])
+                                .add(dg()));
 
 
     //stream event

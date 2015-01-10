@@ -118,7 +118,10 @@ class Data
    */
   double getLatestObservation(String key){
     assert( _consistency());
-    return _dataMap[key].length > 0 ? _dataMap[key].last : double.NAN;
+    var column = _dataMap[key];
+    if(column == null)
+      return double.NAN;
+    return column.length > 0 ? column.last : double.NAN;
   }
 
   List<double> getObservations(String key){

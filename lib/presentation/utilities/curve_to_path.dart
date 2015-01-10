@@ -5,98 +5,142 @@
 
 part of lancaster.presentation;
 
-
-List<List<double>> convertLinearCurveToPath(LinearCurve curve,
-                                            double minPrice,
-                                            double maxPrice,
-                                            double minQuantity,
-                                            double maxQuantity)
-{
-
-  //linear is easy, we just need two points
-  double quantity1 =   (curve.intercept + curve.slope * minPrice );
-  double quantity2 =   (curve.intercept + curve.slope * maxPrice );
-
-
-  return [[quantity1,minPrice],[quantity2,maxPrice]];
-
-}
-
-
-List<List<double>> convertInfinitelyElasticToPath(InfinitelyElasticAsk curve,
-                                                  double minPrice,
-                                                  double maxPrice,
-                                                  double minQuantity,
-                                                  double maxQuantity)
-{
-
-  //horizontal, easy.
-  return [[minQuantity,curve.minPrice],[maxQuantity,curve.minPrice]];
-
-}
-
-
-
-List<List<double>> convertFixedBudgetToPath(FixedBudget curve,
-                                            double minPrice,
-                                            double maxPrice,
-                                            double minQuantity,
-                                            double maxQuantity)
-{
-
-  //easy slope
-  return [[curve.budget/minPrice,minPrice],[curve.budget/maxPrice,maxPrice]];
-
-}
-
-
-List<List<double>> convertFixedQuantityToPath(FixedSupply curve,
-                                            double minPrice,
-                                            double maxPrice,
-                                            double minQuantity,
-                                            double maxQuantity)
-{
-
-  //vertical easy
-  return [[curve.dailyQuantity,minPrice],[curve.dailyQuantity,maxPrice]];
-
-}
-
-
-
 /**
- * converts curve into path for drawing
+ * an adaptor, basically. Takes exogenous curves (most times at least) and
+ * turn them into a series of x-y observations we can interpolate to draw
  */
-List<List<double>> getCurvePath(ExogenousCurve curve,
-                                double minPrice,
-                                double maxPrice,
-                                double minQuantity,
-                                double maxQuantity)
+abstract class CurvePath
 {
 
-  //just a big switch.
-  //now, it would be nice to keep this somewhere in the curve itself; it
-  // wouldn't be hard but I really want to keep this display code out of the
-  // simulation itself
+  List<List<double>> toPath(double minY,double maxY, double minX, double maxX);
 
-  if(curve is FixedBudget)
-    return convertFixedBudgetToPath(curve,minPrice,maxPrice,minQuantity,
-    maxQuantity);
-
-  if(curve is InfinitelyElasticAsk)
-    return convertInfinitelyElasticToPath(curve,minPrice,maxPrice,minQuantity,
-    maxQuantity);
-
-  if(curve is LinearCurve)
-    return convertLinearCurveToPath(curve,minPrice,maxPrice,minQuantity,
-    maxQuantity);
-
-  if(curve is FixedSupply)
-    return convertFixedQuantityToPath(curve,minPrice,maxPrice,minQuantity,
-    maxQuantity);
+}
 
 
-  throw new Exception("unrecognized curve type!");
+class LinearCurvePath implements CurvePath
+{
 
+  final LinearCurve curve;
+
+  LinearCurvePath(this.curve);
+
+  List<List<double>> toPath(double minY, double maxY, double minX,
+                            double maxX) {
+
+    //linear is easy, we just need two points
+    double quantity1 =   (curve.intercept + curve.slope * minY );
+    double quantity2 =   (curve.intercept + curve.slope * maxY );
+
+
+    return [[quantity1,minY],[quantity2,maxY]];
+  }
+
+
+}
+
+class InfinitelyElasticPath implements CurvePath
+{
+
+  final InfinitelyElasticAsk curve;
+
+  InfinitelyElasticPath(this.curve);
+
+  List<List<double>> toPath(double minY, double maxY, double minX,
+                            double maxX) {
+
+    //horizontal, easy.
+    return [[minX,curve.minPrice],[maxX,curve.minPrice]];
+  }
+
+
+}
+
+
+class FixedBudgetPath implements CurvePath
+{
+
+  final FixedBudget curve;
+
+  FixedBudgetPath(this.curve);
+
+  //store here results so that i don't need to recompute this a million times
+  double lastBudget = double.NAN;
+  List<List<double>> lastData = [];
+
+  List<List<double>> toPath(double minY, double maxY, double minX,
+                            double maxX) {
+
+    if(curve.budget == lastBudget)
+      return lastData;
+
+    lastBudget = curve.budget;
+    lastData = [];
+    for(double i =0.0; i<= 1.0; i+=.05)
+    {
+      double y = minY*(i)+maxY*(1.0-i);
+      if(y != 0)
+        lastData.add([lastBudget/y,y]);
+
+    }
+
+    //easy slope
+    return lastData;
+  }
+
+
+}
+
+
+
+class FixedSupplyPath implements CurvePath
+{
+
+  final FixedSupply curve;
+
+  FixedSupplyPath(this.curve);
+
+  List<List<double>> toPath(double minY, double maxY, double minX,
+                            double maxX) {
+
+    //vertical easy
+    return [[curve.dailyQuantity,minY],[curve.dailyQuantity,maxY]];
+  }
+
+
+}
+
+
+
+
+class DynamicHorizontalPath implements CurvePath
+{
+
+  final DataGatherer yGetter;
+
+  DynamicHorizontalPath(this.yGetter);
+
+  List<List<double>> toPath(double minY, double maxY, double minX,
+                            double maxX) {
+    double y = yGetter();
+    return [[minX,y],[maxX,y]];
+
+  }
+
+}
+
+
+class DynamicVerticalPath implements CurvePath
+{
+
+  final DataGatherer xGetter;
+
+  DynamicVerticalPath(this.xGetter);
+
+  List<List<double>> toPath(double minY, double maxY, double minX,
+                            double maxX) {
+    double x = xGetter();
+    return [[x, minY],[x,maxY]];
+
+  }
 
 }

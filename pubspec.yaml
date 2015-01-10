@@ -11,10 +11,4 @@ dev_dependencies:
     git: https://github.com/fibulwinter/dart-mockito.git
   unittest: any
 transformers:
-- angular:
-     html_files:
-      - lib/view/modelgui.html
-      - lib/view/marketview/marketview.html
-      - lib/view/controlbar/controlbar.html
-- $dart2js:
-    suppressWarnings: false
+- angular

@@ -19,10 +19,6 @@ typedef List<BeveridgeDatum> DataInitializer<E extends PresentationEvent>
 typedef CurveRepository RepositoryGetter<E extends PresentationEvent>
     (Presentation<E> presentation);
 
-//initialize data (return a list?)
-typedef Map<String,double> DynamicCurveGetter<E extends PresentationEvent>
-    (Presentation<E> presentation);
-
 
 /**
  * a way to plot price-quantity or whatever other 2d relationship over time,
@@ -163,6 +159,8 @@ ShadowRootAware{
 
   RepositoryGetter<E> repositoryGetter = null;
   CurveRepository curveRepository;
+  Map<String, PathElement> drawnCurves = new HashMap();
+  GElement curves;
 
   static final List<String> COLORS = ["rgb(86,180,233)",
   "rgb(240,228,66)",
@@ -208,60 +206,57 @@ ShadowRootAware{
 
   }
 
+
+  /**
+   * create a new path but doesn't set its d, that's the update job
+   */
+  PathElement _createPathElement(String name)
+  {
+    print("creating a line");
+    PathElement line = new PathElement();
+    curves.append(line);
+    line.classes = ["selectable", "line"];
+    line.setAttribute("stroke", BeveridgePlot.COLORS[drawnCurves.length]);
+    line.setAttribute("stroke-width", "3");
+    line.setAttribute("fill", "none");
+    //give it a toolTip
+    Tooltip tooltip = new Tooltip(line);
+    tooltip.message = name;
+    return line;
+  }
+
   /**
    * build things like fixed demand and supply curves
    */
-  void _buildBackgroundCurves(Selection svg)
-  {
-    //line uniting the points
-    liner = new SvgLine();
-    liner.xAccessor = (d,i) => xScale.apply(d[0]);
-    liner.yAccessor = (d,i)=>yScale.apply(d[1]);
-    liner.defined = (List<double> d,i,e)=> d[0].isFinite && d[1].isFinite;
-
-    //draw curves
-    Selection curves = svg.append("g");
-    curves.attr("pointer-events","all");
-    curves.attr("clip-path","url(#clippath)");
-    int i=0;
-    print(curveRepository.curves);
-    for(ExogenousCurve curve in curveRepository.curves )
-    {
+  _updateCurves() {
+    for (CurvePath curve in curveRepository.curves) {
       String name = curveRepository.getName(curve);
-      Selection pathContainer = curves.append("g");
-      pathContainer.attr("pointer-events","all");
-      DataSelection path =  pathContainer.selectAll("path")
-      .data([curveRepository.curveToPath(curve,
-                                         0.0,100.0,0.0,100.0)]);
-      var line = path.enter
-      .append("path")
-        ..attr("class","selectable line")
-        ..attr("tooltip",name)
-        ..attrWithCallback("d",(d,i,e)=>liner.path(d,i,e))
-        ..attr('stroke', COLORS[i])
-        ..attr('stroke-width', "2")
-        ..attr("fill","none");
-      HTML.Element lineElement = line.first;
+      PathElement path = drawnCurves.putIfAbsent(name, () => _createPathElement
+      (name));
 
 
-      //add tooltip
-      Tooltip tooltip = new Tooltip(lineElement);
-      tooltip.message = curveRepository.getName(curve);
+      path.setAttribute("d", generatePathFromXYObs(curve.toPath(0.0,
+                                                                100.0, 0.0,
+                                                                100.0)
+                                                   , xScale, yScale));
 
-      i++;
     }
+  }
 
+  void _buildBackgroundCurves(SvgElement svg)
+  {
+    //put all this in a group
+    curves = svg.append(new GElement());
+    //keep them inside the plot area
+    curves.setAttribute("pointer-events","all");
+    curves.setAttribute("clip-path","url(#clippath)");
 
+    _updateCurves();
 
 
   }
 
-  DynamicCurveGetter horizontalCurveGetter;
-  Map<String,double> _horizontalCurves;
 
-
-  DynamicCurveGetter verticalCurveGetter;
-  Map<String,double> _verticalCurves;
 
 
   /***
@@ -423,11 +418,12 @@ ShadowRootAware{
     _buildAxesAndScale(svg);
     //background
     _buildChartBackground(svg);
-    //draw the curves
+
+
     curveRepository = repositoryGetter == null ? null :
                       repositoryGetter(_presentation);
     if(curveRepository != null)
-      _buildBackgroundCurves(svg);
+      _buildBackgroundCurves(svgNode);
 
 
     //circles
@@ -437,15 +433,24 @@ ShadowRootAware{
 
 
 
+
     ready=true;
 
 
   }
 
 
-
+  /**
+   * this turns true the first time we call _listenToPresentation so that we
+   * only listen to it once
+   */
+  bool listeningToStream = false;
 
   void _listenToPresentation(){
+
+    if(listeningToStream) //we are already doing this!
+      return;
+
     _presentation.stream.listen((event){
 
       BeveridgeDatum newObservation = dailyDataExtractor(event);
@@ -454,10 +459,12 @@ ShadowRootAware{
         _deleteOldestDatum();
         _addDatum(newObservation);
       }
-      //update circles
+      //update data
       _updateCircles();
-
+      _updateCurves();
     });
+
+    listeningToStream = true;
 
   }
 
@@ -513,6 +520,7 @@ ShadowRootAware{
     areaMask=null;
     liner=null;
     dataToolTip.clear();
+    drawnCurves.clear();
   }
 
 
@@ -542,4 +550,35 @@ class BeveridgeDatum
 
 
 
+/**
+ * similar to generatePathString in the time series object, but dealing with
+ * x-y rather than x-i observations
+ */
+String generatePathFromXYObs(List<List<double>> obs, Scale xScale,
+                             Scale yScale) {
+  List<String> segments = [];
+  List<MATH.Point> points = [];
+
+
+  for (int i = 0; i < obs.length; i++) {
+//if valid
+    var observation = obs[i];
+    if (observation.every((e)=>e>=0&&e.isFinite)) {
+      points.add(new MATH.Point(xScale.apply(observation[0]), yScale.apply
+      (observation[1])));
+//an invalid observation is a break, draw what you got
+    }
+    else if (points.isNotEmpty) {
+      segments.add("M ${points.map((pt) => '${pt.x},${pt.y} ').join('L')}");
+    }
+  }
+//one last segment, if needed
+  if (points.isNotEmpty) {
+    segments.add("M ${points.map((pt) => '${pt.x},${pt.y} ').join('L')}");
+  }
+
+  return segments.join();
+
+
+}
 

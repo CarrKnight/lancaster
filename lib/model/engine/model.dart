@@ -157,8 +157,8 @@ class SimpleScenario extends Scenario{
 }
 
 /**
- * a simple scenario with one firm hiring workers to produce one output to
- * sell. For now just a way to test that every element in the firm works
+ * a simple scenario with one firm hiring a fixed number of workers to produce
+ * one output to sell. For now just a way to test that every element in the firm works
  * properly
  */
 class SimpleFirmScenario extends Scenario
@@ -182,17 +182,18 @@ class SimpleFirmScenario extends Scenario
   double productionMultiplier = 1.0;
   //worker target
   double workerTarget = 10.0;
-
+  Firm mainFirm;
+  ExogenousBuyerMarket laborMarket;
 
   start(Model model)
   {
 
-    Firm mainFirm = new Firm();
+    mainFirm = new Firm();
     Random random = model.random;
 
 
     //build labor market
-    ExogenousBuyerMarket laborMarket = new ExogenousBuyerMarket.linear
+    laborMarket = new ExogenousBuyerMarket.linear
     (intercept:supplyIntercept, slope:supplySlope,goodType : "labor");
     laborMarket.start(model.schedule);
     model.markets["labor"]=laborMarket;

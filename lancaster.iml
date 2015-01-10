@@ -4,6 +4,7 @@
     <exclude-output />
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/build" />
       <excludeFolder url="file://$MODULE_DIR$/packages/lancaster" />
       <excludeFolder url="file://$MODULE_DIR$/test/model/agents/packages" />
       <excludeFolder url="file://$MODULE_DIR$/test/model/engine/packages" />
@@ -14,6 +15,8 @@
       <excludeFolder url="file://$MODULE_DIR$/test/presentation/packages" />
       <excludeFolder url="file://$MODULE_DIR$/test/testresources/packages" />
       <excludeFolder url="file://$MODULE_DIR$/web/packages" />
+      <excludeFolder url="file://$MODULE_DIR$/web/scenario/packages" />
+      <excludeFolder url="file://$MODULE_DIR$/web/scenario/simplefirm/packages" />
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Dart SDK" level="application" />

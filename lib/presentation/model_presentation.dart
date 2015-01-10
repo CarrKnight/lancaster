@@ -30,14 +30,14 @@ class ModelPresentation
     }
   }
 
-  ModelPresentation._internal(this._model)
+  ModelPresentation.empty(this._model)
   {
     _model.start();
   }
 
   factory ModelPresentation.SimpleSeller(Model model,
                                          SimpleSellerScenario scenario) {
-    ModelPresentation presentation = new ModelPresentation._internal(model);
+    ModelPresentation presentation = new ModelPresentation.empty(model);
     presentation.gasPresentation =
     new SimpleMarketPresentation.seller(model.markets["gas"],
                                         scenario.dailyFlow,
@@ -75,4 +75,49 @@ class ModelPresentation
    */
   int get day=>_model.schedule.day;
 
+}
+
+
+
+class SimpleFirmPresentation extends ModelPresentation
+{
+
+  ZKPresentation sales;
+  ZKPresentation hr;
+
+
+  factory SimpleFirmPresentation(Model model,
+                              SimpleFirmScenario scenario) {
+    SimpleFirmPresentation presentation = new SimpleFirmPresentation._internal
+    (model);
+
+    ZeroKnowledgeTrader salesDepartment = scenario.mainFirm.salesDepartments["gas"];
+    presentation.sales = new ZKPresentation(salesDepartment);
+    //in the time series we want to put the target and the equilibrium
+    presentation.sales.additionalObservers["Target"]= ()=>salesDepartment.data
+    .getLatestObservation("pricer_target");
+    presentation.sales.additionalObservers["Equilibrium"]= ()=>50.0;
+
+
+
+    ZeroKnowledgeTrader hrDepartment = scenario.mainFirm
+    .purchasesDepartments["labor"];
+    presentation.hr = new ZKPresentation(hrDepartment);
+    //in the time series we want to put the target and the equilibrium
+    presentation.hr.additionalObservers["Target"]= ()=>hrDepartment.data
+    .getLatestObservation("pricer_target");
+    presentation.hr.additionalObservers["Equilibrium"]= ()=>50.0;
+    presentation.hr.repository.addDynamicVLine(()=>hrDepartment.data
+    .getLatestObservation("pricer_target"),"Target");
+    presentation.hr.repository.addCurve(scenario.laborMarket.supply,"Labor Supply");
+
+
+    presentation.sales.start(model.schedule);
+    presentation.hr.start(model.schedule);
+
+    return presentation;
+  }
+
+  SimpleFirmPresentation._internal(Model model):
+  super.empty(model);
 }

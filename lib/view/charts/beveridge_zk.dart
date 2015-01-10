@@ -16,8 +16,15 @@ class BuyerBeveridge extends BeveridgePlot<ZKEvent>
 {
 
 
+  factory BuyerBeveridge()
+  {
+    BuyerBeveridge toReturn = new   BuyerBeveridge._internal();
+    toReturn.repositoryGetter = (ZKPresentation p)=>p.repository;
+    return toReturn;
+  }
+
 //this.dailyDataExtractor, this.dataInitializer
-  BuyerBeveridge()
+  BuyerBeveridge._internal()
   :
   super(_extractor,_initializer);
 
@@ -39,8 +46,8 @@ class BuyerBeveridge extends BeveridgePlot<ZKEvent>
   static BeveridgeDatum _extractor(ZKEvent e)
   {
 
-    double inflow = e.trader.data.getLatestObservation("inflow");
-    double price = e.trader.data.getLatestObservation("offeredPrice");
+    double inflow = e.trader.currentInflow;
+    double price = e.trader.lastOfferedPrice;
     int day = e.day;
 
     return _adapter(inflow,price,day);

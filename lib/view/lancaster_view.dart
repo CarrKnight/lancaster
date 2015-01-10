@@ -26,3 +26,4 @@ part 'charts/price_chart.dart';
 part 'charts/tooltip.dart';
 part 'controlbar/model_controlbar.dart';
 part 'model_gui.dart';
+part 'scenario/simplefirm/simplefirm_gui.dart';
