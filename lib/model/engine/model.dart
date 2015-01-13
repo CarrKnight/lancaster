@@ -184,6 +184,7 @@ class SimpleFirmScenario extends Scenario
   double workerTarget = 10.0;
   Firm mainFirm;
   ExogenousBuyerMarket laborMarket;
+  ExogenousSellerMarket goodmarket;
 
   start(Model model)
   {
@@ -209,10 +210,10 @@ class SimpleFirmScenario extends Scenario
     mainFirm.addPurchasesDepartment(hr);
 
     //build sales market
-    ExogenousSellerMarket market = new ExogenousSellerMarket.linear
+    goodmarket = new ExogenousSellerMarket.linear
     (intercept:demandIntercept, slope:demandSlope);
-    market.start(model.schedule);
-    model.markets["gas"]=market;
+    goodmarket.start(model.schedule);
+    model.markets["gas"]=goodmarket;
 
     //build sales
     p = random.nextDouble() * (salesMaxP - salesMinP) + salesMinP;
@@ -220,7 +221,7 @@ class SimpleFirmScenario extends Scenario
     initialPrice = random.nextDouble() *
                    (maxInitialPriceSelling - minInitialPriceSelling) + minInitialPriceSelling;
     ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader.PIDBufferSeller(
-        market, initialPrice:initialPrice, p:p, i:i,givenInventory:mainFirm);
+        goodmarket, initialPrice:initialPrice, p:p, i:i,givenInventory:mainFirm);
     mainFirm.addSalesDepartment(seller);
 
 

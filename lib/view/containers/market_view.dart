@@ -10,9 +10,8 @@ part of lancaster.view;
  */
 @Component(
     selector: 'marketview',
-    templateUrl: 'packages/lancaster/view/marketview/marketview.html',
-    cssUrl: 'packages/lancaster/view/marketview/marketview.css',
-    publishAs: 'market')
+    templateUrl: 'packages/lancaster/view/containers/marketview.html',
+    cssUrl: 'packages/lancaster/view/containers/marketview.css')
 class MarketView{
 
   /**

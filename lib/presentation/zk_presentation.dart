@@ -7,15 +7,12 @@ part of lancaster.presentation;
 
 
 /**
- * presentation class for a zero knowledge trader/department
+ * presentation class for a zero knowledge trader/department. It actually
+ * stores its stuff in additional columns of the zk data
  */
 class ZKPresentation extends Presentation<ZKEvent> {
 
-  /**
-   * Useful only for plotting, keep track of additional time serieses
-   */
-  final Map<String, List<double>> additionalObservations = new HashMap();
-  final Map<String, DataGatherer> additionalObservers = new HashMap();
+
 
   /**
    * Useful only for plotting, keep track of additional parameters
@@ -28,7 +25,7 @@ class ZKPresentation extends Presentation<ZKEvent> {
    */
   bool listenedTo = false;
 
-  StreamController<ZKEvent> streamer = new StreamController();
+  StreamController<ZKEvent> streamer = new StreamController.broadcast();
 
 
   /**
@@ -37,10 +34,19 @@ class ZKPresentation extends Presentation<ZKEvent> {
   final ZeroKnowledgeTrader trader;
 
 
+  String get goodType => trader.goodType;
+
   ZKPresentation(this.trader);
 
 
-
+  /**
+   * add a function called by the agent's data at the end of the day. This is
+   * useful if we want to store it later
+   */
+  addDailyObserver(String name, DataGatherer dg)
+  {
+    trader.data.addColumn(name,dg);
+  }
 
 
   /**
@@ -53,18 +59,18 @@ class ZKPresentation extends Presentation<ZKEvent> {
 
 
   /**
-   * stream only if it is listened to.
+   * redirects to the data object of the trader
+   */
+  Map<String, List<double>> get dailyObservations => trader.data.backingMap;
+
+  /**
+   * streams only if it is listened to.
    */
   _broadcastEndDay(Schedule schedule){
 
 
-    //fill curves
-
-    additionalObservers.forEach((name,dg)
-                                =>additionalObservations.putIfAbsent(name,
-                                                                         ()=>[])
-                                .add(dg()));
-
+    //don't need to collect data, since everything should have been done by
+    // the agent data object (we redirected all observers to there too)
 
     //stream event
     if(streamer.hasListener)

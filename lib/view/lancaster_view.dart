@@ -18,11 +18,13 @@ import 'dart:collection';
 import 'dart:svg';
 
 
-part 'marketview/market_view.dart';
+part 'containers/market_view.dart';
+part 'containers/zk_views.dart';
 part 'charts/base_beveridge.dart';
 part 'charts/beveridge_plot.dart';
 part 'charts/beveridge_zk.dart';
 part 'charts/price_chart.dart';
+part 'charts/base_timeseries.dart';
 part 'charts/tooltip.dart';
 part 'controlbar/model_controlbar.dart';
 part 'model_gui.dart';

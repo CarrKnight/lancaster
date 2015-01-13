@@ -94,9 +94,13 @@ class SimpleFirmPresentation extends ModelPresentation
     ZeroKnowledgeTrader salesDepartment = scenario.mainFirm.salesDepartments["gas"];
     presentation.sales = new ZKPresentation(salesDepartment);
     //in the time series we want to put the target and the equilibrium
-    presentation.sales.additionalObservers["Target"]= ()=>salesDepartment.data
-    .getLatestObservation("pricer_target");
-    presentation.sales.additionalObservers["Equilibrium"]= ()=>50.0;
+    presentation.sales.addDailyObserver("Target",()=>salesDepartment.data
+    .getLatestObservation("inflow"));
+    presentation.sales.addDailyObserver("Equilibrium",()=>90.0);
+    presentation.sales.repository.addCurve(scenario.goodmarket.demand,
+                                        "Good Demand");
+    presentation.sales.repository.addDynamicVLine(()=>salesDepartment.data
+    .getLatestObservation("inflow"),"Target");
 
 
 
@@ -104,9 +108,9 @@ class SimpleFirmPresentation extends ModelPresentation
     .purchasesDepartments["labor"];
     presentation.hr = new ZKPresentation(hrDepartment);
     //in the time series we want to put the target and the equilibrium
-    presentation.hr.additionalObservers["Target"]= ()=>hrDepartment.data
-    .getLatestObservation("pricer_target");
-    presentation.hr.additionalObservers["Equilibrium"]= ()=>50.0;
+    presentation.hr..addDailyObserver("Target", ()=>hrDepartment.data
+    .getLatestObservation("pricer_target"));
+    presentation.hr.addDailyObserver("Equilibrium", ()=>10.0);
     presentation.hr.repository.addDynamicVLine(()=>hrDepartment.data
     .getLatestObservation("pricer_target"),"Target");
     presentation.hr.repository.addCurve(scenario.laborMarket.supply,"Labor Supply");

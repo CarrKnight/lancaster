@@ -21,6 +21,11 @@ abstract class Presentation<E extends PresentationEvent>
    */
   Stream<E> get stream;
 
+  /**
+   * holds a list of observations, useful to plot directly if the chart
+   * doesn't need to make any further adjustment
+   */
+  Map<String, List<double>> get dailyObservations;
 
 
 }

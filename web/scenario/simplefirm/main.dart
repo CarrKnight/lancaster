@@ -12,7 +12,11 @@ class SimpleFirmModule extends Module{
     bind(SimpleFirmGUI);
     bind(ControlBar);
     bind(BuyerBeveridge);
+    bind(SellerBeveridge);
     bind(TimeSeriesChart);
+    bind(ZKTimeSeriesChart);
+    bind(ZKBuyer);
+    bind(ZKSeller);
     bind(Tooltip);
   }
 }

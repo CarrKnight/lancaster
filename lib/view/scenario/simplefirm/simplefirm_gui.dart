@@ -12,7 +12,6 @@ part of lancaster.view;
 
 @Component(
     selector: 'simple-firm-gui',
-    // 'packages/lancaster/view/marketview/marketview.html'
     templateUrl: 'packages/lancaster/view/scenario/simplefirm/simplefirmgui.html')
 class SimpleFirmGUI {
 
