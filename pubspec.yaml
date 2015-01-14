@@ -5,6 +5,7 @@ description: A monopolistic competition model that would hopefully run straight 
 dependencies:
   angular: any
   browser: any
+  web_components: ">=0.8.0 <0.9.0"
   charted: any
 dev_dependencies:
   mockito:

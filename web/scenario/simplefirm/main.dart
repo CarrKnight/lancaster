@@ -15,6 +15,7 @@ class SimpleFirmModule extends Module{
     bind(SellerBeveridge);
     bind(TimeSeriesChart);
     bind(ZKTimeSeriesChart);
+    bind(ZKQuantityTimeSeriesChart);
     bind(ZKBuyer);
     bind(ZKSeller);
     bind(Tooltip);

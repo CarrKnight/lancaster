@@ -37,11 +37,11 @@ abstract class ZKView{
 @Component(
     selector: 'zk-buyer',
     templateUrl: 'packages/lancaster/view/containers/zk_buyer.html',
-    cssUrl: 'packages/lancaster/view/containers/marketview.css')
+    cssUrl: 'packages/lancaster/view/containers/zk.css')
 class ZKBuyer extends ZKView{}
 
 @Component(
     selector: 'zk-seller',
     templateUrl: 'packages/lancaster/view/containers/zk_seller.html',
-    cssUrl: 'packages/lancaster/view/containers/marketview.css')
+    cssUrl: 'packages/lancaster/view/containers/zk.css')
 class ZKSeller extends ZKView{}
