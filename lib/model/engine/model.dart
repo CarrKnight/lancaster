@@ -110,6 +110,70 @@ class SimpleSellerScenario extends Scenario
   double get equilibriumPrice=> intercept + slope *dailyFlow;
 
 }
+/**
+ * A simple seller scenario where the sale price is set through this object.
+ * Useful for an easy gui demo
+ */
+class ExogenousSellerScenario extends Scenario
+{
+
+  double dailyFlow;
+
+  ModelInitialization initializer;
+
+  final double intercept;
+
+  final double slope;
+
+  final FixedValue pricing;
+
+  Data sellerData;
+
+  void start(Model model)=>initializer(model);
+
+
+  ExogenousSellerScenario({initialPrice : 10.0,
+                          this.dailyFlow : 50.0,
+                          this.intercept:200.0,this.slope:-2.0})
+  :
+  pricing = new FixedValue(initialPrice)
+  {
+    initializer = (Model model) {
+      ExogenousSellerMarket market = new ExogenousSellerMarket.linear(intercept:intercept,
+                                                                      slope:slope);
+      market.start(model.schedule);
+
+      model.markets["gas"] = market;
+
+      ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader(market,pricing,
+                                                           new AllOwned(),
+                                                           new SimpleSellerTrading(),
+                                                           new Inventory());
+      sellerData = seller.data;
+      //initial price 0
+      model.agents.add(seller);
+      seller.start(model.schedule);
+    };
+  }
+
+  double get price=>pricing.value;
+  void set price(double value){pricing.value = value;}
+
+
+  double get customersAttracted=>sellerData.getLatestObservation("stockouts")
+                                 + sellerData.getLatestObservation("outflow");
+
+
+
+  double get equilibriumPrice=> intercept + slope *dailyFlow;
+
+
+
+}
+
+
+
+
 
 
 /**

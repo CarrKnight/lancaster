@@ -3,10 +3,11 @@ version: 0.0.1
 author: Ernesto Carrella <ernesto.carrella@gmail.com>
 description: A monopolistic competition model that would hopefully run straight into the paper. Supposedly inspired by the Lancaster models of competition.
 dependencies:
-  angular: any
+  angular:
+    git: https://github.com/angular/angular.dart.git
   browser: any
-  web_components: ">=0.8.0 <0.9.0"
   charted: any
+  paper_elements: any
 dev_dependencies:
   mockito:
     git: https://github.com/fibulwinter/dart-mockito.git

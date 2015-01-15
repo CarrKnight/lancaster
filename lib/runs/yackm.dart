@@ -148,6 +148,7 @@ wageName = null, String gasPIDName = null, String wagePIDName = null])
   Market gas = model.markets["gas"];
   Market labor = model.markets["labor"];
 
+  //this is old and might need to be replaced
   Data gasPID = new Data.AdaptiveStrategyData(
       (((gas as SellerMarket).sellers.first as ZeroKnowledgeTrader).pricing as
       ControlStrategy));

@@ -80,6 +80,7 @@ class Tooltip {
 
   void _destroyTemplate() {
     tooltipElem.remove();
+    tooltipElem == null;
   }
 
 
@@ -88,5 +89,7 @@ class Tooltip {
       onEnter.cancel();
     if(onLeave != null)
       onLeave.cancel();
+    if(tooltipElem != null)
+      _destroyTemplate();
   }
 }

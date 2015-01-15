@@ -127,3 +127,74 @@ class SimpleFirmPresentation extends ModelPresentation
   SimpleFirmPresentation._internal(Model model):
   super.empty(model);
 }
+
+
+/**
+ * this is basically the "learned competitor" test gui
+ */
+class MarshallianMicroPresentation extends ModelPresentation
+{
+
+  ZKPresentation sales;
+  ZKPresentation hr;
+
+  MarshallianMicroPresentation._internal(Model model):
+  super.empty(model);
+
+  factory MarshallianMicroPresentation(Model model,
+                                       OneMarketCompetition scenario) {
+    MarshallianMicroPresentation presentation =
+    new MarshallianMicroPresentation._internal(model);
+
+    //single agent
+    scenario.competitors = 1;
+    //acts as competitor
+    scenario.hrIntializer = (ZeroKnowledgeTrader sales) {
+      sales.predictor = new
+      LastPricePredictor();
+    };
+    scenario.salesInitializer = (ZeroKnowledgeTrader sales) {
+      sales.predictor = new
+      LastPricePredictor();
+    };
+    //maximizes as PID
+    scenario.hrPricingInitialization = OneMarketCompetition.PID_MAXIMIZER_HR;
+
+
+
+    ZeroKnowledgeTrader salesDepartment = scenario.firms.first
+    .salesDepartments["gas"];
+    presentation.sales = new ZKPresentation(salesDepartment);
+    //in the time series we want to put the price and quantity equilibrium
+    presentation.sales.addDailyObserver("Equilibrium",()=>50.0);
+    presentation.sales.addDailyObserver("Q Equilibrium",()=>50.0);
+
+    presentation.sales.repository.addCurve(scenario.goodMarket.demand,
+                                           "Good Demand");
+    presentation.sales.repository.addDynamicVLine(()=>salesDepartment.data
+    .getLatestObservation("inflow"),"Target");
+
+
+
+    ZeroKnowledgeTrader hrDepartment = scenario.firms.first
+    .purchasesDepartments["labor"];
+    presentation.hr = new ZKPresentation(hrDepartment);
+    //in the time series we want to put the target and the equilibrium
+    presentation.hr..addDailyObserver("Target", ()=>hrDepartment.data
+    .getLatestObservation("pricer_target"));
+    presentation.hr.addDailyObserver("Equilibrium", ()=>50.0);
+    presentation.hr.addDailyObserver("Q Equilibrium",()=>50.0);
+
+    presentation.hr.repository.addDynamicVLine(()=>hrDepartment.data
+    .getLatestObservation("pricer_target"),"Target");
+    presentation.hr.repository.addCurve(scenario.laborMarket.supply,"Labor Supply");
+
+
+    presentation.sales.start(model.schedule);
+    presentation.hr.start(model.schedule);
+
+    return presentation;
+  }
+
+
+}
