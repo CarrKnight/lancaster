@@ -107,65 +107,129 @@ class SimpleSellerScenario extends Scenario
   }
 
 
-  double get equilibriumPrice=> intercept + slope *dailyFlow;
 
 }
+
+
 /**
  * A simple seller scenario where the sale price is set through this object.
  * Useful for an easy gui demo
  */
+typedef void PriceSetter(double newPrice);
+
+
 class ExogenousSellerScenario extends Scenario
 {
 
-  double dailyFlow;
-
   ModelInitialization initializer;
 
-  final double intercept;
-
-  final double slope;
-
-  final FixedValue pricing;
 
   Data sellerData;
 
   void start(Model model)=>initializer(model);
 
+  ZeroKnowledgeTrader seller;
 
-  ExogenousSellerScenario({initialPrice : 10.0,
-                          this.dailyFlow : 50.0,
-                          this.intercept:200.0,this.slope:-2.0})
-  :
-  pricing = new FixedValue(initialPrice)
+  final DataGatherer priceGetter;
+
+  final PriceSetter priceSetter;
+
+  ExogenousSellerScenario._internal(this.priceSetter,this.priceGetter);
+
+
+  factory ExogenousSellerScenario({initialPrice : 1.0,
+                                  double dailyFlow : 50.0,
+                                  double intercept:200.0,double slope:-2.0})
   {
-    initializer = (Model model) {
+    FixedValue pricing = new FixedValue(initialPrice);
+
+    ExogenousSellerScenario toReturn =new ExogenousSellerScenario._internal(
+            (double price){pricing.value = price;},()=>pricing.value);
+
+    toReturn.initializer = (Model model) {
+      ExogenousSellerMarket market = new ExogenousSellerMarket.linear(intercept:intercept,slope:slope);
+      market.start(model.schedule);
+
+      model.markets["gas"] = market;
+
+      var inventory = new Inventory();
+      toReturn.seller = new ZeroKnowledgeTrader(market,pricing,
+                                                new AllOwned(),
+                                                new SimpleSellerTrading(),
+                                                inventory);
+      ZeroKnowledgeTrader.addDailyInflowAndDepreciation( toReturn.seller,dailyFlow,0.0);
+      toReturn.seller.dawnEvents.add(ResetInventories(inventory));
+      toReturn.sellerData =  toReturn.seller.data;
+
+      //initial price 0
+      model.agents.add( toReturn.seller);
+      toReturn.seller.start(model.schedule);
+
+
+    };
+    toReturn.equilibriumPrice = intercept + slope *dailyFlow;
+    return toReturn;
+  }
+
+
+
+  factory ExogenousSellerScenario.stockoutPID({double initialPrice : 1.0,
+                                              minP:0.05,
+                                              maxP:.5,minI:0.05,
+                                              maxI:.5,
+                                              double dailyFlow : 50.0,
+                                              double intercept:200.0,
+                                              double slope:-2.0})
+  {
+    Random random = new Random();
+    double p = random.nextDouble() * (maxP - minP) + minP;
+    double i = random.nextDouble() * (maxI - minI) + minI;
+
+    PIDAdaptive pricing =
+    new PIDAdaptive.StockoutSeller(initialPrice:initialPrice, p:p, d:0.0,
+                                   i:i);
+    ExogenousSellerScenario toReturn =new ExogenousSellerScenario._internal(
+            (double price){(pricing.pid as PIDController).offset = price;},()
+        =>pricing.value);
+
+    toReturn.initializer = (Model model)
+    {
       ExogenousSellerMarket market = new ExogenousSellerMarket.linear(intercept:intercept,
                                                                       slope:slope);
       market.start(model.schedule);
 
       model.markets["gas"] = market;
-
-      ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader(market,pricing,
-                                                           new AllOwned(),
-                                                           new SimpleSellerTrading(),
-                                                           new Inventory());
-      sellerData = seller.data;
       //initial price 0
-      model.agents.add(seller);
-      seller.start(model.schedule);
+
+      var inventory = new Inventory();
+      toReturn.seller = new ZeroKnowledgeTrader(market,pricing,
+                                       new AllOwned(),
+                                       new SimpleSellerTrading(),
+                                       inventory);
+      ZeroKnowledgeTrader.addDailyInflowAndDepreciation(toReturn.seller,dailyFlow,0.0);
+      toReturn.seller.dawnEvents.add(ResetInventories(inventory));
+      model.agents.add(toReturn.seller);
+      toReturn.seller.start(model.schedule);
+
+      toReturn.sellerData =  toReturn.seller.data;
+
+
     };
+    toReturn.equilibriumPrice = intercept + slope *dailyFlow;
+    return toReturn;
   }
 
-  double get price=>pricing.value;
-  void set price(double value){pricing.value = value;}
+
+double get price=>priceGetter();
+void set price(double value){priceSetter(value);}
 
 
-  double get customersAttracted=>sellerData.getLatestObservation("stockouts")
-                                 + sellerData.getLatestObservation("outflow");
+double get customersAttracted=>sellerData.getLatestObservation("stockouts")
+                               +sellerData.getLatestObservation("outflow");
 
 
 
-  double get equilibriumPrice=> intercept + slope *dailyFlow;
+double equilibriumPrice;
 
 
 

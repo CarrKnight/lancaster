@@ -198,3 +198,78 @@ class MarshallianMicroPresentation extends ModelPresentation
 
 
 }
+
+
+/**
+ * this uses the exogenous seller scenario to show the problem of the
+ */
+class SliderDemoPresentation extends ModelPresentation with
+Presentation<SliderEvent>
+{
+
+  ZKPresentation agent;
+
+  final ExogenousSellerScenario scenario;
+
+  double get price=>scenario.price;
+  void set price(double value){scenario.price = value;}
+
+
+  double get customersAttracted=> scenario.customersAttracted;
+
+  factory SliderDemoPresentation(Model model,
+                                 ExogenousSellerScenario scenario) {
+    SliderDemoPresentation presentation = new SliderDemoPresentation._internal
+    (model,scenario);
+
+    model.schedule.scheduleRepeating(Phase.GUI,(schedule)=>presentation
+    ._broadcastEndDay(model.schedule));
+    presentation.agent = new ZKPresentation(scenario.seller);
+    presentation.agent.start(model.schedule);
+
+
+    return presentation;
+  }
+
+  SliderDemoPresentation._internal(Model model,this.scenario):
+  super.empty(model);
+
+
+  final StreamController streamer = new  StreamController.broadcast();
+
+
+
+  Map<String, List<double>> get dailyObservations => null;
+
+
+
+  /**
+   * streams only if it is listened to.
+   */
+  Stream<SliderEvent> get stream=>streamer.stream;
+
+  _broadcastEndDay(Schedule schedule){
+
+
+    //don't need to collect data, since everything should have been done by
+    // the agent data object (we redirected all observers to there too)
+
+    //stream event
+    if(streamer.hasListener)
+      streamer.add(new SliderEvent(schedule.day,customersAttracted));
+
+  }
+
+}
+
+
+class SliderEvent extends PresentationEvent
+{
+  final int day;
+
+  final double customersAttracted;
+
+  SliderEvent(this.day, this.customersAttracted);
+
+
+}

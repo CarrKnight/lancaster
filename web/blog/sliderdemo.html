@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<!--
+  ~ Copyright (c) 2015 to Ernesto Carrella.
+  ~ This is open source on MIT license. Isn't this jolly?
+  -->
+
+<html ng-app>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Model Control Bar!</title>
+    <link rel="import" href="packages/paper_elements/paper_slider.html">
+    <link rel="import" href="packages/paper_elements/paper_button.html">
+    <link rel="import" href="packages/core_elements/core_icons.html">
+    <link rel="import" href="packages/core_elements/core_icon.html">
+    <link rel="import" href="packages/paper_elements/roboto.html">
+    <link rel="stylesheet" href="pure.css">
+    <link rel="stylesheet" href="blog.css">
+    <link rel="stylesheet" href="main.css">
+</head>
+<body>
+
+<h1 id="zero-knowledge-traders-redrawn">Zero-Knowledge Traders, Redrawn</h1>
+<p>This document is a simple, interactive review of the zero-knowledge traders.</p>
+<h3 id="the-basics">The Basics</h3>
+<p>You have to sell 50 kilos of fresh mozzarella cheese every day.<br>You have no idea what the right price of your cheese is. You want to make money but you don&#39;t want to have unsold cheese since it spoils overnight. What should you do? Give it a try!</p>
+
+<slider-demo-gui></slider-demo-gui>
+
+<p>You probably did a combination of two things:</p>
+<ul>
+    <li>Trial and Error: whenever you attracted too many people you raised the price, whenever you attracted too few you lowered the price</li>
+    <li>Learning: you figured out the demand for cheese is linear and from it derived the correct price</li>
+</ul>
+<p>The problem you solved is the basics of the zero-knowledge methodology. You have agents that are price-makers and have no knowledge of the world around them so they proceed by experimentation.  </p>
+<p>In the previous example you were tinkering with the price slider, when running computer simulations I have <a href="http://en.wikipedia.org/wiki/PID_controller">PID controllers</a> take your place. They are just an easy way to automate trial-and-error. See for yourself:</p>
+
+<slider-demo-pid-gui></slider-demo-pid-gui>
+
+
+</body>
+
+
+<script type="application/dart" src="main2.dart"></script>
+<script type="text/javascript" src="packages/browser/dart.js"></script>
+
+</html>

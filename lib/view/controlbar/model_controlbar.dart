@@ -4,12 +4,8 @@
  */
 part of lancaster.view;
 
-@Component(
-    selector: 'controlbar',
-    templateUrl: 'packages/lancaster/view/controlbar/controlbar.html',
-    publishAs: 'bar')
-class ControlBar
-{
+
+class ControlBarBase{
 
 
   /**
@@ -22,7 +18,7 @@ class ControlBar
    */
   Timer stepper;
 
-  static final  stepTime = const Duration(milliseconds: 10);
+  static final  stepTime = const Duration(milliseconds: 15);
 
 
   String playLabel = "Start";
@@ -54,7 +50,24 @@ class ControlBar
 
   int get day => _presentation.day;
 
+  bool get running => stepper!=null;
   void step()=>_presentation.step();
   void step100Days()=>_presentation.step100Times();
 
+}
+
+@Component(
+    selector: 'controlbar',
+    templateUrl: 'packages/lancaster/view/controlbar/controlbar.html',
+    publishAs: 'bar')
+class ControlBar extends ControlBarBase
+{
+}
+@Component(
+    selector: 'controlbar-paper',
+    templateUrl: 'packages/lancaster/view/controlbar/paperbar.html',
+    cssUrl: 'packages/lancaster/view/controlbar/paperbar.css',
+    publishAs: 'bar')
+class PaperControlBar extends ControlBarBase
+{
 }
