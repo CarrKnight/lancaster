@@ -149,7 +149,7 @@ class Data
     int rows = _dataMap.length == 0 ? 0 : _dataMap.values.first.length;
 
     if(_dataMap[name]!= null)
-      throw new Exception("$name column already exists");
+      throw new Exception("$name column already exists, use subsitute!");
     //create new column
     List<double> column = new List.generate(rows,(i)=>filler,growable:true);
     //plug it in
@@ -157,6 +157,7 @@ class Data
     //register data gatherer
     pluginGatherers[name]=dg;
   }
+
 
 
 

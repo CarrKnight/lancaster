@@ -433,7 +433,8 @@ ShadowRootAware{
 
 
 
-
+    //tell the containing div how tall you are
+    chartLocation.style.height=(height+2* padding).toString();
     ready=true;
 
 

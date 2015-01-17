@@ -261,6 +261,10 @@ ShadowRootAware {
     //now create the paths
     updatePaths();
 
+
+    //tell the containing div how tall you are
+    chartLocation.style.height=(height+2* padding).toString();
+
     _listenToModel();
 
 

@@ -16,9 +16,6 @@ class SliderDemoBase
   SliderDemoPresentation presentation;
 
 
-
-
-
   @NgTwoWay('price')
   void set price(double value)
   {
@@ -91,6 +88,36 @@ class AugmentedSliderDemoGUI extends SliderDemoBase{
     //this is a relatively silly way not to deal with mouse event listeners
     // for release
   presentation.price = value;
+
+
+  }
+}
+
+
+@Component(
+    selector: 'slider-demo-charts-gui',
+    templateUrl: 'packages/lancaster/view/scenario/sliderdemo/slider_with_charts.html',
+    cssUrl: 'packages/lancaster/view/scenario/sliderdemo/sliderdemogui.css')
+class SliderWithChartsDemoGUI extends SliderDemoBase{
+  SliderWithChartsDemoGUI()
+  {
+
+    ExogenousSellerScenario scenario = new ExogenousSellerScenario.stockoutPID
+    (initialPrice:1.0);
+    this.presentation = new SliderDemoPresentation(
+        new Model(new DateTime.now().millisecondsSinceEpoch,scenario),scenario);
+
+    this.presentation.stream.listen((event)=>customersAttracted=event
+    .customersAttracted);
+  }
+
+
+  void set price(double value)
+  {
+    //whenever you set a new value also step!
+    //this is a relatively silly way not to deal with mouse event listeners
+    // for release
+    presentation.price = value;
 
 
   }

@@ -226,7 +226,11 @@ Presentation<SliderEvent>
     ._broadcastEndDay(model.schedule));
     presentation.agent = new ZKPresentation(scenario.seller);
     presentation.agent.start(model.schedule);
-
+    presentation.agent.repository.addDynamicVLine(()=>50.0,"Supply");
+    presentation.agent.repository.addCurve(scenario.market.demand,"Demand");
+    var trader = presentation.agent.trader;
+    presentation.agent.addDailyObserver("customers",
+                                            ()=> trader.currentOutflow + trader.stockouts);
 
     return presentation;
   }

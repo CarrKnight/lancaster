@@ -45,3 +45,9 @@ class ZKBuyer extends ZKView{}
     templateUrl: 'packages/lancaster/view/containers/zk_seller.html',
     cssUrl: 'packages/lancaster/view/containers/zk.css')
 class ZKSeller extends ZKView{}
+
+@Component(
+    selector: 'zk-seller-simple',
+    templateUrl: 'packages/lancaster/view/containers/zk_seller_simple.html',
+    cssUrl: 'packages/lancaster/view/containers/marketview.css')
+class ZKSellerSimple extends ZKView{}

@@ -44,9 +44,9 @@ class ZKTimeSeriesChart extends BaseTimeSeriesChart implements ShadowRootAware {
 
 
 /**
- * plots useful price stuff for zk. Q Equilibrium might be given by the
- * scenario/presentation
- * */
+  * plots useful price stuff for zk. Q Equilibrium might be given by the
+  * scenario/presentation
+  * */
 @Component(
     selector: 'zk-quantity',
     templateUrl: 'packages/lancaster/view/charts/plot.html',
@@ -57,4 +57,20 @@ ShadowRootAware {
 
 
   List<String> get selectedColumns=> ["inflow","outflow","Q Equilibrium"];
+}
+
+/**
+ *  Only plots "inflow" (which is standard) and "customers" which needs to be
+ *  set by the presentation (probably outflow+customers)
+ * */
+@Component(
+    selector: 'zk-quantity-stockout',
+    templateUrl: 'packages/lancaster/view/charts/plot.html',
+    cssUrl: 'packages/lancaster/view/charts/plot.css'
+    )
+class ZKStockoutTimeSeriesChart extends BaseTimeSeriesChart implements
+ShadowRootAware {
+
+
+  List<String> get selectedColumns=> ["inflow","customers"];
 }

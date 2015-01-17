@@ -35,6 +35,31 @@ main(){
     expect(gasMarket.averageClosingPrice,60);
   });
 
+  test("simple seller stockout",(){
+
+    Model model = new Model(0,new SimpleSellerScenario.stockout());
+    model.start();
+
+
+    Trader seller = model.agents.first as Trader;
+
+    for(int i=0; i<200; i++)
+    {
+      model.schedule.simulateDay();
+
+    }
+    print(
+        "price ${seller.lastOfferedPrice} and quantity ${seller.currentOutflow}"
+        );
+    Market gasMarket = model.markets["gas"];
+
+    //should be correct by now
+    expect(40,seller.currentOutflow);
+    expect(60,seller.lastOfferedPrice);
+    expect(gasMarket.quantityTraded,40);
+    expect(gasMarket.averageClosingPrice,60);
+  });
+
 
 
   for(int j=0; j<5; j++)

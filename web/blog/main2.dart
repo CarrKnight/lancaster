@@ -13,6 +13,10 @@ class SliderModule extends Module{
     bind(ControlBar);
     bind(PaperControlBar);
     bind(AugmentedSliderDemoGUI);
+    bind(SliderWithChartsDemoGUI);
+    bind(ZKSellerSimple);
+    bind(ZKStockoutTimeSeriesChart);
+    bind(SellerBeveridge);
   }
 }
 

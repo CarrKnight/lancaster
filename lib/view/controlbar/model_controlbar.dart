@@ -18,7 +18,7 @@ class ControlBarBase{
    */
   Timer stepper;
 
-  static final  stepTime = const Duration(milliseconds: 15);
+  Duration stepTime = const Duration(milliseconds: 15);
 
 
   String playLabel = "Start";
@@ -47,6 +47,13 @@ class ControlBarBase{
     _presentation = presentation;
 
   }
+
+  @NgOneWayOneTime('period')
+  set period(int newValue)
+  {
+    stepTime = new Duration(milliseconds:newValue);
+  }
+
 
   int get day => _presentation.day;
 

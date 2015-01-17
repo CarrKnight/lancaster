@@ -36,6 +36,17 @@
 
 <slider-demo-pid-gui></slider-demo-pid-gui>
 
+<p>The PID controller in this example emulates your reasoning. It has a fixed inflow (50 kg of cheese) and it wants its outflow to match it. It does so by manipulating prices. The PID controller, much like you in the first example, doesn&#39;t know what is the relationship between price set and customer attracted so it proceeds by continuously proposing a new price  and seeing if it&#39;s the correct one.<br>This a simple <a href="http://en.wikipedia.org/wiki/Control_theory">control</a> problem solved in a <a href="http://en.wikipedia.org/wiki/Feedback">feedback loop</a>.</p>
+<p>Now let&#39;s look under the hood of the model. There is a fixed daily supply of cheese and a fixed daily demand. The PID controller keeps changing price until inflow and outflow are the same. You can trace its attempts over the familiar demand-supply diagram:</p>
+<slider-demo-charts-gui></slider-demo-charts-gui>
+<p>You can complicate this: what happens if there are multiple sellers competing? What if sellers need to keep inventory targets? What if the number of customers attracted is not known, only actual sales? You can take a look at the papers, but the basics stay the same.</p>
+<h3 id="production">Production</h3>
+<p>The main conflict between the zero-knowledge methodology and standard economics is that <a href="http://en.wikipedia.org/wiki/Fundamental_theorems_of_welfare_economics">welfare theorems</a> are violated. This is because the agent(s) trade in order to discover prices and by consequence some goods are exchanged at prices that will later be revealed to be wrong.I believe this to be an acceptable loss. The alternative is to assume that price vectors are derived by some methaphysical process independent and orthogonal from the economy and market. And that&#39;s just silly.</p>
+<p>On the other hand, you can use zero-knowledge trial and error as a price-discovery mechanism and then use these prices in a very classical way to make economic decisions.</p>
+<p>If you operate in multiple markets at the same time, you can use multiple controllers to discover the right price in each.<br>Take a firm that produces cheese. Each worker hired produces one kilo of cheese.  If your target is to produce 20 kilos of cheese, what is the correct wage $w$ and the correct sale price $p$?<br>This is only slightly harder than before. You are running two separate PID controllers, one for each market. They depend on one another since the workers you hire end up producing goods you then need to sell.
+    This is how it goes:</p>
+
+
 
 </body>
 
