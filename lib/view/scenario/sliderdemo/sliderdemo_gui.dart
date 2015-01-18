@@ -122,3 +122,92 @@ class SliderWithChartsDemoGUI extends SliderDemoBase{
 
   }
 }
+
+class FixedProductionBase
+{
+  MarshallianMicroPresentation presentation;
+
+  ZKPresentation get hr => presentation.hr;
+  ZKPresentation get sales => presentation.sales;
+
+
+  FixedProductionBase() {
+    OneMarketCompetition scenario = new OneMarketCompetition();
+    presentation = new MarshallianMicroPresentation.fixedTarget(
+        new Model(new DateTime.now().millisecondsSinceEpoch,scenario),
+        scenario,20.0);
+
+
+    //listen to the presentation to update prices
+    presentation.hr.stream.listen((event)=>wage=event.trader.lastOfferedPrice);
+    presentation.sales.stream.listen((event)=>price=event.trader
+    .lastOfferedPrice);
+
+  }
+
+
+  bool get ready => price.isFinite;
+  bool get correct => price == wage;
+  String get equality => correct ? "=" : price > wage ? ">" : "<";
+  String get cssClass => correct ? "green_highlight" : "red_highlight";
+
+  double price = double.NAN;
+  double wage = double.NAN;
+  void set target(double value){presentation.hrTarget=value;}
+  double get target => presentation.hrTarget;
+  int get period => 100;
+}
+
+//
+@Component(
+    selector: 'simple-fixed-production',
+    templateUrl: 'packages/lancaster/view/scenario/sliderdemo/fixed_production.html',
+    cssUrl: 'packages/lancaster/view/scenario/sliderdemo/sliderdemogui.css')
+class FixedProductionGUI extends FixedProductionBase
+{
+
+
+}
+//
+@Component(
+    selector: 'simple-exogenous-production',
+    templateUrl: 'packages/lancaster/view/scenario/sliderdemo/exogenous_production.html',
+    cssUrl: 'packages/lancaster/view/scenario/sliderdemo/sliderdemogui.css')
+class ExogenousProductionGUI extends FixedProductionBase
+{
+
+
+}
+
+@Component(
+    selector: 'final-demo',
+    templateUrl: 'packages/lancaster/view/scenario/sliderdemo/fixed_production.html',
+    cssUrl: 'packages/lancaster/view/scenario/sliderdemo/sliderdemogui.css')
+class FinalDemoGUI
+{
+  MarshallianMicroPresentation presentation;
+
+
+  ZKPresentation get hr => presentation.hr;
+  ZKPresentation get sales => presentation.sales;
+
+  FinalDemoGUI() {
+    OneMarketCompetition scenario = new OneMarketCompetition();
+    presentation = new MarshallianMicroPresentation(
+        new Model(new DateTime.now().millisecondsSinceEpoch,scenario),
+        scenario);
+    //listen to the presentation to update prices
+    presentation.hr.stream.listen((event)=>wage=event.trader.lastOfferedPrice);
+    presentation.sales.stream.listen((event)=>price=event.trader
+    .lastOfferedPrice);
+
+  }
+
+
+  bool get ready => price.isFinite;
+
+  double price = double.NAN;
+  double wage = double.NAN;
+  int get period => 10;
+
+}

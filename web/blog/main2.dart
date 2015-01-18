@@ -17,6 +17,11 @@ class SliderModule extends Module{
     bind(ZKSellerSimple);
     bind(ZKStockoutTimeSeriesChart);
     bind(SellerBeveridge);
+    bind(BuyerBeveridge);
+    bind(DoubleBeveridge);
+    bind(FixedProductionGUI);
+    bind(FinalDemoGUI);
+    bind(ExogenousProductionGUI);
   }
 }
 

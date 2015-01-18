@@ -128,7 +128,7 @@ class SimpleFirmPresentation extends ModelPresentation
   super.empty(model);
 }
 
-
+typedef void DoubleSetter(double newValue);
 /**
  * this is basically the "learned competitor" test gui
  */
@@ -139,12 +139,25 @@ class MarshallianMicroPresentation extends ModelPresentation
   ZKPresentation hr;
 
   MarshallianMicroPresentation._internal(Model model):
-  super.empty(model);
+  super.empty(model)
+  {
+    //empty/useless setters
+    hrTargetGetter = ()=> hr== null? double.NAN : hr.trader.data
+   .getLatestObservation("pricer_target");
+    targetSetter = (double value){}; //doesn't set a thing
+  }
 
+  /**
+   * classic "learned competitive", a single agent acting as if in a pure
+   * competitive environment
+   */
   factory MarshallianMicroPresentation(Model model,
                                        OneMarketCompetition scenario) {
     MarshallianMicroPresentation presentation =
     new MarshallianMicroPresentation._internal(model);
+
+    //maximizes as PID
+    scenario.hrPricingInitialization = OneMarketCompetition.PID_MAXIMIZER_HR;
 
     //single agent
     scenario.competitors = 1;
@@ -157,8 +170,7 @@ class MarshallianMicroPresentation extends ModelPresentation
       sales.predictor = new
       LastPricePredictor();
     };
-    //maximizes as PID
-    scenario.hrPricingInitialization = OneMarketCompetition.PID_MAXIMIZER_HR;
+
 
 
 
@@ -197,6 +209,92 @@ class MarshallianMicroPresentation extends ModelPresentation
   }
 
 
+  /**
+   * the target is fixed but can be changed from the outside
+   */
+  factory MarshallianMicroPresentation.fixedTarget(Model model,
+                                       OneMarketCompetition scenario,
+                                       double initialTarget) {
+
+
+    //maximizes as PID
+    scenario.hrPricingInitialization = OneMarketCompetition.FIXED_TARGET_HR
+    (initialTarget);
+    scenario.salesPricingInitialization = OneMarketCompetition.STOCKOUT_SALES;
+
+    //single agent
+    scenario.competitors = 1;
+    //acts as competitor
+    scenario.hrIntializer = (ZeroKnowledgeTrader sales) {
+      sales.predictor = new
+      LastPricePredictor();
+    };
+    scenario.salesInitializer = (ZeroKnowledgeTrader sales) {
+      sales.predictor = new
+      LastPricePredictor();
+      //make sales burn inventories since we are doing stockouts!
+      sales.dawnEvents.add(BurnInventories());
+    };
+
+
+
+    MarshallianMicroPresentation presentation =
+    new MarshallianMicroPresentation._internal(model);
+
+    ZeroKnowledgeTrader salesDepartment = scenario.firms.first
+    .salesDepartments["gas"];
+
+;
+    presentation.sales = new ZKPresentation(salesDepartment);
+
+
+    presentation.sales.repository.addCurve(scenario.goodMarket.demand,
+                                           "Good Demand");
+    presentation.sales.repository.addDynamicVLine(()=>salesDepartment.data
+    .getLatestObservation("inflow"),"Target");
+
+
+
+    ZeroKnowledgeTrader hrDepartment = scenario.firms.first
+    .purchasesDepartments["labor"];
+    presentation.hr = new ZKPresentation(hrDepartment);
+
+    presentation.hr.repository.addDynamicVLine(()=>hrDepartment.data
+    .getLatestObservation("pricer_target"),"Target");
+    presentation.hr.repository.addCurve(scenario.laborMarket.supply,"Labor Supply");
+
+
+    presentation.sales.start(model.schedule);
+    presentation.hr.start(model.schedule);
+
+
+    //place a better setter
+    //the setter adds a new target-extractor to the maximizer
+    presentation.targetSetter = (value){
+      (presentation.hr.trader.pricing as PIDAdaptive).targetExtractor =
+      new FixedExtractor(value);
+    };
+    //notice here probably the ugliest code to ever have been written.
+    //i mean, it's guaranteed true but still ugh.
+    presentation.hrTargetGetter = ()=>
+    ((presentation.hr.trader.pricing as PIDAdaptive).targetExtractor as
+    FixedExtractor).output;
+
+
+    return presentation;
+  }
+
+
+  /**
+   * so this stuff is basically a way to see and modify targets from gui.
+   * It's only used once in the slider demo so for most cases this is pretty
+   * useless
+   */
+  DataGatherer hrTargetGetter;
+  DoubleSetter targetSetter;
+
+  double get hrTarget => hrTargetGetter();
+  set hrTarget(double value)=>targetSetter(value);
 }
 
 

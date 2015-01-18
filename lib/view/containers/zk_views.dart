@@ -18,7 +18,7 @@ abstract class ZKView{
 
 
 
-  @NgOneWay('presentation')
+  @NgOneWayOneTime('presentation')
   set presentation(ZKPresentation presentation)
   {
     _presentation = presentation;
@@ -51,3 +51,23 @@ class ZKSeller extends ZKView{}
     templateUrl: 'packages/lancaster/view/containers/zk_seller_simple.html',
     cssUrl: 'packages/lancaster/view/containers/marketview.css')
 class ZKSellerSimple extends ZKView{}
+
+
+@Component(
+    selector: 'double-beveridge',
+    templateUrl: 'packages/lancaster/view/containers/double_beveridge.html',
+    cssUrl: 'packages/lancaster/view/containers/marketview.css')
+/**
+ * a simple splitter of the model presentation in hr and sales presentation
+ * so that you can feed that stuff in two separate beveridges
+ */
+class DoubleBeveridge
+{
+  @NgOneWayOneTime('presentation')
+  MarshallianMicroPresentation presentation;
+
+
+  ZKPresentation get hr => presentation.hr;
+  ZKPresentation get sales => presentation.sales;
+
+}

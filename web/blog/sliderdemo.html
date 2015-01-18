@@ -8,6 +8,8 @@
 <head lang="en">
     <meta charset="UTF-8">
     <title>Model Control Bar!</title>
+    <script src="packages/web_components/webcomponents.js"></script>
+    <script src="packages/web_components/dart_support.js"></script>
     <link rel="import" href="packages/paper_elements/paper_slider.html">
     <link rel="import" href="packages/paper_elements/paper_button.html">
     <link rel="import" href="packages/core_elements/core_icons.html">
@@ -41,13 +43,25 @@
 <slider-demo-charts-gui></slider-demo-charts-gui>
 <p>You can complicate this: what happens if there are multiple sellers competing? What if sellers need to keep inventory targets? What if the number of customers attracted is not known, only actual sales? You can take a look at the papers, but the basics stay the same.</p>
 <h3 id="production">Production</h3>
-<p>The main conflict between the zero-knowledge methodology and standard economics is that <a href="http://en.wikipedia.org/wiki/Fundamental_theorems_of_welfare_economics">welfare theorems</a> are violated. This is because the agent(s) trade in order to discover prices and by consequence some goods are exchanged at prices that will later be revealed to be wrong.I believe this to be an acceptable loss. The alternative is to assume that price vectors are derived by some methaphysical process independent and orthogonal from the economy and market. And that&#39;s just silly.</p>
-<p>On the other hand, you can use zero-knowledge trial and error as a price-discovery mechanism and then use these prices in a very classical way to make economic decisions.</p>
-<p>If you operate in multiple markets at the same time, you can use multiple controllers to discover the right price in each.<br>Take a firm that produces cheese. Each worker hired produces one kilo of cheese.  If your target is to produce 20 kilos of cheese, what is the correct wage $w$ and the correct sale price $p$?<br>This is only slightly harder than before. You are running two separate PID controllers, one for each market. They depend on one another since the workers you hire end up producing goods you then need to sell.
-    This is how it goes:</p>
-
-
-
+<p>If you operate in multiple markets at the same time, you can use multiple controllers to discover each price.<br>Take cheese-making. Each worker produces one kilo of cheese.  If you want to produce 20 kilos of cheese, what is the correct wage $w$ and the correct sale price $p$?<br>This is only slightly harder than before. You are running two separate PID controllers, one for each market. They depend on one another since the workers you hire end up producing goods you then need to sell.<br>This is how it goes:</p>
+<simple-fixed-production></simple-fixed-production>
+<p>The labor target is fixed, it's always 20 workers. That's why the
+    vertical line in the labor market never moves. The target outflow of
+    goods instead changes and is equal to workers hired. Either way the 2
+    PID controllers solve them together</p>
+<p>So now that you are convinced PID controllers can deal with production and discover prices there is just one more variable to endogeneize. How to choose the production target (20 kg in the previous example.<br>This is a profit-maximization problem. It has been drilled into your head that, in a perfect competitive market, the correct thing to do is to choose production so that:<br>$$\text{MB}=\text{MC}$$<br>Which for this very simple example simplifies to:<br>$$p=w$$<br>The next example, you are in charge. Prices and Wages are discovered by independent PID controllers, but can you set the right labor target that maximizes profits?</p>
+<simple-exogenous-production></simple-exogenous-production>
+<p>You probably did a combination of 3 things:</p>
+<ul>
+    <li><strong>Trial and Error</strong>: whenever wages were lower than prices you raised production and viceversa.</li>
+    <li><strong>Learning</strong>: you figured out the simple labor supply curve and good demand and chose as target the intersection of the two.</li>
+    <li><strong>Waiting</strong>: whether by trial and error or by learning you realized that it takes some time for the prices to adjust to any movement in labor target.</li>
+</ul>
+<p>You are familiar with the first two items. This is again a control
+    problem, except that instead of equalizing inflow and outflow you are
+    equalizing marginal costs and benefits.<br>The novelty though is that it takes time for prices and wages to adjust to movements in targets. This is because those prices are likewise found by trial and error.</p>
+<p>So we are going to use a PID controller again to set the labor target but it will function at a <em>lower frequency</em>. In the next, and final example, labor target is set by a PID but one that activates on average only once every 30 days. </p>
+<final-demo></final-demo>
 </body>
 
 

@@ -115,11 +115,11 @@ class SimpleSellerScenario extends Scenario
   }
 
   SimpleSellerScenario.stockout({minInitialPrice : 100.0,
-                              maxInitialPrice:100, this.dailyFlow : 40.0,
-                              this.intercept:100.0,this.slope:-1.0,minP:0.05,
-                              maxP:.5,
-                              minI:0.05,
-                              maxI:.5,int seed:1,int competitors:1})
+                                maxInitialPrice:100, this.dailyFlow : 40.0,
+                                this.intercept:100.0,this.slope:-1.0,minP:0.05,
+                                maxP:.5,
+                                minI:0.05,
+                                maxI:.5,int seed:1,int competitors:1})
   {
     initializer = (Model model) {
       ExogenousSellerMarket market = new ExogenousSellerMarket.linear(intercept:intercept,
@@ -250,9 +250,9 @@ class ExogenousSellerScenario extends Scenario
 
       var inventory = new Inventory();
       toReturn.seller = new ZeroKnowledgeTrader(toReturn.market,pricing,
-                                       new AllOwned(),
-                                       new SimpleSellerTrading(),
-                                       inventory);
+                                                new AllOwned(),
+                                                new SimpleSellerTrading(),
+                                                inventory);
       toReturn.seller.dawnEvents.add(BurnInventories());
       ZeroKnowledgeTrader.addDailyInflowAndDepreciation(toReturn.seller,dailyFlow,0.0);
       model.agents.add(toReturn.seller);
@@ -267,16 +267,16 @@ class ExogenousSellerScenario extends Scenario
   }
 
 
-double get price=>priceGetter();
-void set price(double value){priceSetter(value);}
+  double get price=>priceGetter();
+  void set price(double value){priceSetter(value);}
 
 
-double get customersAttracted=>sellerData.getLatestObservation("stockouts")
-                               +sellerData.getLatestObservation("outflow");
+  double get customersAttracted=>sellerData.getLatestObservation("stockouts")
+                                 +sellerData.getLatestObservation("outflow");
 
 
 
-double equilibriumPrice;
+  double equilibriumPrice;
 
 
 
@@ -464,6 +464,26 @@ class OneMarketCompetition extends Scenario
   ExogenousSellerMarket goodMarket = new ExogenousSellerMarket.linear
   (intercept:100.0, slope:-1.0);
 
+  /**
+   * function that returns an hr initialization function, in this case one
+   * that has a fixed target, useful for testing mostly
+   */
+  static HrStrategyInitialization FIXED_TARGET_HR(double target) =>
+  (SISOPlant plant,
+      Firm firm, Random r, ZeroKnowledgeTrader seller, OneMarketCompetition scenario
+  ){
+    double p = r.nextDouble() * (scenario.purchaseMaxP - scenario.purchaseMinP) +
+               scenario.purchaseMinP;
+    double i = r.nextDouble() * (scenario.purchaseMaxI - scenario
+    .purchaseMinI)  + scenario.purchaseMinI;
+    double initialPrice = r.nextDouble() *
+                          (scenario.maxInitialPriceBuying - scenario.minInitialPriceBuying) +
+                          scenario.minInitialPriceBuying;
+    return new PIDAdaptive.FixedInflowBuyer(flowTarget:target,
+                                            initialPrice:initialPrice,p:p,
+                                            i:i,d:0.0);
+  };
+
   static final HrStrategyInitialization MARGINAL_MAXIMIZER_HR = (SISOPlant plant,
                                                                  Firm firm,
                                                                  Random r,
@@ -625,6 +645,29 @@ class OneMarketCompetition extends Scenario
                           scenario.minInitialPriceSelling;
     return new BufferInventoryAdaptive.simpleSeller(initialPrice:initialPrice,
                                                     p:p,d:0.0,i:i);
+  };
+
+  /**
+   * just tries to sell inflow=outflow but it counts "stockouts" as outflows
+   * as well so it doesn't need inventory buffers
+   */
+  static final SalesStrategyInitialization STOCKOUT_SALES = (SISOPlant plant,
+                                                           Firm firm,
+                                                         Random r,
+                                                         OneMarketCompetition
+                                                         scenario)
+  {
+    double p = r.nextDouble() * (scenario.salesMaxP - scenario.salesMinP) +
+               scenario
+               .salesMinP;
+    double i = r.nextDouble() * (scenario.salesMaxI - scenario.salesMinI) +
+               scenario
+               .salesMinI;
+    double initialPrice = r.nextDouble() *
+                          (scenario.maxInitialPriceSelling - scenario.minInitialPriceSelling) +
+                          scenario.minInitialPriceSelling;
+    return new PIDAdaptive.StockoutSeller(initialPrice:initialPrice,p:p,i:i,
+                                          d:0.0);
   };
 
 
