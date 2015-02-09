@@ -1,0 +1,159 @@
+---
+title: "Yackm lab notes"
+author: "Ernesto Carrella"
+date:  "`r format(Sys.time(), '%d %B, %Y')`"
+output: html_document
+---
+
+```{r,echo=FALSE,warning=FALSE}
+rawdataFolder<-
+  file.path("~","code","lancaster","docs","yackm","rawdata")
+```
+
+#Convergence Speed between Marshallian and Keynesian
+
+### Date 
+
+2015-02-08
+
+###Background Information
+
+Fixed wages macro runs in YACKM have a single solution and both Marshallian and Keynesian seem to get there fine. 
+
+But because they use slightly different PID setups the speed of converge looks very different from sample runs.
+
+###References
+
+###Purpose
+
+Test whether the speed of convergence is the same and if not test whether equalizing PID parameters make it the same
+
+
+###Hypothesis
+
+Speed of convergence is the same or can be made so easily
+
+###Experiment
+
+1000 runs each, plot histograms and do simple statistical tests if necessary.
+
+
+
+###Code used
+
+The dart code used is ```2015-02-08 convergenceSpeed.dart``` in the ```runs/yackm/experiments``` folder.
+
+###Results
+
+####Experiment 1
+First I run the code without changing default, as of 2015-02-08. For Keynesian I have the following histogram:  
+```{r , echo=FALSE,warning=FALSE}
+
+
+test1<-read.csv(file.path(rawdataFolder,"convergeSpeed1.csv"))
+test1$keynesian[test1$keynesian=="null"]<-NaN
+test1$keynesian<-as.numeric(test1$keynesian)
+
+hist(test1$keynesian,xlim=c(0,15000),main = "Keynesian Convergence Day")
+failures<-sum(read.csv(file.path(rawdataFolder,"convergeSpeed1.csv"))$keynesian == "null")
+
+```
+
+There are also `r  failures ` failures. This means the failure rate is about `r failures/1000 *100`%
+
+For marshallian:  
+```{r , echo=FALSE,warning=FALSE}
+
+
+test1<-read.csv(file.path(rawdataFolder,"convergeSpeed1.csv"))
+isolated<-test1$marshallian
+isolated[isolated=="null"]<-NaN
+isolated<-as.numeric(isolated)
+
+hist(isolated,xlim=c(0,15000),,main = "Marshallia nConvergence Day")
+failures<-sum(read.csv(file.path(rawdataFolder,"convergeSpeed1.csv"))$marshallian == "null")
+```
+
+It never fails.
+
+So with the default parameters it **Keynesian is a lot faster**.
+
+####Experiment 2
+
+Changed ```KEYNESIAN_QUOTA``` in the scenario declaration in ```model.dart```. While the default is critical inventory 100 and normal inventory 10, the keynesian quota originally went critical inventory 10, normal inventory 1.  
+The unit tests ran fine, still a small % of failure for Keynesian setup though.
+
+The results of this experiment are in ```convergeSpeed2.csv```
+First I run the code without changing default, as of 2015-02-08. For Keynesian I have the following histogram:  
+```{r , echo=FALSE,warning=FALSE}
+
+cleanColumn<-function(column){
+  
+  column[column="null"]<-NaN
+  column<-as.numeric(column)
+  return(column)
+}
+
+doubleHist<-function(filename)
+  {
+  
+  data<-read.csv(file.path(rawdataFolder,filename))
+  keynesian<-cleanColumn(data$keynesian)
+  marshallian<-cleanColumn(data$marshallian)
+  par(mfrow=c(2,1))
+  hist(keynesian,xlim=c(0,15000),main = "Keynesian Convergence Day")
+  hist(marshallian,xlim=c(0,15000),main = "Marshallian Convergence Day")
+  par(mfrow=c(1,1))
+
+  }
+
+doubleHist("convergeSpeed2.csv")
+
+```
+
+As you can see, it doesn't matter much.
+
+####Experiment 3
+
+The ```PROFIT_MAXIMIZER_PRICING``` uses a PI multiplier in the Keynesian scenario of about 100. Without it tests fail. There was also an initial max price parameter of 27 which I killed (doesn't affect tests).  
+What is going on is an extremely slow price adjustment:
+
+```{r , echo=FALSE,warning=FALSE}
+library(ggplot2)
+library(reshape2)
+library(gridExtra)
+rawdataFolder<-
+  file.path("~","code","lancaster","docs","yackm","rawdata")
+
+plotMacro<-function(filename,correctPrice,correctQuantity,title)
+{
+  data <- read.csv(file.path(rawdataFolder,filename))
+  
+  market<-data.frame(quantity=data$quantity,price=data$price,day=1:length(data$quantity))
+  
+  #quantity
+  plot1<-ggplot() + 
+    geom_abline(intercept=correctQuantity,slope=0,aes(colour=factor("target")),size=1,alpha=0.5) +
+    geom_line(data=market,aes(y=quantity,x=day)) + ylim(0,10) + theme_gray(20)
+  #price
+  plot2<-ggplot() + 
+    geom_abline(intercept=correctPrice,slope=0,aes(colour=factor("target")),size=1,alpha=0.5) +
+    geom_line(data=market,aes(y=price,x=day)) + ylim(0,75) + theme_gray(20)
+  return(grid.arrange(plot1,plot2, ncol=1, main =title))
+  
+  
+}
+
+plotMacro("nomultiplierK.csv",20,5,"Keynesian Macro without multiplier")
+```
+
+On the other hand the marshallian quota also has a PImultiplier (defaulted to 100 as well). Taking it away also make the approach much slower:
+```{r , echo=FALSE,warning=FALSE}
+plotMacro("nomultiplierM.csv",20,5,"Marshallian Macro without multiplier")
+```
+
+
+
+###Conclusion
+
+The difference in speed doesn't seem caused primarily by parameter differences. I would like to make sure it's not simply a result of prices having to go all the way to 20 while labor having to go to 100 (or is it quantity going to 5?)

@@ -17,9 +17,21 @@ main()
 {
 
 
-  KeynesianLearnedCompetitive(false,false,getOutputPathForFile("KGas.csv"),
-  getOutputPathForFile("KWage.csv"));
+  fixedWageMacro(true,testing:false,
+                 gasCsvName: "K_macro_gas.csv",
+                 laborCsvName: "K_macro_wage.csv");
 
+
+  fixedWageMacro(false,testing:false,
+                 gasCsvName: "M_macro_gas.csv",
+                 laborCsvName: "M_macro_wage.csv");
+
+
+  /*
+
+  KeynesianLearnedCompetitive(false,false,getOutputPathForFile("KGas.csv"),
+                              getOutputPathForFile("KWage.csv"));
+*/
   /*
   learnedCompetitorTest(1,false,getOutputPathForFile("MGas.csv"),
   getOutputPathForFile("MWage.csv"),getOutputPathForFile("MPIDGas.csv"),
@@ -76,9 +88,9 @@ wageName = null])
                                       OneMarketCompetition scenario)
   {
     double p = r.nextDouble()*(scenario.purchaseMaxP-scenario.purchaseMinP) +
-    scenario.purchaseMinP;
+               scenario.purchaseMinP;
     double i = r.nextDouble()*(scenario.purchaseMaxI-scenario.purchaseMinI) +
-    scenario.purchaseMinI;
+               scenario.purchaseMinI;
     double price = r.nextDouble()*(scenario.maxInitialPriceBuying-scenario
     .minInitialPriceBuying) + scenario.minInitialPriceBuying;
 
@@ -96,18 +108,20 @@ wageName = null])
 
   for (int i = 0; i < 3000; i++) {
     model.schedule.simulateDay();
-    print('''gas price: ${gas.averageClosingPrice} workers' wages: ${labor
+ /*   print('''gas price: ${gas.averageClosingPrice} workers' wages: ${labor
     .averageClosingPrice}''');
     print('''gas quantity: ${gas.quantityTraded} workers : ${labor
     .quantityTraded}''');
-
+*/
   }
+  /*
   print('''gas price: ${gas.averageClosingPrice} workers' wages: ${labor
   .averageClosingPrice}''');
   print('''gas quantity: ${gas.quantityTraded} workers : ${labor
   .quantityTraded}''');
   print('''gas price: ${gas.averageClosingPrice} workers' wages: ${labor
   .averageClosingPrice}''');
+  */
   if(unitTest) {
     expect(gas.averageClosingPrice, closeTo(50.0, 1.5));
     expect(gas.quantityTraded, closeTo(50.0, 1.5));
@@ -184,6 +198,102 @@ wageName = null, String gasPIDName = null, String wagePIDName = null])
 }
 
 
+/**
+ * run fixed wage macro experiments and return the output market data
+ */
+Data fixedWageMacro(bool keynesian,
+               {
+               bool testing : true,
+               String gasCsvName: null,
+               String laborCsvName: null,
+               int totalSteps : 10000,
+               productionExponent : 0.5,
+               //negative!
+               fixedCost : -5.0})
+{
+  Model model = new Model.randomSeed();
+  OneMarketCompetition scenario = new OneMarketCompetition();
+  scenario.competitors = 1;
+  //doesn't add slopes when predicting prices
+  scenario.hrIntializer = (ZeroKnowledgeTrader sales) {
+    sales.predictor = new
+    LastPricePredictor();
+  };
+  scenario.salesInitializer = (ZeroKnowledgeTrader sales) {
+    sales.predictor = new
+    LastPricePredictor();
+  };
+  //F = Sqrt(L)-5
+  scenario.productionFunction = new ExponentialProductionFunction(exponent:productionExponent)
+    ..freebie = fixedCost;
+  scenario.laborMarket = new ExogenousBuyerMarket.infinitelyElastic(1.0,
+                                                                    goodType:"labor");
+  //demand = total wages yesterday
+  scenario.goodMarket = new ExogenousSellerMarket.linkedToWagesFromModel
+  (model,"labor");
+
+  //fixed wages = 1
+  scenario.hrPricingInitialization = (SISOPlant plant,
+                                      Firm firm,  Random r,  ZeroKnowledgeTrader seller,
+                                      OneMarketCompetition scenario)=> new FixedValue(1.0);
+
+  if(keynesian){
+    scenario.hrQuotaInitializer = OneMarketCompetition
+    .KEYNESIAN_STOCKOUT_QUOTAS(50.0);
+    scenario.salesInitializer = (ZeroKnowledgeTrader trader) {
+      trader.predictor = new LastPricePredictor();
+      trader.dawnEvents.add(BurnInventories());
+    };
+    //this is the default
+    // multiplier when using  PROFIT_MAXIMIZER_PRICING
+    scenario.salesMinP = 100.0;
+    scenario.salesMaxP = 100.0;
+    scenario.salesPricingInitialization = OneMarketCompetition.PROFIT_MAXIMIZER_PRICING;
+  }
+  else {
+    //marshallian
+    scenario.hrQuotaInitializer = OneMarketCompetition.MARSHALLIAN_QUOTAS(50.0);
+    scenario.salesPricingInitialization = OneMarketCompetition.BUFFER_PID;
+  }
+  model.scenario = scenario;
+  model.start();
+
+  Market gas = model.markets["gas"];
+  Market labor = model.markets["labor"];
+
+
+  for (int i = 0; i < totalSteps; i++) {
+    model.schedule.simulateDay();
+    /*
+    print('''gas : ${gas.quantityTraded} workers' : ${labor
+    .quantityTraded}''');
+    print('''gas price: ${gas.averageClosingPrice} workers' wages: ${labor
+    .averageClosingPrice}''');
+    */
+  }
+
+
+
+
+  if(testing)
+  {
+    expect(gas.averageClosingPrice, closeTo(20.0, 1.5));
+    expect(gas.quantityTraded, closeTo(5.0, 0.5));
+    expect(labor.averageClosingPrice, closeTo(1.0, 0.0));
+    expect(labor.quantityTraded, closeTo(100.0, 2.5));
+  }
+  if(gasCsvName!=null)
+    writeCSV(gas.data.backingMap,gasCsvName);
+  if(laborCsvName!=null)
+    writeCSV(labor.data.backingMap,laborCsvName);
+
+
+  return gas.data;
+}
+
+
+
+
 String findRootFolder()
 {
 /*  Directory.current.list().listen((entity){
@@ -212,7 +322,8 @@ String findRootFolder()
 
 String getOutputPathForFile(String file){
 
-  return "${findRootFolder()}${Platform.pathSeparator}docs${Platform
+  var root = findRootFolder();
+  return "${root}${Platform.pathSeparator}docs${Platform
   .pathSeparator}yackm${Platform.pathSeparator}rawdata${Platform
   .pathSeparator}$file";
 }
@@ -221,6 +332,8 @@ String getOutputPathForFile(String file){
 
 void writeCSV(Map<String,List<double>> _dataMap, String fileName)
 {
+  fileName = getOutputPathForFile(fileName);
+  print("writing to $fileName");
   //create string
   StringBuffer toWrite = new StringBuffer();
   var rows = _dataMap.values;

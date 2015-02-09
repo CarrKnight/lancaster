@@ -32,7 +32,7 @@ class Model {
   }
 
   Model.randomSeed([Scenario givenScenario = null]):
-  this((new Random()).nextInt((1 << 32) - 1),givenScenario);
+  this(new DateTime.now().millisecondsSinceEpoch,givenScenario);
 
   //starts the scenario, that's all
   void start()
@@ -560,12 +560,11 @@ class OneMarketCompetition extends Scenario
     double i = r.nextDouble() * (scenario.purchaseMaxI - scenario
     .purchaseMinI)  + scenario.purchaseMinI;
 
-    double optimalInventory = 10.0;
+ //   double optimalInventory = 10.0;
 
     //here price really is people to hire
     BufferInventoryAdaptive quotaStrategy =
-    new BufferInventoryAdaptive.simpleSeller(optimalInventory:optimalInventory,
-                                             criticalInventory:optimalInventory/10.0,initialPrice:1.0,p:p,d:0.0,
+    new BufferInventoryAdaptive.simpleSeller(initialPrice:1.0,p:p,d:0.0,
                                              i:i,columnName: "quota");
     //we want to change L given the seller results rather than our own
     quotaStrategy.targetExtractingStockingUp = new OtherDataExtractor(seller,

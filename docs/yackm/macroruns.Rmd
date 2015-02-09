@@ -1,0 +1,48 @@
+---
+title: "macroruns"
+author: "Ernesto Carrella"
+date: "02/07/2015"
+output: html_document
+---
+:
+
+```{r , echo=FALSE,warning=FALSE}
+library(ggplot2)
+library(reshape2)
+library(gridExtra)
+rawdataFolder<-
+  file.path("~","code","lancaster","docs","yackm","rawdata")
+
+plotMacro<-function(filename,correctPrice,correctQuantity,title)
+{
+  data <- read.csv(file.path(rawdataFolder,filename))
+  
+  market<-data.frame(quantity=data$quantity,price=data$price,day=1:length(data$quantity))
+  
+  #quantity
+  plot1<-ggplot() + 
+    geom_abline(intercept=correctQuantity,slope=0,aes(colour=factor("target")),size=1,alpha=0.5) +
+    geom_line(data=market,aes(y=quantity,x=day)) + ylim(0,10) + theme_gray(20)
+  #price
+  plot2<-ggplot() + 
+    geom_abline(intercept=correctPrice,slope=0,aes(colour=factor("target")),size=1,alpha=0.5) +
+    geom_line(data=market,aes(y=price,x=day)) + ylim(0,75) + theme_gray(20)
+  return(grid.arrange(plot1,plot2, ncol=1, main =title))
+  
+  
+}
+```
+
+A sample Marshallian run of the fixed wages macro look like this:
+
+```{r, echo=FALSE, warning=FALSE}
+plotMacro("M_macro_gas.csv",20,5,"Marshallian Macro")
+```
+
+A sample Keynesian run of the fixed wages macro look like this:
+
+```{r, echo=FALSE, warning=FALSE}
+plotMacro("K_macro_gas.csv",20,5,"Marshallian Macro")
+```
+
+

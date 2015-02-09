@@ -276,7 +276,6 @@ class PIDMaximizer implements Extractor
     double efficiency = (benefits/costs);
     pid.adjust(ratioTransformer(efficiency),ratioTransformer(1.0));
     currentTarget = pid.manipulatedVariable;
-    print("benefits $benefits and costs $costs");
   }
 
   void start(Schedule s, Firm firm, SISOPlant producer)
@@ -352,7 +351,6 @@ class PIDMaximizerFacade implements AdaptiveStrategy
 
     delegate.updateTarget(buyer,seller,plant.function,(buyer as
     ZeroKnowledgeTrader).quoting.value);
-    print("new target $value");
 
   }
 
