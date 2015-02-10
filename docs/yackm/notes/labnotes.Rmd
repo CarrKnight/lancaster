@@ -194,40 +194,7 @@ doubleHist("convergeSpeed3.csv")
 ####Experiment 5
 I brought the multiplier back to 100, but this time I focus on initial price
 
-
-###Conclusion
-
-The difference in speed doesn't seem caused primarily by parameter differences. I would like to make sure it's not simply a result of prices having to go all the way to 20 while labor has to go to 100 (or is it quantity going to 5?).
-
-### Questions
-* Why PI multiplier for experiment 4 needed to be lowered for Keynesian but not Marshallian (which in fact doesn't overshoot at 100 in the same market?)
-* Why does it look like price in the Keynesian mode gets adjusted far more aggressively than labor in the Marshallian one besides being run by the same sticky maximizer?
-
-
----------------------------------------
-
-#Convergence Speed between Marshallian and Keynesian, day 2
-
-### Date 
-
-2015-02-09
-
-###Background Information
-
-Like the previous day, I am investigating why Keynesian reaches equilibrium somewhat faster.
-
-###References
-
-###Purpose
-Identify why Keynesian reaches equilibrium faster than the rest
-
-
-###Hypothesis
-Something in the PID of the Keynesian pricing makes it faster than quantity adjustment in the Marshallian world (both use PID maximizers)
-
-###Experiment
-
-####Experiment 1
+####Experiment 6
 So Marhsallian simulation uses buffer inventory while Keynesian seems to be using stockouts. I try then to run Marshall with stockout sales.  
 
 ```{r, echo=FALSE,warning=FALSE}
@@ -236,20 +203,20 @@ doubleHist("convergeSpeed4.csv")
 
 Not really any better.
 
-####Experiment 2
+####Experiment 7
 Marshallian tries to equalize MB=MC by making the sigmoid of MB/MC equals to 1. The Keynesian moves price in the opposite direction. I did so previously by doing 1/sigmoid, let me just try to do -sigmoid.
 ```{r, echo=FALSE,warning=FALSE}
 doubleHist("convergeSpeed5.csv")
 ```  
 
-####Experiment 3
+####Experiment 8
 keeping the new sigmoid, try to focus again on $b=-1$ (fixed cost of production). Interestingly now some of the keynesian results are correct, although the majority still screws up
 ```{r, echo=FALSE,warning=FALSE}
 doubleHist("convergeSpeed6.csv")
 ```  
 Still not good enough, also a 40% failure rate which is unacceptable
 
-####Experiment 4
+####Experiment 9
 Figuring out why it fails so damn much with Keynesian. It seems that at some point it just reaches escape velocity.
 
 So there is a lot more outflow than inflow which pushes the labor PID to hire more workers
@@ -264,26 +231,83 @@ And since for these many workers $\text{MB} < \text{MC} $ you end up raising pri
 ```{r, echo=FALSE,warning=FALSE}
 par(mfrow = c(2,1))
 plot(ksales$maximizer_ratio,main="MB/MC")
-plot(khr$quota,main="people hired")
+plot(ksales$offeredPrice,main="price")
 ```  
 
-plot(ksales$maximizer_ratio)
-#ksales<-head(ksales,n=1000)
-plot(ksales$maximizer_ratio)
-plot(ksales$maximizer_efficiency)
+It is possible that keep hiring workers increase demand faster than it increases supply, keeping prices fixed. This is an issue because if the demand increases you answer by increasing workers in Keynesian world. Unfortunately that just starts the cycle once again.
 
-plot(ksales$maximizer_benefits, main="PID computed marginal benefits against theoretical ones",ylab="MB")
-lines(ksales$offeredPrice/(2*sqrt(khr$inflow)),col="red")
-
-head(khr)
-plot(khr$inflow)
-plot(ksales$outflow-ksales$inflow)
-plot(ksales$stockouts)
-
-plot(tail(khr$quota,n=3000))
-plot(ksales$stockouts)
+Does it help if I increase the speed of the price pid? It would seem that increasing price faster than labor would break the error.
 
 
+###Conclusion
+
+The difference in speed doesn't seem caused primarily by parameter differences. I would like to make sure it's not simply a result of prices having to go all the way to 20 while labor has to go to 100 (or is it quantity going to 5?).
+
+### Questions
+* Why PI multiplier for experiment 4 needed to be lowered for Keynesian but not Marshallian (which in fact doesn't overshoot at 100 in the same market?)
+* Why does it look like price in the Keynesian mode gets adjusted far more aggressively than labor in the Marshallian one besides being run by the same sticky maximizer?
+
+
+---------------------------------------
+
+# Effect of a demand shock
+
+### Date 
+2015-02-10
+
+###Background Information
+At the present stage this seems like the most interesting question, what happens to labor, income and quantity when there is a demand shock. I know from the solution that if I lower demand by 1 the new solution is:
+
+>$$
+\begin{align*}
+ L &= 64 \\
+ p &= 16 \\
+ Y &= 3
+\end{align*}
+$$ 
+
+from
+>$$
+\begin{align*}
+ L &= 100 \\
+ p &= 20 \\
+ Y &= 5
+\end{align*}
+$$
+
+And I know from tests after a shock the new equilibrium is reached (I also know that the old equilibrium is returned to if the demand shock is then removed)
+
+###References
+
+###Purpose
+
+
+
+###Hypothesis
+
+
+###Experiment
+
+####Experiment 1
+
+####Experiment 2
+I increase the Marshallian PI Multiplier to 1000, again this is mostly as a way to compare and contrast to similarly fast Keynesian. I get the following quantity:  
+```{r,echo=FALSE,warning=FALSE}
+rawdataFolder<-
+  file.path("~","code","lancaster","docs","yackm","rawdata")
+#Marshallian
+marshall<-read.csv(file.path(rawdataFolder,"M_drop_gas_1000.csv"))
+plot(marshall$quantity,type="l")
+abline(h = 5,lty=2,col="red")
+abline(h= 3, lty=2, col = "blue")
+```
+
+And the following price:  
+```{r,echo=FALSE,warning=FALSE}
+plot(marshall$price,type="l")
+abline(h = 20,lty=2,col="red")
+abline(h= 16, lty=2, col = "blue")
+```
 
 
 ###Code used
@@ -296,6 +320,7 @@ plot(ksales$stockouts)
 ###Conclusion
 
 ### Questions
+
 
 
 ---------------------------------------
@@ -331,3 +356,4 @@ plot(ksales$stockouts)
 ###Conclusion
 
 ### Questions
+

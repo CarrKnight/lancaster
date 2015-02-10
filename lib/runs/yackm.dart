@@ -17,19 +17,49 @@ main()
 {
 
 
-
+/*
   fixedWageMacro(true,testing:false,
                  gasCsvName: "K_macro_gas.csv",
                  laborCsvName: "K_macro_wage.csv",fixedCost:-1.0,
                  salesCSV : "K_sales.csv", hrCSV: "K_hr.csv");
 
-/*
+
   fixedWageMacro(false,testing:false,
                  gasCsvName: "M_macro_gas.csv",
                  laborCsvName: "M_macro_wage.csv",fixedCost:-1.0,
                  salesCSV : "M_sales.csv", hrCSV: "M_hr.csv");
 
+
+
+  //cyclical tests!
+  //demand shock at day 10000, recovery at day 15000
+  fixedWageMacro(true,testing:false,
+                 gasCsvName: "K_cycle_gas.csv",
+                 laborCsvName: "K_cycle_wage.csv",
+                 totalSteps:20000,shockday:10000,endshockday:15000,shockSize:-1.0,
+                 salesCSV : "K_cycle_sales.csv", hrCSV: "K_cycle_hr.csv");
+
+  fixedWageMacro(false,testing:false,
+                 gasCsvName: "M_cycle_gas_1000.csv",
+                 laborCsvName: "M_cycle_wage.csv",
+                 totalSteps:20000,shockday:10000,endshockday:15000,shockSize:-1.0,
+                 salesCSV : "M_cycle_sales.csv", hrCSV: "M_cycle_hr.csv");
 */
+
+/*
+  //drop
+  //demand shock at day 10000, never recovers
+  fixedWageMacro(true,testing:false,
+                 gasCsvName: "K_drop_gas.csv",
+                 laborCsvName: "K_drop_wage.csv",
+                 totalSteps:20000,shockday:10000,endshockday:-1,shockSize:-1.0,
+                 salesCSV : "K_drop_sales.csv", hrCSV: "K_drop_hr.csv");
+ */
+  fixedWageMacro(false,testing:false,
+                 gasCsvName: "M_drop_gas.csv",
+                 laborCsvName: "M_drop_wage.csv",
+                 totalSteps:20000,shockday:10000,endshockday:-1,shockSize:-1.0,
+                 salesCSV : "M_drop_sales.csv", hrCSV: "M_drop_hr.csv");
 
 
 }

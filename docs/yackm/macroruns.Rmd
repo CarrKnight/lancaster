@@ -42,7 +42,7 @@ plotMacro("M_macro_gas.csv",20,5,"Marshallian Macro")
 A sample Keynesian run of the fixed wages macro look like this:
 
 ```{r, echo=FALSE, warning=FALSE}
-plotMacro("K_macro_gas.csv",1,4,"Keynesian Macro")
+plotMacro("K_macro_gas.csv",20,5,"Keynesian Macro")
 ```
 
 
