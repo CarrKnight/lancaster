@@ -168,7 +168,7 @@ class ExogenousSellerMarket extends SellerMarket with OneSideMarketClearer{
 
 
 
-  final ExogenousCurve demand;
+  ExogenousCurve demand;
 
 
   double _moneyExchanged = 0.0;
@@ -183,17 +183,26 @@ class ExogenousSellerMarket extends SellerMarket with OneSideMarketClearer{
   /**
    * demand = w*L of the previous day
    */
-  factory ExogenousSellerMarket.linkedToWagesFromModel( Model model,
-                                                   String laborType,{
-                                                   String goodType : "gas",
-                                                   String moneyType: "money"})
-  {
-    var budgetDemand = ()=>model.markets[laborType].data.getLatestObservation
-    ("price") *model.markets[laborType].data.getLatestObservation
-    ("quantity") ;
+  static FixedBudget linkedToWageDemand(Model model, String laborType, double intercept) {
+    var budgetDemand = () => model.markets[laborType].data.getLatestObservation
+                             ("price") * model.markets[laborType].data.getLatestObservation
+                             ("quantity") ;
 
-    return new ExogenousSellerMarket(new FixedBudget(budgetDemand),
-    goodType:goodType, moneyType:moneyType);
+    FixedBudget fixedBudget = new FixedBudget(budgetDemand,intercept);
+    return fixedBudget;
+  }
+
+  factory ExogenousSellerMarket.linkedToWagesFromModel( Model model,
+                                                        String laborType,
+                                                        {
+                                                        String goodType : "gas",
+                                                        //additional budget or penalty
+                                                        double intercept : 0.0,
+                                                        String moneyType: "money"})
+  {
+    var fixedBudget = linkedToWageDemand(model, laborType, intercept);
+    return new ExogenousSellerMarket(fixedBudget,
+                                     goodType:goodType, moneyType:moneyType);
 
   }
 
@@ -201,16 +210,16 @@ class ExogenousSellerMarket extends SellerMarket with OneSideMarketClearer{
    * demand = w*L of the previous day
    */
   factory ExogenousSellerMarket.linkedToWagesFromData( Data laborData,
-                                                        {
-                                                        String goodType : "gas",
-                                                        String moneyType: "money"})
+                                                       {
+                                                       String goodType : "gas",
+                                                       String moneyType: "money"})
   {
     var budgetDemand = ()=>laborData.getLatestObservation
-    ("price") *laborData.getLatestObservation
-    ("quantity") ;
+                           ("price") *laborData.getLatestObservation
+                           ("quantity") ;
 
     return new ExogenousSellerMarket(new FixedBudget(budgetDemand),
-    goodType:goodType, moneyType:moneyType);
+                                     goodType:goodType, moneyType:moneyType);
 
   }
 
@@ -240,7 +249,7 @@ class ExogenousSellerMarket extends SellerMarket with OneSideMarketClearer{
 
 
   double get averageClosingPrice => demand.quantityTraded == 0 ? double.NAN :
-  _moneyExchanged/demand.quantityTraded;
+                                    _moneyExchanged/demand.quantityTraded;
 
   double get quantityTraded=> demand.quantityTraded;
 
@@ -288,7 +297,7 @@ class ExogenousBuyerMarket extends BuyerMarket with OneSideMarketClearer{
   String goodType : "gas",
   String moneyType: "money" }):
   this(new InfinitelyElasticAsk(price),goodType:goodType,moneyType:moneyType,
-  pricePolicy: FIXED_PRICE(price));
+       pricePolicy: FIXED_PRICE(price));
 
 
   ExogenousBuyerMarket(ExogenousCurve this.supply, {String goodType : "gas",
@@ -321,7 +330,7 @@ class ExogenousBuyerMarket extends BuyerMarket with OneSideMarketClearer{
 
 
   double get averageClosingPrice => supply.quantityTraded == 0 ? double.NAN :
-  _moneyExchanged/supply.quantityTraded;
+                                    _moneyExchanged/supply.quantityTraded;
 
   double get quantityTraded=> supply.quantityTraded;
 
@@ -452,7 +461,7 @@ class _AsksStream{
     _asks = new StreamController.broadcast(
         onListen: ()=>recordAsks=true,
         onCancel: ()=>recordAsks=false
-    );
+        );
   }
 
 }
@@ -472,7 +481,7 @@ abstract class TimestampedStreamBase<T>{
     _controller = new StreamController.broadcast(
         onListen: ()=>listenedTo=true,
         onCancel: ()=>listenedTo=false
-    );
+        );
   }
 
   void start(Schedule s){
@@ -506,7 +515,7 @@ class TradeStream extends TimestampedStreamBase<TradeEvent>{
     if(started && listenedTo) //if you can log, do log
       _controller.add(
           new TradeEvent(seller,buyer,amount,unitPrice,
-          _schedule.day));
+                         _schedule.day));
   }
 
 

@@ -19,10 +19,12 @@ main()
   Data histogramKM = new Data(["keynesian","marshallian"],
                                   (data)=>(s){
                                 data["keynesian"].add(extractApproximateDateOfEquilibrium(
-                                    fixedWageMacro(true,testing:false,totalSteps:15000)
+                                    fixedWageMacro(true,testing:false,totalSteps:15000,fixedCost : -1.0)
+                                    , correctP : 4.0, correctQ : 1.0, minPDistance: 0.25, minQDistance:0.25
                                     ));
                                 data["marshallian"].add(extractApproximateDateOfEquilibrium(
-                                    fixedWageMacro(false,testing:false,totalSteps:15000)
+                                    fixedWageMacro(false,testing:false,totalSteps:15000,fixedCost : -1.0)
+                                    , correctP : 4.0, correctQ : 1.0, minPDistance: 0.25, minQDistance:0.25
                                     ));
                               });
 
@@ -34,7 +36,7 @@ main()
   }
 
 
-  writeCSV(histogramKM.backingMap,"convergeSpeed2.csv");
+  writeCSV(histogramKM.backingMap,"convergeSpeed7.csv");
 
 }
 
@@ -42,11 +44,13 @@ main()
 /**
  * try to get the day when equilibrium was reached by reading the data
  */
-int extractApproximateDateOfEquilibrium(Data gasMarketData)
+int extractApproximateDateOfEquilibrium(Data gasMarketData,
+                                        {double correctQ: 5.0, double minQDistance : 0.75,
+                                        double correctP : 20.0, double minPDistance : 0.25})
 {
 
-  Matcher qCloseEnough =  closeTo(5.0, 0.75);
-  Matcher pCloseEnough =  closeTo(20.0, 0.25);
+  Matcher qCloseEnough =  closeTo(correctQ, minQDistance);
+  Matcher pCloseEnough =  closeTo(correctP, minPDistance);
 
   int earlierQDate = null;
   int earlierPDate = null;
@@ -75,6 +79,7 @@ int extractApproximateDateOfEquilibrium(Data gasMarketData)
 
   }
 
+  print("result p:${prices.last} and q:${quantities.last}");
 
   if(earlierQDate == null || earlierPDate== null)
     return null;

@@ -49,17 +49,17 @@ _EffectEstimate computeMarginalEffect(Trader trader,
   double totalUp = priceUp*(currentLevel+deltaLevelUp);
   double totalNow = priceNow*(currentLevel);
   double totalDown = (-deltaLevelDown)>=currentLevel? 0.0 : priceDown*
-  (currentLevel+deltaLevelDown);
+                                                            (currentLevel+deltaLevelDown);
 
   //compute marginals, use infinity if the total  is not finite
   assert(totalNow.isFinite); //we wouldn't be here otherwise
   double marginalUp = totalUp.isFinite ? totalUp - totalNow :  defaultReturn;
   double marginalDown = totalDown.isFinite ? totalDown - totalNow :
-  defaultReturn;
+                        defaultReturn;
 
 
   return new _EffectEstimate(marginalUp,marginalDown,totalUp,totalDown,
-  totalNow);
+                             totalNow);
 }
 
 /**
@@ -122,7 +122,7 @@ class MarginalMaximizer implements Extractor
     production.consumption(currentTarget-delta) - consumption;
 
     var costs = computeMarginalEffect(buyer,consumption,deltaConsumptionUp,
-    deltaConsumptionDown);
+                                      deltaConsumptionDown);
     //if there are no estimates, return
     if(identical(costs, _EffectEstimate.NO_ESTIMATE))
       return;
@@ -142,7 +142,7 @@ class MarginalMaximizer implements Extractor
     production.production(currentTarget-delta) - ouput;
 
     var benefits = computeMarginalEffect(seller,ouput,deltaOutputUp ,
-    deltaOutputDown,0.0);
+                                         deltaOutputDown,0.0);
     //if there are no estimates, return
     if(identical(benefits, _EffectEstimate.NO_ESTIMATE))
       return;
@@ -177,7 +177,7 @@ class MarginalMaximizer implements Extractor
     Trader buyer = firm.purchasesDepartments[producer.inputType];
 
     s.scheduleRepeating(Phase.ADJUST_PRODUCTION,(s)=>updateTarget(r,buyer,
-    seller,producer.function,seller.currentOutflow));
+                                                                  seller,producer.function,seller.currentOutflow));
   }
 
 
@@ -202,9 +202,15 @@ class PIDMaximizer implements Extractor
 
   double delta = 1.0;
 
-  static final  Transformer defaultTransformer = (x)=>sigmoid(x,0.0);
+  static final  Transformer defaultTransformer = (x)=>sigmoid(x,1.0);
 
   Transformer ratioTransformer = defaultTransformer; //bound it upward
+
+
+  double lastEfficiency = double.NAN;
+  double lastBenefits = double.NAN;
+  double lastCosts = double.NAN;
+  bool lastActivated = false;
 
 
   double extract(Data data) {
@@ -218,7 +224,7 @@ class PIDMaximizer implements Extractor
   {
 
     PIDMaximizer toReturn = new PIDMaximizer(r,averagePIDPeriod,
-    PImultiplier);
+                                             PImultiplier);
     if(firm!=null)
       firm.startWhenPossible((f,s)=> toReturn.start(s,f,plant));
     return toReturn;
@@ -229,7 +235,7 @@ class PIDMaximizer implements Extractor
   PIDMaximizer(Random random,[int averagePIDPeriod = 20, double
   PImultiplier = 100.0]):
   pid = new StickyPID.Random(new PIDController.standardPI(),random,
-  averagePIDPeriod)
+                             averagePIDPeriod)
   {
     pid.offset=currentTarget;
     (pid.delegate as PIDController).proportionalParameter *=PImultiplier;
@@ -242,6 +248,7 @@ class PIDMaximizer implements Extractor
   updateTarget(Trader buyer,Trader seller,
                SISOProductionFunction production, double input)
   {
+
     /***
      *       ___               ____ __
      *      / _ )___ ___  ___ / _(_) /____
@@ -251,7 +258,7 @@ class PIDMaximizer implements Extractor
      */
 
     //new products at new price - old products at old prices
-    var benefits = marginalBenefits(seller, production,input,delta);
+    lastBenefits = marginalBenefits(seller, production,input,delta);
     //so this is a little trick from somehwere. Numerical derivatives work
     // better when you have (f(x+h)-f(x-h))/2
 
@@ -265,16 +272,22 @@ class PIDMaximizer implements Extractor
      */
 
     //new inputs at new price - old inputs at old prices
-    var costs = marginalCosts(buyer, production,input,delta);
+    lastCosts = marginalCosts(buyer, production,input,delta);
 
 
-    if(costs==0 || !costs.isFinite || !benefits.isFinite || !ratioTransformer
-    (benefits/costs).isFinite )
+    print("last cost $lastCosts, ratio ${lastBenefits/lastCosts}");
+
+    if(lastCosts==0 || !lastCosts.isFinite || !lastBenefits.isFinite || !ratioTransformer
+    (lastBenefits/lastCosts).isFinite )
       return;
 
 
-    double efficiency = (benefits/costs);
-    pid.adjust(ratioTransformer(efficiency),ratioTransformer(1.0));
+    lastEfficiency = ratioTransformer(lastBenefits/lastCosts);
+    print("last efficiency $lastEfficiency");
+    print("---------------------------------------------");
+
+    pid.adjust(lastEfficiency,ratioTransformer(1.0));
+    lastActivated = pid.adjustedLast;
     currentTarget = pid.manipulatedVariable;
   }
 
@@ -284,7 +297,7 @@ class PIDMaximizer implements Extractor
     Trader buyer = firm.purchasesDepartments[producer.inputType];
 
     s.scheduleRepeating(Phase.ADJUST_PRODUCTION,(s)=>updateTarget(buyer,
-    seller,producer.function,currentTarget));
+                                                                  seller,producer.function,currentTarget));
   }
 
 
@@ -315,6 +328,22 @@ class PIDMaximizerFacade implements AdaptiveStrategy
   Trader buyer = null;
 
 
+  /**
+   * The first time adapt is called this strategy plug in its target and cv
+   * in the data of the trader. Once that is done, this flag is set to false.
+   */
+  bool _columnToSet = true;
+
+  /**
+   * the data in the trader will be plugin as [columName]_target and
+   * [columnName]_cv
+   */
+  String columnName = "maximizer";
+
+
+
+
+
   PIDMaximizerFacade(this.delegate,this.firm,this.plant,
                      [double initialPrice=1.0])
   {
@@ -330,11 +359,11 @@ class PIDMaximizerFacade implements AdaptiveStrategy
   {
 
     PIDMaximizer delegate = new PIDMaximizer(r,averagePIDPeriod,
-    PImultiplier);
+                                             PImultiplier);
     //we are not going to start it, since we can call it from updatePrice
-    delegate.ratioTransformer = (x)=>1/(PIDMaximizer.defaultTransformer(x));
+    delegate.ratioTransformer = (x)=>-(PIDMaximizer.defaultTransformer(x));
     PIDMaximizerFacade facade = new PIDMaximizerFacade(delegate,
-    firm,plant,initialPrice);
+                                                       firm,plant,initialPrice);
     return facade;
 
   }
@@ -342,18 +371,33 @@ class PIDMaximizerFacade implements AdaptiveStrategy
   double get value=> delegate.currentTarget;
 
 
-  //unused because the maximizer steps itself.
   adapt(Trader t, Data data) {
     if(seller == null)
       seller = firm.salesDepartments[plant.outputType];
     if(buyer == null)
       buyer = firm.purchasesDepartments[plant.inputType];
 
+
+    initializeColumnsIfNeeded(t);
+
     delegate.updateTarget(buyer,seller,plant.function,(buyer as
     ZeroKnowledgeTrader).quoting.value);
 
   }
 
+
+  initializeColumnsIfNeeded(Trader t) {
+    if (_columnToSet)
+    {
+      Data data = t.data;
+      data.addColumn("${columnName}_activated", () => delegate.lastActivated ? 1.0 : 0.0);
+      data.addColumn("${columnName}_benefits", () => delegate.lastBenefits);
+      data.addColumn("${columnName}_costs", () => delegate.lastCosts);
+      data.addColumn("${columnName}_ratio", () => delegate.lastBenefits/delegate.lastCosts);
+      data.addColumn("${columnName}_efficiency", () => delegate.lastEfficiency);
+      _columnToSet = false;
+    }
+  }
 
 }
 
@@ -364,18 +408,27 @@ double squareToRoot(double x)=> (x/sqrt(pow(x,2)+1)) ;
 
 double marginalBenefits(Trader seller, SISOProductionFunction production,
                         double input,double delta) {
-  double benefits = seller.predictPrice(delta) * production.production
-  (input + delta) - seller.predictPrice(-delta) * production
-  .production(input - delta);
+  var increaseBenefit = seller.predictPrice(delta) * production.production(input + delta);
+  var productionWhenDecreasing = production.production(input - delta);
+  var decreaseBenefit =  productionWhenDecreasing <= 0 ? 0 :
+                         seller.predictPrice(-delta) * productionWhenDecreasing;
+  double benefits = increaseBenefit - decreaseBenefit ;
   benefits /= 2.0;
+
+  print("benefit $benefits increase benefit: $increaseBenefit decrease benefit: $decreaseBenefit");
+  print("increasing Production ${production.production(input + delta)}, decreasing production ${production.production(input - delta)}");
+  print("input $input and price ${seller.predictPrice(delta)}");
+
   return benefits;
 }
 
 double marginalCosts(Trader buyer, SISOProductionFunction production,
                      double input, double delta) {
-  double costs = buyer.predictPrice(delta) * production.consumption
-  (input + delta) - buyer.predictPrice(-delta) * production.consumption
-  (input - delta) ;
+  var increaseCosts = buyer.predictPrice(delta) * production.consumption(input + delta);
+  var decreaseCosts = production.consumption(input - delta) < 0
+                      ? 0
+                      : buyer.predictPrice(-delta) * production.consumption(input - delta);
+  double costs = increaseCosts - decreaseCosts ;
   costs /= 2.0;
   return costs;
 }

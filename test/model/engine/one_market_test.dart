@@ -47,7 +47,7 @@ KeynesianInfiniteElasticity(bool marketDayOnly) {
   Market gas = model.markets["gas"];
   Market labor = model.markets["labor"];
 
-  for (int i = 0; i < 5000; i++) {
+  for (int i = 0; i < 8000; i++) {
     model.schedule.simulateDay();
     print('''gas price: ${gas.averageClosingPrice} workers' wages: ${labor
     .averageClosingPrice}''');
@@ -90,6 +90,28 @@ main()
 
   }
 
+  for(int i=0; i<5;i++) {
+    test("Marshallian Macro with shock ",
+             ()=>fixedWageMacro(false,totalSteps:20000,shockday:10000,shockSize:-1.0));
+
+  }
+
+  for(int i=0; i<5;i++) {
+    test("Keynesian Macro with shock ",
+             ()=>fixedWageMacro(true,totalSteps:20000,shockday:10000,shockSize:-1.0));
+
+  }
+  for(int i=0; i<5;i++) {
+    test("Recover from shock ",
+             ()=>fixedWageMacro(false,totalSteps:20000,shockday:10000,endshockday:15000,shockSize:-1.0));
+
+  }
+
+  for(int i=0; i<5;i++) {
+    test("Keynesian Macro with shock ",
+             ()=>fixedWageMacro(true,totalSteps:20000,shockday:10000,endshockday:15000,shockSize:-1.0));
+
+  }
   //one agent working as competitive
   for(int i=0;i<5;i++)
     test("Fake competitive", (){

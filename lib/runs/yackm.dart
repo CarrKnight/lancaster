@@ -17,26 +17,20 @@ main()
 {
 
 
+
   fixedWageMacro(true,testing:false,
                  gasCsvName: "K_macro_gas.csv",
-                 laborCsvName: "K_macro_wage.csv");
+                 laborCsvName: "K_macro_wage.csv",fixedCost:-1.0,
+                 salesCSV : "K_sales.csv", hrCSV: "K_hr.csv");
 
-
+/*
   fixedWageMacro(false,testing:false,
                  gasCsvName: "M_macro_gas.csv",
-                 laborCsvName: "M_macro_wage.csv");
+                 laborCsvName: "M_macro_wage.csv",fixedCost:-1.0,
+                 salesCSV : "M_sales.csv", hrCSV: "M_hr.csv");
 
-
-  /*
-
-  KeynesianLearnedCompetitive(false,false,getOutputPathForFile("KGas.csv"),
-                              getOutputPathForFile("KWage.csv"));
 */
-  /*
-  learnedCompetitorTest(1,false,getOutputPathForFile("MGas.csv"),
-  getOutputPathForFile("MWage.csv"),getOutputPathForFile("MPIDGas.csv"),
-  getOutputPathForFile("MPIDWage.csv"));
-*/
+
 
 }
 
@@ -209,7 +203,16 @@ Data fixedWageMacro(bool keynesian,
                int totalSteps : 10000,
                productionExponent : 0.5,
                //negative!
-               fixedCost : -5.0})
+               fixedCost : -5.0,
+               multiplier: 1.0,
+               String salesCSV : null,
+               String hrCSV: null,
+               //shocks
+               int shockday : -1,
+               int endshockday: -1,
+               //negative if the shock lowers demand
+               double shockSize : 0.0
+               })
 {
   Model model = new Model.randomSeed();
   OneMarketCompetition scenario = new OneMarketCompetition();
@@ -225,18 +228,20 @@ Data fixedWageMacro(bool keynesian,
   };
   //F = Sqrt(L)-5
   scenario.productionFunction = new ExponentialProductionFunction(exponent:productionExponent)
+    ..multiplier = multiplier
     ..freebie = fixedCost;
   scenario.laborMarket = new ExogenousBuyerMarket.infinitelyElastic(1.0,
                                                                     goodType:"labor");
   //demand = total wages yesterday
-  scenario.goodMarket = new ExogenousSellerMarket.linkedToWagesFromModel
-  (model,"labor");
+  var goodMarket = new ExogenousSellerMarket.linkedToWagesFromModel (model, "labor");
+  scenario.goodMarket = goodMarket;
 
   //fixed wages = 1
   scenario.hrPricingInitialization = (SISOPlant plant,
                                       Firm firm,  Random r,  ZeroKnowledgeTrader seller,
                                       OneMarketCompetition scenario)=> new FixedValue(1.0);
 
+//todo make explicit all the choices of initializers
   if(keynesian){
     scenario.hrQuotaInitializer = OneMarketCompetition
     .KEYNESIAN_STOCKOUT_QUOTAS(50.0);
@@ -253,7 +258,12 @@ Data fixedWageMacro(bool keynesian,
   else {
     //marshallian
     scenario.hrQuotaInitializer = OneMarketCompetition.MARSHALLIAN_QUOTAS(50.0);
-    scenario.salesPricingInitialization = OneMarketCompetition.BUFFER_PID;
+    scenario.salesPricingInitialization = OneMarketCompetition.STOCKOUT_SALES;
+    scenario.salesInitializer = (ZeroKnowledgeTrader trader) {
+      trader.predictor = new LastPricePredictor();
+      trader.dawnEvents.add(BurnInventories());
+    };
+
   }
   model.scenario = scenario;
   model.start();
@@ -264,12 +274,13 @@ Data fixedWageMacro(bool keynesian,
 
   for (int i = 0; i < totalSteps; i++) {
     model.schedule.simulateDay();
-    /*
-    print('''gas : ${gas.quantityTraded} workers' : ${labor
-    .quantityTraded}''');
-    print('''gas price: ${gas.averageClosingPrice} workers' wages: ${labor
-    .averageClosingPrice}''');
-    */
+    if(i==shockday)
+      goodMarket.demand = ExogenousSellerMarket.linkedToWageDemand (model,
+                                                                            "labor",
+                                                                            shockSize);
+    if(i==endshockday)
+      goodMarket.demand = ExogenousSellerMarket.linkedToWageDemand (model,
+                                                                    "labor", 0.0);
   }
 
 
@@ -277,16 +288,32 @@ Data fixedWageMacro(bool keynesian,
 
   if(testing)
   {
-    expect(gas.averageClosingPrice, closeTo(20.0, 1.5));
-    expect(gas.quantityTraded, closeTo(5.0, 0.5));
-    expect(labor.averageClosingPrice, closeTo(1.0, 0.0));
-    expect(labor.quantityTraded, closeTo(100.0, 2.5));
+    int i = model.schedule.day;
+    if((shockday> 0 && i>=shockday) && (endshockday < 0 || i < endshockday))
+    {
+
+      //shock!
+      expect(gas.averageClosingPrice, closeTo(16.0, 1.5));
+      expect(gas.quantityTraded, closeTo(3.0, 0.5));
+      expect(labor.averageClosingPrice, closeTo(1.0, 0.0));
+      expect(labor.quantityTraded, closeTo(64.0, 2.5));
+    }
+    else {
+      expect(gas.averageClosingPrice, closeTo(20.0, 1.5));
+      expect(gas.quantityTraded, closeTo(5.0, 0.5));
+      expect(labor.averageClosingPrice, closeTo(1.0, 0.0));
+      expect(labor.quantityTraded, closeTo(100.0, 2.5));
+    }
   }
   if(gasCsvName!=null)
     writeCSV(gas.data.backingMap,gasCsvName);
   if(laborCsvName!=null)
     writeCSV(labor.data.backingMap,laborCsvName);
-
+  if(salesCSV != null)
+    //look at this long series of dot operations! Stay in school, kids!
+    writeCSV(scenario.firms.first.salesDepartments["gas"].data.backingMap,salesCSV);
+ if(hrCSV != null)
+    writeCSV(scenario.firms.first.purchasesDepartments["labor"].data.backingMap,hrCSV);
 
   return gas.data;
 }

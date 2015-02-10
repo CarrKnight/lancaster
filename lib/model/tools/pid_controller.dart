@@ -159,6 +159,8 @@ class StickyPID implements Controller
    */
   var _adjustToday = ()=>true;
 
+  bool adjustedLast = false;
+
   StickyPID(this.delegate,bool adjustmentChecker())
   {
     _adjustToday = adjustmentChecker;
@@ -204,7 +206,8 @@ class StickyPID implements Controller
   get manipulatedVariable=>delegate.manipulatedVariable;
 
   void adjust(double target, double controlledVariable) {
-    if (_adjustToday())
+    adjustedLast = _adjustToday();
+    if (adjustedLast)
       delegate.adjust(target, controlledVariable);
   }
 

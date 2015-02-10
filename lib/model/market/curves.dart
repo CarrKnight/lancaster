@@ -104,6 +104,8 @@ class FixedBudget implements ExogenousCurve
 
   double budget = 0.0;
 
+  double intercept = 0.0;
+
   double recordTrade(double quantity, double price) {
     budget -= quantity * price;
     quantityTraded+= quantity; //update counter
@@ -112,7 +114,7 @@ class FixedBudget implements ExogenousCurve
 
   double quantityAtThisPrice(double price) {
     if(price > 0)
-      return budget/price;
+      return max(budget/price + intercept,0);
     else
       return double.INFINITY;
   }
@@ -126,7 +128,7 @@ class FixedBudget implements ExogenousCurve
       budget += newBudget;
   }
 
-  FixedBudget(this.computeBudget);
+  FixedBudget(this.computeBudget,[this.intercept=0.0]);
 
 }
 

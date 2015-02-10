@@ -107,6 +107,15 @@ doubleHist<-function(filename)
 
   }
 
+countFailures<-function(filename)
+{
+  return( c(
+    sum(read.csv(file.path(rawdataFolder,filename))$marshallian == "null"),
+    sum(read.csv(file.path(rawdataFolder,filename))$keynesian == "null")
+    
+    ))
+  }
+
 doubleHist("convergeSpeed2.csv")
 
 ```
@@ -152,8 +161,173 @@ On the other hand the marshallian quota also has a PImultiplier (defaulted to 10
 plotMacro("nomultiplierM.csv",20,5,"Marshallian Macro without multiplier")
 ```
 
+####Experiment 4
+
+Find the parameters for which price equal labor
+$$
+p = L
+$$
+Solution is just:
+$$
+\frac{2 \sqrt{\frac{4b^2}{a^2}}}{a} = \frac{4b^2}{a^2}
+$$
+Which, if we assume $a=1$ leads to $b=1$ and then:
+>$$
+\begin{align*}
+ L &= 4 \\
+ p &= 4 \\
+ Y &= 1
+\end{align*}
+$$
+
+But something really strange happen with this setup, the PI multiplier for the Keynesian maximizer (which sets prices) is just too high so you end up with very wavy results:
+```{r , echo=FALSE,warning=FALSE}
+plotMacro("overshooting.csv",1,4,"Keynesian Macro")
+```
+I know that's a multiplier issue because when I lower it from 100 to 50 I get no issues. Unfortunately Marshallian multiplier at 50 means that the results are usually in time, failing tests.
+
+Interestingly, even though the multiplier is at 50, Keynesian is still faster:
+```{r , echo=FALSE,warning=FALSE}
+doubleHist("convergeSpeed3.csv")
+```
+
+####Experiment 5
+I brought the multiplier back to 100, but this time I focus on initial price
 
 
 ###Conclusion
 
-The difference in speed doesn't seem caused primarily by parameter differences. I would like to make sure it's not simply a result of prices having to go all the way to 20 while labor having to go to 100 (or is it quantity going to 5?)
+The difference in speed doesn't seem caused primarily by parameter differences. I would like to make sure it's not simply a result of prices having to go all the way to 20 while labor has to go to 100 (or is it quantity going to 5?).
+
+### Questions
+* Why PI multiplier for experiment 4 needed to be lowered for Keynesian but not Marshallian (which in fact doesn't overshoot at 100 in the same market?)
+* Why does it look like price in the Keynesian mode gets adjusted far more aggressively than labor in the Marshallian one besides being run by the same sticky maximizer?
+
+
+---------------------------------------
+
+#Convergence Speed between Marshallian and Keynesian, day 2
+
+### Date 
+
+2015-02-09
+
+###Background Information
+
+Like the previous day, I am investigating why Keynesian reaches equilibrium somewhat faster.
+
+###References
+
+###Purpose
+Identify why Keynesian reaches equilibrium faster than the rest
+
+
+###Hypothesis
+Something in the PID of the Keynesian pricing makes it faster than quantity adjustment in the Marshallian world (both use PID maximizers)
+
+###Experiment
+
+####Experiment 1
+So Marhsallian simulation uses buffer inventory while Keynesian seems to be using stockouts. I try then to run Marshall with stockout sales.  
+
+```{r, echo=FALSE,warning=FALSE}
+doubleHist("convergeSpeed4.csv")
+```  
+
+Not really any better.
+
+####Experiment 2
+Marshallian tries to equalize MB=MC by making the sigmoid of MB/MC equals to 1. The Keynesian moves price in the opposite direction. I did so previously by doing 1/sigmoid, let me just try to do -sigmoid.
+```{r, echo=FALSE,warning=FALSE}
+doubleHist("convergeSpeed5.csv")
+```  
+
+####Experiment 3
+keeping the new sigmoid, try to focus again on $b=-1$ (fixed cost of production). Interestingly now some of the keynesian results are correct, although the majority still screws up
+```{r, echo=FALSE,warning=FALSE}
+doubleHist("convergeSpeed6.csv")
+```  
+Still not good enough, also a 40% failure rate which is unacceptable
+
+####Experiment 4
+Figuring out why it fails so damn much with Keynesian. It seems that at some point it just reaches escape velocity.
+
+So there is a lot more outflow than inflow which pushes the labor PID to hire more workers
+```{r, echo=FALSE,warning=FALSE}
+ksales <- read.csv(file.path(rawdataFolder,"escapevelocity_sales.csv"))
+khr <- read.csv(file.path(rawdataFolder,"escapevelocity_hr.csv"))
+par(mfrow = c(2,1))
+plot(ksales$outflow+ksales$stockouts-ksales$inflow,main="outflow-inflow")
+plot(khr$quota,main="people hired")
+```  
+And since for these many workers $\text{MB} < \text{MC} $ you end up raising prices:
+```{r, echo=FALSE,warning=FALSE}
+par(mfrow = c(2,1))
+plot(ksales$maximizer_ratio,main="MB/MC")
+plot(khr$quota,main="people hired")
+```  
+
+plot(ksales$maximizer_ratio)
+#ksales<-head(ksales,n=1000)
+plot(ksales$maximizer_ratio)
+plot(ksales$maximizer_efficiency)
+
+plot(ksales$maximizer_benefits, main="PID computed marginal benefits against theoretical ones",ylab="MB")
+lines(ksales$offeredPrice/(2*sqrt(khr$inflow)),col="red")
+
+head(khr)
+plot(khr$inflow)
+plot(ksales$outflow-ksales$inflow)
+plot(ksales$stockouts)
+
+plot(tail(khr$quota,n=3000))
+plot(ksales$stockouts)
+
+
+
+
+###Code used
+
+
+###Results
+
+
+
+###Conclusion
+
+### Questions
+
+
+---------------------------------------
+
+#title
+
+### Date 
+
+###Background Information
+
+
+###References
+
+###Purpose
+
+
+
+###Hypothesis
+
+
+###Experiment
+
+
+
+
+###Code used
+
+
+###Results
+
+
+
+###Conclusion
+
+### Questions
