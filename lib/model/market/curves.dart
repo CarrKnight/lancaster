@@ -113,8 +113,12 @@ class FixedBudget implements ExogenousCurve
   }
 
   double quantityAtThisPrice(double price) {
+    assert(price is double);
+    assert(intercept is double);
+    assert(budget is double);
+
     if(price > 0)
-      return max(budget/price + intercept,0);
+      return max(budget/price + intercept,0.0);
     else
       return double.INFINITY;
   }

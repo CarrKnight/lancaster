@@ -3,7 +3,7 @@
  * This is open source on MIT license. Isn't this jolly?
  */
 
-library runs.yackm;
+library experiments.convergenceSpeed;
 
 import 'package:lancaster/model/lancaster_model.dart';
 import 'dart:math';
@@ -38,6 +38,10 @@ main()
 
   writeCSV(histogramKM.backingMap,"convergeSpeed7.csv");
 
+
+
+
+
 }
 
 
@@ -67,24 +71,26 @@ int extractApproximateDateOfEquilibrium(Data gasMarketData,
       earlierQDate = day;
     }
     //also check if it was good enough but it isn't anymore
-    else if(!qCloseEnough.matches(quantities[day],null))
+    else if(earlierQDate != null && !qCloseEnough.matches(quantities[day],null))
       earlierQDate = null;
 
 
     //same thing for price
     if(earlierPDate == null && pCloseEnough.matches(prices[day],null))
       earlierPDate = day;
-    else if(!pCloseEnough.matches(prices[day],null))
+    else if(earlierPDate != null && !pCloseEnough.matches(prices[day],null))
       earlierPDate = null;
 
   }
 
-  print("result p:${prices.last} and q:${quantities.last}");
-
   if(earlierQDate == null || earlierPDate== null)
     return null;
-  else
-    return max(earlierQDate,earlierPDate);
+
+  print("result p:${prices.last} and q:${quantities.last}, equality day: ${max(earlierQDate,earlierPDate)}");
+
+
+
+  return max(earlierQDate,earlierPDate);
 
 
 }

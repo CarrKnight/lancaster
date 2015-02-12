@@ -89,8 +89,8 @@ First I run the code without changing default, as of 2015-02-08. For Keynesian I
 
 cleanColumn<-function(column){
   
-  column[column="null"]<-NaN
-  column<-as.numeric(column)
+  column[column=="null"]<-NaN
+  column<-as.numeric(as.character(column))
   return(column)
 }
 
@@ -238,6 +238,8 @@ It is possible that keep hiring workers increase demand faster than it increases
 
 Does it help if I increase the speed of the price pid? It would seem that increasing price faster than labor would break the error.
 
+ 
+
 
 ###Conclusion
 
@@ -246,7 +248,7 @@ The difference in speed doesn't seem caused primarily by parameter differences. 
 ### Questions
 * Why PI multiplier for experiment 4 needed to be lowered for Keynesian but not Marshallian (which in fact doesn't overshoot at 100 in the same market?)
 * Why does it look like price in the Keynesian mode gets adjusted far more aggressively than labor in the Marshallian one besides being run by the same sticky maximizer?
-
+* Could it be that escape velocity is self-adjusting when dropping Q/L but not necessarilly so when increasing it?
 
 ---------------------------------------
 
@@ -290,6 +292,31 @@ And I know from tests after a shock the new equilibrium is reached (I also know 
 
 ####Experiment 1
 
+Run the simulation for 20,000 days, at 10,000 the demand drops. The result is interesting for Keynesian world, but Marshallian is too slow. Marshallian: 
+```{r,echo=FALSE,warning=FALSE}
+rawdataFolder<-
+  file.path("~","code","lancaster","docs","yackm","rawdata")
+#Marshallian
+marshall<-read.csv(file.path(rawdataFolder,"M_drop_gas.csv"))
+plot(marshall$quantity,type="l")
+abline(h = 5,lty=2,col="red")
+abline(h= 3, lty=2, col = "blue")
+```  
+Keynesian:  
+```{r,echo=FALSE,warning=FALSE}
+rawdataFolder<-
+  file.path("~","code","lancaster","docs","yackm","rawdata")
+#Marshallian
+keynesian<-read.csv(file.path(rawdataFolder,"K_drop_gas.csv"))
+plot(keynesian$quantity,type="l")
+abline(h = 5,lty=2,col="red")
+abline(h= 3, lty=2, col = "blue")
+```  
+There is a large undershooting which is nice because I was expecting it.  This doesn't prove that the undershooting is impossible in the Marshallian world
+
+
+
+
 ####Experiment 2
 I increase the Marshallian PI Multiplier to 1000, again this is mostly as a way to compare and contrast to similarly fast Keynesian. I get the following quantity:  
 ```{r,echo=FALSE,warning=FALSE}
@@ -301,13 +328,206 @@ plot(marshall$quantity,type="l")
 abline(h = 5,lty=2,col="red")
 abline(h= 3, lty=2, col = "blue")
 ```
-
-And the following price:  
+So there is no undershooting in quantity, and the overshooting at the beginning is really looks like a consequence of random initial price being so high:  
 ```{r,echo=FALSE,warning=FALSE}
 plot(marshall$price,type="l")
 abline(h = 20,lty=2,col="red")
 abline(h= 16, lty=2, col = "blue")
 ```
+
+Compare this with the Keynesian world where there is undershooting.
+
+####Experiment 3
+Keeping the Marshallian PI multiplier to 1000, here's what happens if the shock only lasts 5000 days.
+
+```{r,echo=FALSE,warning=FALSE}
+rawdataFolder<-
+  file.path("~","code","lancaster","docs","yackm","rawdata")
+#Marshallian
+marshall<-read.csv(file.path(rawdataFolder,"M_cycle_gas_1000.csv"))
+plot(marshall$quantity,type="l")
+abline(h = 5,lty=2,col="red")
+abline(h= 3, lty=2, col = "blue")
+```  
+
+No undershooting or overshooting in the Marshallian world.
+
+```{r,echo=FALSE,warning=FALSE}
+rawdataFolder<-
+  file.path("~","code","lancaster","docs","yackm","rawdata")
+#Marshallian
+keynesian<-read.csv(file.path(rawdataFolder,"K_cycle_gas.csv"))
+plot(keynesian$quantity,type="l")
+abline(h = 5,lty=2,col="red")
+abline(h= 3, lty=2, col = "blue")
+```  
+Plenty of overshooting in the Keynesian world though.
+
+
+
+###Code used
+
+
+###Results
+
+
+
+###Conclusion
+
+### Questions
+
+---------------------------------------
+
+# Convergence speed in a Micro-setting
+
+### Date
+2015-02-11
+
+###Background Information
+This follows from the previous convergence experiments in the macro-world. There seem to be too many moving parts there to really figure out what is the root cause of convergence speed. So I move to a simpler micro-example.
+
+###References
+
+check the experiment *Convergence Speed between Marshallian and Keynesian*
+
+###Purpose
+Simplify the scenario where Keynesian and Marshallian methods are employed to find the root cause of convergence speed divergence.
+
+
+###Hypothesis
+There is no difference in speed in the micro-world or if there is it is easily identifiable.
+
+###Experiment
+Does the difference in speed exist in the micro-econ world? To do I just replicate the linear demand-linear supply model that has a nice equilibrium:
+>$$
+\begin{align*}
+ L &= 50 \\
+ p &= 50 \\
+ Y &= 50
+\end{align*}
+$$
+Like the micro-tests but with an infinitely elastic labor supply at $w=50$. The convergence speed should be exactly the same:
+
+```{r, echo=FALSE,warning=FALSE}
+doubleHist("micro_converge_speed.csv")
+```  
+
+And weirdly the opposite happens: Marshallian convergence speed is a lot faster!
+
+Now if I plot 
+
+```{r, echo=FALSE,warning=FALSE}
+ksales <- head(read.csv(file.path(rawdataFolder,"K_micro_sales.csv")),n=2000)
+khr <- head(read.csv(file.path(rawdataFolder,"K_micro_hr.csv")),n=2000)
+msales <- head(read.csv(file.path(rawdataFolder,"M_micro_sales.csv")),n=2000)
+mhr <- head(read.csv(file.path(rawdataFolder,"M_micro_hr.csv")),n=2000)
+par(mfrow = c(3,2))
+plot(ksales$outflow+ksales$stockouts-ksales$inflow,main="Keynesian outflow-inflow",type="l")
+plot(msales$outflow+msales$stockouts-msales$inflow,main="Marshallian outflow-inflow",type="l")
+plot(khr$quota,main="Keynesian L",type="l")
+plot(mhr$quota,main="Marshallian L",type="l")
+plot(ksales$offeredPrice,main="Keynesian P",type="l")
+plot(msales$offeredPrice,main="Marshallian P",type="l")
+par(mfrow = c(1,1))
+```  
+
+Marshallian L and Keynesian P should be run by the same kind of PI controller with the same parameters, but it looks like the Marshallian L adapts a bit faster in this case than the Keynesian P. (notice also the difference in starting point which should give advantage to the Keynesian).
+
+If I look at the PI maximizers themselves:  
+
+```{r, echo=FALSE,warning=FALSE}
+par(mfrow = c(2,1))
+#flip the keynesian efficiency since it goes in reverse
+plot(-ksales$maximizer_efficiency,type="l", main="Keynesian PI input",ylim=c(-1,1))
+abline(h=0.5,col="red",lty=2)
+plot(mhr$maximizer_efficiency,type="l", main="Marshallian PI input",ylim=c(0,1))
+abline(h=0.5,col="red",lty=2)
+```
+
+So it seems like the Marshallian PI is faster simply because we put larger inputs in it. Is it because of Keynesian starting P is usually closer to equilibrium than Marshallian starting L which is always 1? To study this I try again 1000 runs by making Marshallian L also randomly distributed. The result?
+
+```{r, echo=FALSE,warning=FALSE}
+doubleHist("micro_converge_speed2.csv")
+```  
+
+Mega-sucess! The success remain if I also randomize the initial L of the Keynesian PI (which adapts fast):
+
+```{r, echo=FALSE,warning=FALSE}
+doubleHist("micro_converge_speed3.csv")
+```
+
+
+
+
+###Code used
+
+The main code is ```2015-02-11_microspeed.dartre```
+
+###Results
+
+* The convergence speed difference can be attributed entirely to initial conditions rather than PI parameters (at least in micro)
+* Starting closer to equilibrium doesn't mean you will achieve it quickly. Quite the opposite in this example.
+
+###Conclusion
+
+### Questions
+* Can I generalize this back to macro?
+
+
+---------------------------------------
+
+#Convergence Speed after a drop
+
+### Date 
+
+2015-02-11
+
+###Background Information
+
+I know that initial prices/targets matter when it comes to convergence speed in micro so I assume they matter in macro as well. Let's try!
+
+###References
+
+###Purpose
+
+The best way to make sure Marshallian and Keynesian agents start the same is to make them go to an equilibrium then shock the demand and see how much it takes to go to a new equilibrium.
+
+
+###Hypothesis
+
+Either there is no difference in speed or if there is it must be irreducibile (that is it is inherent in the way they adjust rather than differences in parameters)
+
+###Experiment
+
+Make the production equation look like this:  
+$$
+Y = 0.5 \sqrt L - 1
+$$
+
+This gives rises to the following macro equilibrium 
+>$$
+\begin{align*}
+ L &= 16 \\
+ p &= 16 \\
+ Y &= 1
+\end{align*}
+$$
+
+Then I lower the demand by 0.2 when shocked and I get:
+\begin{align*}
+ L &= 10.24 \\
+ p &= 12.8 \\
+ Y &= 0.6
+\end{align*}
+$$
+
+```{r, echo=FALSE,warning=FALSE}
+doubleHist("shock_converge_speed.csv")
+```
+
+Sample runs look like this:
+
+(notice that the speed difference is very different from previous experiments because $l$ and $p$ are closer)
 
 
 ###Code used

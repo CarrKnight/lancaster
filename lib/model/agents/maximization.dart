@@ -275,7 +275,7 @@ class PIDMaximizer implements Extractor
     lastCosts = marginalCosts(buyer, production,input,delta);
 
 
-    print("last cost $lastCosts, ratio ${lastBenefits/lastCosts}");
+//    print("last cost $lastCosts, ratio ${lastBenefits/lastCosts}");
 
     if(lastCosts==0 || !lastCosts.isFinite || !lastBenefits.isFinite || !ratioTransformer
     (lastBenefits/lastCosts).isFinite )
@@ -283,8 +283,8 @@ class PIDMaximizer implements Extractor
 
 
     lastEfficiency = ratioTransformer(lastBenefits/lastCosts);
-    print("last efficiency $lastEfficiency");
-    print("---------------------------------------------");
+//    print("last efficiency $lastEfficiency");
+ //   print("---------------------------------------------");
 
     pid.adjust(lastEfficiency,ratioTransformer(1.0));
     lastActivated = pid.adjustedLast;
@@ -415,9 +415,9 @@ double marginalBenefits(Trader seller, SISOProductionFunction production,
   double benefits = increaseBenefit - decreaseBenefit ;
   benefits /= 2.0;
 
-  print("benefit $benefits increase benefit: $increaseBenefit decrease benefit: $decreaseBenefit");
-  print("increasing Production ${production.production(input + delta)}, decreasing production ${production.production(input - delta)}");
-  print("input $input and price ${seller.predictPrice(delta)}");
+ // print("benefit $benefits increase benefit: $increaseBenefit decrease benefit: $decreaseBenefit");
+//  print("increasing Production ${production.production(input + delta)}, decreasing production ${production.production(input - delta)}");
+//  print("input $input and price ${seller.predictPrice(delta)}");
 
   return benefits;
 }

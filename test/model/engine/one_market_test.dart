@@ -79,6 +79,20 @@ main()
 {
 
   for(int i=0; i<5;i++) {
+    test("Marshallian Micro, ",
+             ()=>fixedWageMicro(false,totalSteps:3000));
+
+  }
+
+  for(int i=0; i<5;i++) {
+    test("Keynesian Micro, ",
+             ()=>fixedWageMicro(true,totalSteps:3000));
+
+  }
+
+
+
+  for(int i=0; i<5;i++) {
     test("Marshallian Macro, ",
         ()=>fixedWageMacro(false));
 
@@ -102,13 +116,13 @@ main()
 
   }
   for(int i=0; i<5;i++) {
-    test("Recover from shock ",
+    test("Marshallian Recover from shock ",
              ()=>fixedWageMacro(false,totalSteps:20000,shockday:10000,endshockday:15000,shockSize:-1.0));
 
   }
 
   for(int i=0; i<5;i++) {
-    test("Keynesian Macro with shock ",
+    test("Keynesian Recover with shock ",
              ()=>fixedWageMacro(true,totalSteps:20000,shockday:10000,endshockday:15000,shockSize:-1.0));
 
   }

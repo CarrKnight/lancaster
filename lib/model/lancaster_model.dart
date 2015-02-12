@@ -22,6 +22,7 @@ import 'dart:async';
 
 part 'engine/schedule.dart';
 part 'engine/model.dart';
+part 'engine/onemarket_scenario.dart';
 
 /***
  *      __    ___  ____  __ _  ____  ____
