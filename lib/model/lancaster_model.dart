@@ -8,6 +8,7 @@ library lancaster.model;
 import 'dart:collection';
 import 'dart:math';
 import 'dart:async';
+import 'package:json_object/json_object.dart';
 
 
 
@@ -23,6 +24,8 @@ import 'dart:async';
 part 'engine/schedule.dart';
 part 'engine/model.dart';
 part 'engine/onemarket_scenario.dart';
+part 'engine/parameter_database.dart';
+part 'engine/number_generator.dart';
 
 /***
  *      __    ___  ____  __ _  ____  ____

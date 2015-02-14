@@ -8,6 +8,7 @@ dependencies:
   browser: any
   charted: any
   paper_elements: any
+  json_object: any
 dev_dependencies:
   mockito:
     git: https://github.com/fibulwinter/dart-mockito.git

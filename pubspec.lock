@@ -8,18 +8,18 @@ packages:
   angular:
     description:
       ref: null
-      resolved-ref: "3827f4240366e161534a6a693cb822f5caa447b2"
+      resolved-ref: f9406a4a08671307d051172953e164f1c6cd52ac
       url: "https://github.com/angular/angular.dart.git"
     source: git
-    version: "1.0.0"
+    version: "1.1.0"
   args:
     description: args
     source: hosted
-    version: "0.12.2+2"
+    version: "0.12.2+4"
   barback:
     description: barback
     source: hosted
-    version: "0.15.2+2"
+    version: "0.15.2+4"
   browser:
     description: browser
     source: hosted
@@ -27,11 +27,15 @@ packages:
   charted:
     description: charted
     source: hosted
-    version: "0.0.8"
+    version: "0.0.9"
+  cli_util:
+    description: cli_util
+    source: hosted
+    version: "0.0.1+1"
   code_transformers:
     description: code_transformers
     source: hosted
-    version: "0.2.3+2"
+    version: "0.2.5"
   collection:
     description: collection
     source: hosted
@@ -39,11 +43,11 @@ packages:
   core_elements:
     description: core_elements
     source: hosted
-    version: "0.6.0+3"
+    version: "0.6.0+4"
   csslib:
     description: csslib
     source: hosted
-    version: "0.11.0+2"
+    version: "0.11.0+4"
   custom_element_apigen:
     description: custom_element_apigen
     source: hosted
@@ -56,10 +60,18 @@ packages:
     description: html5lib
     source: hosted
     version: "0.12.0"
+  initialize:
+    description: initialize
+    source: hosted
+    version: "0.2.0"
   intl:
     description: intl
     source: hosted
     version: "0.11.12"
+  json_object:
+    description: json_object
+    source: hosted
+    version: "1.0.18+2"
   logging:
     description: logging
     source: hosted
@@ -67,26 +79,26 @@ packages:
   matcher:
     description: matcher
     source: hosted
-    version: "0.11.4"
+    version: "0.11.4+1"
   mockito:
     description:
       ref: null
-      resolved-ref: bf672ea7a23e4262e940798e8d36b2c48ee01461
+      resolved-ref: "64a81acfa76947638f105a862b905d3073616ee9"
       url: "https://github.com/fibulwinter/dart-mockito.git"
     source: git
-    version: "0.8.1"
+    version: "0.8.2"
   observe:
     description: observe
     source: hosted
-    version: "0.12.2"
+    version: "0.12.2+1"
   paper_elements:
     description: paper_elements
     source: hosted
-    version: "0.6.0+4"
+    version: "0.6.1"
   path:
     description: path
     source: hosted
-    version: "1.3.1"
+    version: "1.3.2"
   perf_api:
     description: perf_api
     source: hosted
@@ -94,11 +106,11 @@ packages:
   petitparser:
     description: petitparser
     source: hosted
-    version: "1.3.3"
+    version: "1.3.6"
   polymer:
     description: polymer
     source: hosted
-    version: "0.15.5"
+    version: "0.15.5+1"
   polymer_expressions:
     description: polymer_expressions
     source: hosted
@@ -110,11 +122,11 @@ packages:
   quiver:
     description: quiver
     source: hosted
-    version: "0.18.2"
+    version: "0.20.0"
   route_hierarchical:
     description: route_hierarchical
     source: hosted
-    version: "0.6.1"
+    version: "0.6.1+1"
   smoke:
     description: smoke
     source: hosted
@@ -122,15 +134,15 @@ packages:
   source_maps:
     description: source_maps
     source: hosted
-    version: "0.9.4"
+    version: "0.10.0+1"
   source_span:
     description: source_span
     source: hosted
-    version: "1.0.2"
+    version: "1.0.3"
   stack_trace:
     description: stack_trace
     source: hosted
-    version: "1.1.1"
+    version: "1.1.3"
   string_scanner:
     description: string_scanner
     source: hosted
@@ -142,19 +154,27 @@ packages:
   unittest:
     description: unittest
     source: hosted
-    version: "0.11.5"
+    version: "0.11.5+3"
   utf:
     description: utf
     source: hosted
-    version: "0.9.0+1"
+    version: "0.9.0+2"
   watcher:
     description: watcher
     source: hosted
-    version: "0.9.3"
+    version: "0.9.4"
   web_components:
     description: web_components
     source: hosted
-    version: "0.10.0"
+    version: "0.10.1"
+  when:
+    description: when
+    source: hosted
+    version: "0.2.0"
+  which:
+    description: which
+    source: hosted
+    version: "0.1.3"
   yaml:
     description: yaml
     source: hosted
