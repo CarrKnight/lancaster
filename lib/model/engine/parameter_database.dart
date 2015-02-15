@@ -37,7 +37,7 @@ class ParameterDatabase
       seed = seedParameter;
     random = new Random(seed.toInt());
 
-   //add default generators
+    //add default generators
     _generators["normal"] = DEFAULT_NORMAL;
     _generators["uniform"] = DEFAULT_UNIFORM;
     _generators["empirical"] = DEFAULT_EMPIRICAL;
@@ -69,16 +69,14 @@ class ParameterDatabase
 
   }
 
-  Object _lookup(String fieldName, String bestPath, String fallbackPath)
+  Object _lookup(String bestPath, String fallbackPath)
   {
     //todo log
 
-    String address = bestPath.isEmpty ?  fieldName : "$bestPath.$fieldName";
-    Object parameter =_getFieldAtPath(address);
+    Object parameter =_getFieldAtPath(bestPath);
     if(parameter == null && fallbackPath != null)
     {
-      address = "$fallbackPath.$fieldName";
-      parameter =_getFieldAtPath(address);
+      parameter =_getFieldAtPath(fallbackPath);
     }
     return parameter;
   }
@@ -88,16 +86,16 @@ class ParameterDatabase
    * strategy1.strategy2.parameter  <br>
    * and if you don't find it then look in:  <br>
    * strategy3.parameter  <br>
-   * then [fieldname] would be "parameter", [bestPath] would be "strategy1.strategy2" and [fallbackPath] would be "strategy3"
+   *[bestPath] would be "strategy1.strategy2.parameter" and [fallbackPath] would be "strategy3".parameter
    * Throws an exception if it's not in either. Throws also an exception if the parameter is not a string but rather a map
    */
-  String getAsString(String fieldName, String bestPath, [String fallbackPath=null])
+  String getAsString(String bestPath, [String fallbackPath=null])
   {
 
-    Object parameter =  _lookup(fieldName,bestPath,fallbackPath);
+    Object parameter =  _lookup(bestPath,fallbackPath);
 
     if(parameter ==null)
-      throw new Exception("Couldn't find the field neither as $bestPath.$fieldName nor $fallbackPath.$fieldName");
+      throw new Exception("Couldn't find the field neither as $bestPath nor $fallbackPath");
 
     if(parameter is JsonObject)
       throw new Exception("The parameter is a map, not a string! ${parameter.toString()}");
@@ -139,19 +137,21 @@ class ParameterDatabase
    * strategy1.strategy2.parameter  <br>
    * and if you don't find it then look in:  <br>
    * strategy3.parameter  <br>
-   * then [fieldname] would be "parameter", [bestPath] would be "strategy1.strategy2" and [fallbackPath] would be "strategy3"
+   * then [bestPath] would be "strategy1.strategy2.parameter" and [fallbackPath] would be "strategy3.parameter"
    * Throws an exception if it's not in either. Throws also an exception if the parameter is not a string but rather a map
    */
-  num getAsNumber(String fieldName, String bestPath, [String fallbackPath=null])
+  num getAsNumber(String bestPath, [String fallbackPath=null])
   {
 
-    Object parameter =  _lookup(fieldName,bestPath,fallbackPath);
+    Object parameter =  _lookup(bestPath,fallbackPath);
 
     if(parameter ==null)
-      throw new Exception("Couldn't find the field neither as $bestPath.$fieldName nor $fallbackPath.$fieldName");
+      throw new Exception("Couldn't find the field neither as $bestPath nor $fallbackPath");
 
     if(parameter is JsonObject)
       return _generateNumber(parameter);
+
+
 
     if(parameter is String)
       return num.parse(parameter);
@@ -160,6 +160,57 @@ class ParameterDatabase
 
 
   }
+
+
+  //todo when dart implements generic methods make this into one
+  /**
+   * use reflect to create an instance of the class with constructor [constructorName] having 2 parameters:
+   * ParameterDataBase and String optionalArgument (usually a sub-path).
+   */
+  Object _instantiate(String className, String libraryName, String constructorName, String optionalArgument )
+  {
+
+    MirrorSystem mirrors = currentMirrorSystem();
+    LibraryMirror lm = mirrors.libraries.values.firstWhere(
+            (LibraryMirror lm) => lm.qualifiedName == new Symbol(libraryName));
+
+    ClassMirror cm = lm.declarations[new Symbol(className)];
+
+    InstanceMirror im = cm.newInstance(new Symbol(constructorName), [this,optionalArgument]);
+
+    return im.reflectee;
+
+  }
+  //todo when dart implements generic methods make this into one
+
+  /**
+   * turns the field into an instance. It looks for 3 fields, "class","library" and "constructor". The last is optional
+   * and is the name of the constructor to use (if none, use the default one), library and class are needed to know what
+   * class this object actually is. It searches for each field separately first in the best path then in the fallback one <br>
+   * Notice that the constructor must be with parameters (ParameterDatabase,String), at least for now!
+   */
+  Object getAsInstance(String bestPath, [String fallbackPath=null])
+  {
+
+    String className = getAsString("$bestPath.class","$fallbackPath.class");
+    String libraryName = getAsString("$bestPath.library","$fallbackPath.library");
+    String constructorName = getAsString("$bestPath.constructor","$fallbackPath.constructor");
+    if(constructorName == null)
+      constructorName = ""; //default constructor if no constructor name is provided
+
+    assert(className != null);
+    assert(libraryName != null);
+
+    //instantiate it then, passing as optional parameter the address of the class.
+    return _instantiate(className,libraryName,constructorName,bestPath);
+
+
+
+  }
+
+
+
+
 
 
   /**

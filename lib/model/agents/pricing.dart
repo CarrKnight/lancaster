@@ -91,6 +91,8 @@ class PIDAdaptive implements ControlStrategy
    */
   String columnName;
 
+
+  static const  String DB_ADDRESS= "default.strategy.PIDAdaptive";
   /**
    * constructor
    */
@@ -103,6 +105,19 @@ class PIDAdaptive implements ControlStrategy
     pid.offset = offset;
   }
 
+  PIDAdaptive.fromDB(Extractor targetExtractor, Extractor cvExtractor,
+                     ParameterDatabase db, String containerPath):
+  this(targetExtractor,cvExtractor,
+       p:db.getAsNumber("$containerPath.p","$DB_ADDRESS.p"),
+       i:db.getAsNumber("$containerPath.i","$DB_ADDRESS.i"),
+       d:db.getAsNumber("$containerPath.d","$DB_ADDRESS.d"),
+       offset:db.getAsNumber("$containerPath.offset","$DB_ADDRESS.offset"),
+       columnName:db.getAsString("$containerPath.columnName","$DB_ADDRESS.columnName")
+       );
+
+
+  static final Extractor DEFAULT_SELLER_TARGET_EXTRACTOR =  new SimpleExtractor("inflow",(x)=>-x);
+  static final Extractor DEFAULT_SELLER_CV_EXTRACTOR =  new SimpleExtractor("outflow",(x)=>-x);
 
   PIDAdaptive.DefaultSeller({double initialPrice: 0.0,
                             double p:
@@ -114,10 +129,17 @@ class PIDAdaptive implements ControlStrategy
                             String columnName: "pricer"
                             }) : //target: -inflows,
   // controlled variable = -outflow the minuses to adapt the right way
-  this(new SimpleExtractor("inflow",(x)=>-x),
-       new SimpleExtractor("outflow",(x)=>-x),
+  this(DEFAULT_SELLER_TARGET_EXTRACTOR,
+       DEFAULT_SELLER_CV_EXTRACTOR,
        offset:initialPrice, p:p,i:i,d:d,columnName:columnName);
 
+  PIDAdaptive.DefaultSellerFromDB(ParameterDatabase db, String containerPath):
+  this.fromDB(DEFAULT_SELLER_TARGET_EXTRACTOR,
+              DEFAULT_SELLER_CV_EXTRACTOR,
+              db,containerPath);
+
+  static final Extractor STOCKOUT_SELLER_TARGET_EXTRACTOR =  new SimpleExtractor("inflow",(x)=>-x);
+  static final Extractor STOCKOUT_SELLER_CV_EXTRACTOR =  new SumOfSimpleExtractors(["outflow","stockouts"],(x)=>-x);
 
   /**
    * pid seller that counts stockouts
@@ -132,9 +154,20 @@ class PIDAdaptive implements ControlStrategy
                              String columnName: "pricer"
                              }) : //target: -inflows,
   // controlled variable = -outflow - stockouts
-  this(new SimpleExtractor("inflow",(x)=>-x),
-       new SumOfSimpleExtractors(["outflow","stockouts"],(x)=>-x),
+  this(STOCKOUT_SELLER_TARGET_EXTRACTOR,
+       STOCKOUT_SELLER_CV_EXTRACTOR,
        offset:initialPrice, p:p,i:i,d:d,columnName:columnName);
+
+
+  PIDAdaptive.StockoutSellerFromDB(ParameterDatabase db, String containerPath):
+  this.fromDB(STOCKOUT_SELLER_TARGET_EXTRACTOR,
+              STOCKOUT_SELLER_CV_EXTRACTOR,
+              db,containerPath);
+
+
+
+  static final Extractor STOCKOUT_BUYER_TARGET_EXTRACTOR =  new SimpleExtractor("outflow",(x)=>x);
+  static final Extractor STOCKOUT_BUYER_CV_EXTRACTOR =  new SumOfSimpleExtractors(["inflow","stockouts"],(x)=>x);
 
   /**
    * pid buyer that counts stockouts
@@ -149,9 +182,19 @@ class PIDAdaptive implements ControlStrategy
                             String columnName: "pricer"
                             }) : //target: -outflow,
   // controlled variable = -(inflow+stockouts)
-  this(new SimpleExtractor("outflow",(x)=>x),
-       new SumOfSimpleExtractors(["inflow","stockouts"],(x)=>x),
+  this(STOCKOUT_BUYER_TARGET_EXTRACTOR,
+       STOCKOUT_BUYER_CV_EXTRACTOR,
        offset:initialPrice, p:p,i:i,d:d,columnName:columnName);
+
+  PIDAdaptive.StockoutBuyerFromDB(ParameterDatabase db, String containerPath)
+  :
+  this.fromDB(STOCKOUT_BUYER_TARGET_EXTRACTOR,STOCKOUT_BUYER_CV_EXTRACTOR,db,containerPath);
+
+
+
+  static final Extractor STOCKOUT_QUOTA_BUYER_TARGET_EXTRACTOR =  new SimpleExtractor("quota",(x)=>x);
+  static final Extractor STOCKOUT_QUOTA_BUYER_CV_EXTRACTOR = new SumOfSimpleExtractors(["inflow","stockouts"],(x)=>x);
+
 
   /**
    * pid buyer that counts stockouts and targets quota rather than outflows
@@ -166,9 +209,15 @@ class PIDAdaptive implements ControlStrategy
                                  String columnName: "pricer"
                                  }) : //target: -outflow,
   // controlled variable = -(inflow+stockouts)
-  this(new SimpleExtractor("quota",(x)=>x),
-       new SumOfSimpleExtractors(["inflow","stockouts"],(x)=>x),
+  this(STOCKOUT_QUOTA_BUYER_TARGET_EXTRACTOR,
+       STOCKOUT_QUOTA_BUYER_CV_EXTRACTOR,
        offset:initialPrice, p:p,i:i,d:d,columnName:columnName);
+
+
+  PIDAdaptive.StockoutQuotaBuyerFromDB(ParameterDatabase db, String containerPath):
+  this.fromDB(STOCKOUT_QUOTA_BUYER_TARGET_EXTRACTOR,
+              STOCKOUT_QUOTA_BUYER_CV_EXTRACTOR,
+              db,containerPath);
 
   PIDAdaptive.FixedInflowBuyer({double flowTarget:1.0, double initialPrice: 0.0,
                                double p:
@@ -183,6 +232,12 @@ class PIDAdaptive implements ControlStrategy
        new SimpleExtractor("inflow"),
        offset:initialPrice, p:p,i:i,d:d,columnName:columnName);
 
+  PIDAdaptive.FixedInflowBuyerFromDB(ParameterDatabase db, String containerPath)
+  :
+  this.fromDB(new FixedExtractor(db.getAsNumber("$containerPath.flowTarget","$DB_ADDRESS.flowTarget")),
+              new SimpleExtractor("inflow"),db,containerPath);
+
+  //todo create DB version after the maximizer
   PIDAdaptive.MaximizerBuyer(SISOPlant plant, Firm firm, Random r,
                              {double initialPrice: 0.0,
                              double p:
@@ -197,7 +252,7 @@ class PIDAdaptive implements ControlStrategy
        new SimpleExtractor("inflow"),
        offset:initialPrice, p:p,i:i,d:d,columnName: columnName);
 
-
+  //todo create DB version after the maximizer
   PIDAdaptive.PIDMaximizerBuyer(SISOPlant plant, Firm firm, Random r,
                                 {double initialPrice: 0.0,
                                 double p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
@@ -226,6 +281,12 @@ class PIDAdaptive implements ControlStrategy
   this(new FixedExtractor(inventoryTarget),
        new SimpleExtractor("inventory"),
        offset:initialPrice, p:p,i:i,d:d,columnName:columnName);
+
+  PIDAdaptive.FixedInventoryBuyerFromDB(ParameterDatabase db, String containerPath)
+  :
+  this.fromDB(new FixedExtractor(db.getAsNumber("$containerPath.inventoryTarget","$DB_ADDRESS.inventoryTarget")),
+              new SimpleExtractor("inventory"),db,containerPath);
+
 
 
   double get value => pid.manipulatedVariable;
@@ -268,6 +329,8 @@ class PIDAdaptive implements ControlStrategy
  */
 class BufferInventoryAdaptive implements ControlStrategy
 {
+
+  static const  String DB_ADDRESS= "default.strategy.BufferInventoryAdaptive";
 
 
   /**
@@ -317,6 +380,8 @@ class BufferInventoryAdaptive implements ControlStrategy
   }
 
 
+
+
   BufferInventoryAdaptive.simpleSeller({double initialPrice:100.0,
                                        double optimalInventory:100.0,
                                        double criticalInventory:10.0,
@@ -333,6 +398,8 @@ class BufferInventoryAdaptive implements ControlStrategy
                                     columnName:columnName),
       optimalInventory:optimalInventory,
       criticalInventory:criticalInventory);
+
+
 
 
   void _updateStockingFlag(Data data)
@@ -370,7 +437,7 @@ class BufferInventoryAdaptive implements ControlStrategy
 
     if(delegate._columnToSet)
       data.addColumn("${delegate.columnName}_stockingup",
-                           ()=>this._stockingUp ? 1.0 : 0.0);
+                         ()=>this._stockingUp ? 1.0 : 0.0);
 
     delegate.adapt(t,data);
   }
