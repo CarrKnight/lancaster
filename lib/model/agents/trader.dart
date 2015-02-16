@@ -347,7 +347,7 @@ class ZeroKnowledgeTrader implements Trader
 
     ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader(market,
     new BufferInventoryAdaptive.simpleSeller(optimalInventory:optimalInventory,
-    criticalInventory:criticalInventory,initialPrice:initialPrice,p:p,d:d,i:i),
+    criticalInventory:criticalInventory,offset:initialPrice,p:p,d:d,i:i),
    new AllOwned(),
     new SimpleSellerTrading(), inventory);
 

@@ -29,8 +29,7 @@ main(){
   test("horizontal slope kalman",(){
 
     KalmanPricePredictor learner = new KalmanPricePredictor("testX",
-    burnoutRate:50,initialSlope:1.0,yColumnName:"testY",forgettingRate:
-    .99);
+                                                            50,1.0,"testY",.99,10.0);
 
     int day=0;
     List<double> x = new List();
@@ -72,8 +71,7 @@ main(){
   test("embedded y=2*x",(){
 
     KalmanPricePredictor learner = new KalmanPricePredictor("testX",
-    burnoutRate:50,initialSlope:1.0,yColumnName:"testY",forgettingRate:
-    .99);
+    50,1.0,"testY",.99,10.0);
 
     //create fake trader
     Trader t = new DummyTrader();
@@ -125,8 +123,8 @@ main(){
 
 
     //fake learners
-    KalmanPricePredictor hrLearner = new KalmanPricePredictor("inflow");
-    KalmanPricePredictor salesLearner = new KalmanPricePredictor("outflow");
+    KalmanPricePredictor hrLearner = new KalmanPricePredictor("inflow",100,0.0,"offeredPrice",.99,10.0);
+    KalmanPricePredictor salesLearner = new KalmanPricePredictor("outflow",100,0.0,"offeredPrice",.99,10.0);
 
     model.scenario = scenario;
     model.start();

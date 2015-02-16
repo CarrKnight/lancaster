@@ -72,32 +72,53 @@ class MarginalMaximizer implements Extractor
 {
 
 
+  static const String DB_ADDRESS = "default.strategy.MarginalMaximizer";
 
-  double currentTarget=1.0;
+  double currentTarget;
 
-  double delta = 1.0;
+  double delta;
 
 
   double updateProbability = 1.0/21.0; //a poor man's way of stepping every
   // now and then. This has average 20 (negative binomial)
 
 
-  MarginalMaximizer();
+  MarginalMaximizer(this.currentTarget, this.delta, this.updateProbability);
+
+  MarginalMaximizer.FromDB(ParameterDatabase db, String containerPath)
+  :
+  this(db.getAsNumber("$containerPath.currentTarget","$DB_ADDRESS.currentTarget"),
+       db.getAsNumber("$containerPath.delta","$DB_ADDRESS.delta"),
+       db.getAsNumber("$containerPath.updateProbability","$DB_ADDRESS.updateProbability")
+       );
 
 
   /**
    * build a marginal maximizer and set it to start when the firm starts.
    */
   factory MarginalMaximizer.forHumanResources(SISOPlant plant, Firm firm,
-                                              Random r)
+                                              Random r,double currentTarget,
+                                              double delta, double updateProbability)
   {
-
-    MarginalMaximizer toReturn = new MarginalMaximizer();
+    MarginalMaximizer toReturn = new MarginalMaximizer(currentTarget,delta,updateProbability);
     firm.startWhenPossible((f,s)=> toReturn.start(s,f,r,plant));
     return toReturn;
 
   }
 
+
+  /**
+   * notice how a DB-compatible constructor doesn't exist. This is because the order of construction
+   * requires firm and plant to exist beforehand
+   */
+  factory MarginalMaximizer.forHumanResourcesFromDB(SISOPlant plant, Firm firm,
+                                                    ParameterDatabase db, String containerPath)
+  {
+    MarginalMaximizer toReturn = new MarginalMaximizer.FromDB(db,containerPath);
+    firm.startWhenPossible((f,s)=> toReturn.start(s,f,db.random,plant));
+    return toReturn;
+
+  }
   /**
    * Basically try to find the new target
    */
@@ -196,6 +217,8 @@ class MarginalMaximizer implements Extractor
 class PIDMaximizer implements Extractor
 {
 
+  static const String DB_ADDRESS = "default.strategy.PIDMaximizer";
+
   final StickyPID pid;
 
   double currentTarget=1.0;
@@ -219,12 +242,23 @@ class PIDMaximizer implements Extractor
 
 
   factory PIDMaximizer.ForHumanResources(SISOPlant plant, Firm firm,
-                                         Random r,[int averagePIDPeriod = 20, double
-      PImultiplier = 100.0])
+                                         Random r,int averagePIDPeriod, double
+      PImultiplier,double sigmoidCenter)
   {
 
     PIDMaximizer toReturn = new PIDMaximizer(r,averagePIDPeriod,
-                                             PImultiplier);
+                                             PImultiplier,sigmoidCenter);
+    if(firm!=null)
+      firm.startWhenPossible((f,s)=> toReturn.start(s,f,plant));
+    return toReturn;
+
+  }
+
+  factory PIDMaximizer.ForHumanResourcesFromDB(SISOPlant plant, Firm firm,
+                                               ParameterDatabase db, String container)
+  {
+
+    PIDMaximizer toReturn = new PIDMaximizer.FromDB(db,container);
     if(firm!=null)
       firm.startWhenPossible((f,s)=> toReturn.start(s,f,plant));
     return toReturn;
@@ -232,16 +266,24 @@ class PIDMaximizer implements Extractor
   }
 
 
-  PIDMaximizer(Random random,[int averagePIDPeriod = 20, double
-  PImultiplier = 100.0]):
+
+  PIDMaximizer(Random random,int averagePIDPeriod, double PIMultiplier, double sigmoidCenter):
   pid = new StickyPID.Random(new PIDController.standardPI(),random,
                              averagePIDPeriod)
   {
+    ratioTransformer = (x)=>sigmoid(x,sigmoidCenter);
     pid.offset=currentTarget;
-    (pid.delegate as PIDController).proportionalParameter *=PImultiplier;
-    (pid.delegate as PIDController).integrativeParameter *=PImultiplier;
+    (pid.delegate as PIDController).proportionalParameter *=PIMultiplier;
+    (pid.delegate as PIDController).integrativeParameter *=PIMultiplier;
   }
 
+  PIDMaximizer.FromDB(ParameterDatabase db, String container)
+  :
+  this(db.random,
+       db.getAsNumber("$container.averagePIDPeriod","$DB_ADDRESS.averagePIDPeriod"),
+       db.getAsNumber("$container.PIMultiplier","$DB_ADDRESS.PIMultiplier"),
+       db.getAsNumber("$container.sigmoidCenter","$DB_ADDRESS.sigmoidCenter")
+       );
 
 
 
@@ -284,7 +326,7 @@ class PIDMaximizer implements Extractor
 
     lastEfficiency = ratioTransformer(lastBenefits/lastCosts);
 //    print("last efficiency $lastEfficiency");
- //   print("---------------------------------------------");
+    //   print("---------------------------------------------");
 
     pid.adjust(lastEfficiency,ratioTransformer(1.0));
     lastActivated = pid.adjustedLast;
@@ -310,7 +352,7 @@ class PIDMaximizer implements Extractor
 /**
  * this is a facade/adapter of the PIDMaximizer, but instead of being an
  * extractor it really is a pricing strategy. This is handy for the Keynesian
- * short run model
+ * short run model.
  */
 class PIDMaximizerFacade implements AdaptiveStrategy
 {
@@ -342,26 +384,47 @@ class PIDMaximizerFacade implements AdaptiveStrategy
 
 
 
+  static const String  DB_ADDRESS = "default.strategy.PIDMaximizerFacade";
 
 
   PIDMaximizerFacade(this.delegate,this.firm,this.plant,
-                     [double initialPrice=1.0])
+                     double initialPrice)
   {
     delegate.pid.offset = initialPrice;
     delegate.currentTarget = initialPrice;
   }
 
+
+  factory PIDMaximizerFacade.FromDB(SISOPlant plant, Firm firm,
+                                    ParameterDatabase db, String container)
+  {
+
+    //todo adjust when varargs come (add default)
+    PIDMaximizer delegate = new PIDMaximizer.FromDB(db,"$container.delegate");
+    //we are not going to start it, since we can call it from updatePrice
+    Transformer oldTransformer = delegate.ratioTransformer;
+    delegate.ratioTransformer = (x)=>-(oldTransformer(x));
+    PIDMaximizerFacade facade = new PIDMaximizerFacade(delegate,
+                                                       firm,plant,
+                                                       db.getAsNumber("$container.initialPrice",
+                                                                      "$DB_ADDRESS.initialPrice"));
+    return facade;
+
+  }
+
+
+
   //todo rename
   factory PIDMaximizerFacade.PricingFacade(SISOPlant plant, Firm firm,
-                                           Random r,[double initialPrice=1.0,
-      int averagePIDPeriod = 20, double
-      PImultiplier = 100.0])
+                                           Random r,double initialPrice,
+      int averagePIDPeriod, double PIMultiplier, double sigmoidCenter)
   {
 
     PIDMaximizer delegate = new PIDMaximizer(r,averagePIDPeriod,
-                                             PImultiplier);
+                                             PIMultiplier, sigmoidCenter);
     //we are not going to start it, since we can call it from updatePrice
-    delegate.ratioTransformer = (x)=>-(PIDMaximizer.defaultTransformer(x));
+    Transformer oldTransformer = delegate.ratioTransformer;
+    delegate.ratioTransformer = (x)=>-(oldTransformer(x));
     PIDMaximizerFacade facade = new PIDMaximizerFacade(delegate,
                                                        firm,plant,initialPrice);
     return facade;
@@ -415,7 +478,7 @@ double marginalBenefits(Trader seller, SISOProductionFunction production,
   double benefits = increaseBenefit - decreaseBenefit ;
   benefits /= 2.0;
 
- // print("benefit $benefits increase benefit: $increaseBenefit decrease benefit: $decreaseBenefit");
+  // print("benefit $benefits increase benefit: $increaseBenefit decrease benefit: $decreaseBenefit");
 //  print("increasing Production ${production.production(input + delta)}, decreasing production ${production.production(input - delta)}");
 //  print("input $input and price ${seller.predictPrice(delta)}");
 

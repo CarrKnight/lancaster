@@ -315,7 +315,7 @@ oneMarketTest(bool learned, bool pidMaximizer, [int competitors=1])
     if(learned)
       sales.predictor = new FixedSlopePredictor(competitors == 1 ? -1.0 : 0.0);
     else {
-      KalmanPricePredictor kalman = new KalmanPricePredictor("outflow");
+      KalmanPricePredictor kalman = new KalmanPricePredictor("outflow",100,0.0,"offeredPrice",.99,10.0);
       //in the original model I used to regress on inflow. I might have to do
       // it here too, but the imperfection resulting out of that is bigger
       // here, so I get about 480/500 right by regressing on inflow and all
@@ -337,7 +337,7 @@ oneMarketTest(bool learned, bool pidMaximizer, [int competitors=1])
       hr.predictor = new FixedSlopePredictor(competitors == 1 ? 1.0 : 0.0);
     else
       //no inventory no problem.
-      hr.predictor = new KalmanPricePredictor("inflow");
+      hr.predictor = new KalmanPricePredictor("inflow",100,0.0,"offeredPrice",.99,10.0);
   };
 
   model.scenario = scenario;

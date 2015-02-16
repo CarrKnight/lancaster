@@ -134,7 +134,7 @@ class OneMarketCompetition extends Scenario
      Firm firm,
      Random r, ZeroKnowledgeTrader seller,
      OneMarketCompetition scenario) {
-    PIDMaximizer delegate = new PIDMaximizer.ForHumanResources(plant, null, r);
+    PIDMaximizer delegate = new PIDMaximizer.ForHumanResources(plant, null, r,20,100.0,1.0);
     return new PIDMaximizerFacade(delegate, firm, plant,initialTarget);
   };
 
@@ -154,7 +154,7 @@ class OneMarketCompetition extends Scenario
 
     //here price really is people to hire
     BufferInventoryAdaptive quotaStrategy =
-    new BufferInventoryAdaptive.simpleSeller(initialPrice:1.0,p:p,d:0.0,
+    new BufferInventoryAdaptive.simpleSeller(offset:1.0,p:p,d:0.0,
                                              i:i,columnName: "quota");
     //we want to change L given the seller results rather than our own
     quotaStrategy.targetExtractingStockingUp = new OtherDataExtractor(seller,
@@ -232,7 +232,7 @@ class OneMarketCompetition extends Scenario
     double initialPrice = r.nextDouble() *
                           (scenario.maxInitialPriceSelling - scenario.minInitialPriceSelling) +
                           scenario.minInitialPriceSelling;
-    return new BufferInventoryAdaptive.simpleSeller(initialPrice:initialPrice,
+    return new BufferInventoryAdaptive.simpleSeller(offset:initialPrice,
                                                     p:p,d:0.0,i:i);
   };
 
@@ -276,7 +276,7 @@ class OneMarketCompetition extends Scenario
 
 
     PIDMaximizerFacade pricer = new PIDMaximizerFacade.PricingFacade(p,firm,r,
-                                                                     initialPrice,20,pidMultiplier);
+                                                                     initialPrice,20,pidMultiplier,1.0);
     return pricer;
   };
 

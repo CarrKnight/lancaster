@@ -40,8 +40,8 @@ void bufferTests(){
 
     BufferInventoryAdaptive pricing = new BufferInventoryAdaptive(
             new FixedExtractor(0.0),inventoryExtractor,
-            new PIDAdaptive.DefaultSeller(),optimalInventory:10.0,
-            criticalInventory:5.0);
+            new PIDAdaptive.DefaultSeller(),10.0,
+            5.0);
 
 
     expect(pricing.stockingUp,true);
@@ -90,7 +90,7 @@ void bufferTests(){
       (
       optimalInventory: 1000.0, //pointless sets, just for verbosity sake
       criticalInventory: 500.0,
-      initialPrice:10.0
+      offset:10.0
       );
     //making sure the initial price is initialized correctly
     expect(pricing.value,10.0);
@@ -118,7 +118,7 @@ void bufferTests(){
     (
         optimalInventory: 1000.0, //pointless sets, just for verbosity sake
         criticalInventory: 500.0,
-        initialPrice:10.0
+        offset:10.0
     );
     //until you tell it to update it thinks it is stocking up
     expect(pricing.stockingUp,true);
@@ -185,7 +185,7 @@ void PIDFlows() {
   test("default seller increase", () {
 
     //the seller: when inflow > outflow price should go down
-    PIDAdaptive pricing = new PIDAdaptive.DefaultSeller(initialPrice:100.0);
+    PIDAdaptive pricing = new PIDAdaptive.DefaultSeller(offset:100.0);
     //default seller takes "inflow" and "outflow" columns
     var data = new Data(["inflow", "outflow"], (references) => (Schedule s) {
       references["inflow"].add(1.0);
@@ -203,7 +203,7 @@ void PIDFlows() {
   test("default seller decrease", () {
 
     //the seller:  when inflow < outflow price go up
-    PIDAdaptive pricing = new PIDAdaptive.DefaultSeller(initialPrice:100.0);
+    PIDAdaptive pricing = new PIDAdaptive.DefaultSeller(offset:100.0);
     //default seller takes "inflow" and "outflow" columns
     var data = new Data(["inflow", "outflow"], (references) => (Schedule s) {
       references["inflow"].add(0.0);
@@ -220,7 +220,7 @@ void PIDFlows() {
 
   test("ignore NAs and lack of data", () {
 
-    PIDAdaptive pricing = new PIDAdaptive.DefaultSeller(initialPrice:100.0);
+    PIDAdaptive pricing = new PIDAdaptive.DefaultSeller(offset:100.0);
     var data = new Data(["inflow", "outflow"], (references) => (Schedule s) {
       //puts garbage in
       references["inflow"].add(double.NAN);

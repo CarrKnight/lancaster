@@ -37,6 +37,7 @@ class LastPricePredictor implements PricePredictor
 {
 
 
+  static const String DB_ADDRESS = "default.strategy.LastPricePredictor";
 
   static final  LastPricePredictor _singleton = new LastPricePredictor
   ._internal();
@@ -47,6 +48,15 @@ class LastPricePredictor implements PricePredictor
    *  always predicts last CLOSING price
    */
   factory LastPricePredictor(){
+    return _singleton;
+  }
+
+
+
+  /**
+   *  always predicts last CLOSING price
+   */
+  factory LastPricePredictor.FromDB(ParameterDatabase db, String containerPath){
     return _singleton;
   }
 
@@ -69,6 +79,11 @@ class LastPricePredictor implements PricePredictor
  */
 class FixedSlopePredictor implements PricePredictor
 {
+
+
+  static const String DB_ADDRESS = "default.strategy.PricePredictor";
+
+
   /**
    * the slope of the predictor
    */
@@ -78,6 +93,14 @@ class FixedSlopePredictor implements PricePredictor
    * create the slope predictor
    */
   FixedSlopePredictor([this.slope=0.0]);
+
+
+  /**
+   * create the slope predictor
+   */
+  FixedSlopePredictor.FromDB(ParameterDatabase db, String containerPath)
+  :
+  this(db.getAsNumber("$containerPath.slope","$DB_ADDRESS.slope"));
 
   /**
    * unused
@@ -102,6 +125,9 @@ typedef bool DataValidator(double x,double y);
  */
 class KalmanPricePredictor implements PricePredictor
 {
+
+  static const String DB_ADDRESS = "default.strategy.KalmanPricePredictor";
+
 
   /**
    * how many observations before we start using the kalman slope
@@ -133,15 +159,29 @@ class KalmanPricePredictor implements PricePredictor
   Data data;
 
 
-  KalmanPricePredictor(this.xColumnName,{this.burnoutRate:100, double
-  initialSlope:0.0, this.yColumnName:"offeredPrice", double forgettingRate: .99,
-  double maxTrace:10.0}):
+
+  KalmanPricePredictor(this.xColumnName,this.burnoutRate, double
+  initialSlope, this.yColumnName, double forgettingRate,
+  double maxTrace):
   delegate = new FixedSlopePredictor(initialSlope),
   filter = new KalmanFilter(2)
   {
     filter.forgettingFactor = forgettingRate;
     filter.maxTraceToStopForgetting = maxTrace;
   }
+
+
+  KalmanPricePredictor.FromDB(ParameterDatabase db, String containerPath):
+
+  this(
+    db.getAsString("$containerPath.xColumnName","$DB_ADDRESS.xColumnName"),
+    db.getAsNumber("$containerPath.burnoutRate","$DB_ADDRESS.burnoutRate"),
+    db.getAsNumber("$containerPath.initialSlope","$DB_ADDRESS.initialSlope"),
+    db.getAsString("$containerPath.yColumnName","$DB_ADDRESS.yColumnName"),
+    db.getAsNumber("$containerPath.forgettingRate","$DB_ADDRESS.forgettingRate"),
+    db.getAsNumber("$containerPath.maxTrace","$DB_ADDRESS.maxTrace")
+  );
+
 
   double predictPrice(Trader trader, double quantityChange)
   =>delegate.predictPrice(trader,quantityChange);

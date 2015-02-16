@@ -51,11 +51,26 @@ class ParameterDatabase
     Object leaf = _root;
     for(String path in address)
     {
-      leaf = leaf[path];
+      Object newLeaf = leaf[path];
       //if the path doesn't exist, return null
-      if(leaf == null)
-        return null;
+      if(newLeaf == null)
+      {
+        //is it a link?
+        if(leaf["link"] == null)
+          //no
+          return null;
+        else
+        {//yes, then follow the link
+          return _getFieldAt(leaf["link"]);
+        }
+      }
+      leaf = newLeaf;
     }
+
+    //if you landed on a link, follow it
+    if(leaf is JsonObject && leaf["link"] != null)
+      return _getFieldAtPath(leaf["link"]);
+
     return leaf;
   }
 

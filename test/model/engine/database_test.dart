@@ -226,6 +226,49 @@ main()
     });
   });
 
+
+  String input3 =
+  '''
+  {
+  "container":
+  {
+    "realvalue": 5.0
+  },
+  "referencing":
+  {
+    "link": "container.realvalue"
+  },
+
+  "inner" :
+  {
+    "deep" :
+    {
+      "link": "referencing"
+    }
+  }
+  }
+  ''';
+
+
+  group("Links work",()
+  {
+    test('link test', (){
+
+      ParameterDatabase db = new ParameterDatabase(input3);
+      //reads correctly
+      expect(db.getAsNumber("container.realvalue"),5);
+      //follows link correctly
+      expect(db.getAsNumber("referencing"),5);
+      //follows multiple links correctly
+      expect(db.getAsNumber("inner.deep"),5);
+
+
+    });
+
+
+  });
+
+
 }
 
 

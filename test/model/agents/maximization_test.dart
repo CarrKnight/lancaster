@@ -18,7 +18,7 @@ main(){
   test("climb mount fuji",(){
 
     Random random = new Random();
-    MarginalMaximizer maximizer = new MarginalMaximizer();
+    MarginalMaximizer maximizer = new MarginalMaximizer(1.0,1.0,1.0/21.0);
     double currentX = maximizer.extract(null);
     expect(currentX,1.0);
     maximizer.delta=.5; //increase by .5 steps
@@ -63,7 +63,7 @@ main(){
   test("climb mount fuji in reverse",(){
 
     Random random = new Random();
-    MarginalMaximizer maximizer = new MarginalMaximizer();
+    MarginalMaximizer maximizer = new MarginalMaximizer(1.0,1.0,1.0/21.0);
     maximizer.currentTarget = 50.0;
     double currentX = maximizer.extract(null);
     expect(currentX,50.0);
@@ -111,7 +111,7 @@ main(){
   test("climb mount fuji PID",(){
 
     Random random = new Random();
-    PIDMaximizer maximizer = new PIDMaximizer(random,0);
+    PIDMaximizer maximizer = new PIDMaximizer(random,1,1.0,1.0);
     double currentX = maximizer.extract(null);
     expect(currentX,1.0);
     maximizer.delta=1.0; //increase by 1.0 steps
