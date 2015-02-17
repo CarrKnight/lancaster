@@ -259,9 +259,8 @@ Data fixedWageMacro(bool keynesian,
     LastPricePredictor();
   };
   //F = Sqrt(L)-5
-  scenario.productionFunction = new ExponentialProductionFunction(exponent:productionExponent)
-    ..multiplier = multiplier
-    ..freebie = fixedCost;
+  scenario.productionFunction = new ExponentialProductionFunction(multiplier,productionExponent,fixedCost);
+
   scenario.laborMarket = new ExogenousBuyerMarket.infinitelyElastic(1.0,
                                                                     goodType:"labor");
   //demand = total wages yesterday
@@ -469,7 +468,7 @@ Data fixedWageMicro(bool keynesian,
     LastPricePredictor();
   };
   //1 worker, 1 good
-  scenario.productionFunction = new LinearProductionFunction();
+  scenario.productionFunction = new LinearProductionFunction(true,1.0);
 
   scenario.laborMarket = new ExogenousBuyerMarket.infinitelyElastic(wage,
                                                                     goodType:"labor");

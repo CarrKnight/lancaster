@@ -10,86 +10,74 @@ part of lancaster.model;
 
 
 typedef AdaptiveStrategy  HrStrategyInitialization(SISOPlant plant, Firm firm,
-                                                   Random r, ZeroKnowledgeTrader seller, OneMarketCompetition scenario);
+                                                   Random r, ZeroKnowledgeTrader seller,
+                                                   ParameterDatabase db,
+                                                   String containerPath);
 
 typedef AdaptiveStrategy SalesStrategyInitialization(SISOPlant plant, Firm firm,
                                                      Random r,
-                                                     OneMarketCompetition
-                                                     scenario);
+                                                     ParameterDatabase db,
+                                                     String containerPath);
 
 typedef void TraderConsumer(ZeroKnowledgeTrader trader);
-
 
 
 class OneMarketCompetition extends Scenario
 {
 
-
-  double minInitialPriceBuying = 0.0;
-  double maxInitialPriceBuying = 100.0;
-  double minInitialPriceSelling = 0.0;
-  double maxInitialPriceSelling = 100.0;
-  double demandIntercept=100.0; double demandSlope=-1.0;
-  //sales pid
-  double salesMinP=0.05; double salesMaxP=.5;
-  double salesMinI=0.05; double salesMaxI=.5;
-  //purchases pid
-  double purchaseMinP=0.05; double purchaseMaxP=.5;
-  double purchaseMinI=0.05; double purchaseMaxI=.5;
-  //plant
-  double productionMultiplier = 1.0;
-  int competitors = 1;
   List<Firm> firms = new List();
+
+  int competitors;
+
 
   /**
    * called to build the pricer of hr. By default it creates a marginal
    * maximizer
    */
-  HrStrategyInitialization hrPricingInitialization = PID_MAXIMIZER_HR;
+  HrStrategyInitialization hrPricingInitialization;
 
+
+
+  HrStrategyInitialization _generateHRPricingFromDB(ParameterDatabase db)
+  {
+    String strategyName = db.getAsString("$DB_ADDRESS.hrPricingInitialization.hrPricingStrategy");
+    if (strategyName == "FIXED_TARGET_HR")
+      return FIXED_TARGET_HR;
+    if (strategyName == "MARGINAL_MAXIMIZER_HR")
+      return MARGINAL_MAXIMIZER_HR;
+    if (strategyName == "PID_MAXIMIZER_HR")
+      return PID_MAXIMIZER_HR;
+
+    throw new Exception("don't know what $strategyName is regarding hr pricing!");
+
+  }
 
   //build labor market
-  ExogenousBuyerMarket laborMarket = new ExogenousBuyerMarket.linear
-  (intercept:0.0, slope:1.0, goodType : "labor");
+  ExogenousBuyerMarket laborMarket;
 
   ExogenousSellerMarket goodMarket = new ExogenousSellerMarket.linear
   (intercept:100.0, slope:-1.0);
 
-  /**
-   * function that returns an hr initialization function, in this case one
-   * that has a fixed target, useful for testing mostly
-   */
-  static HrStrategyInitialization FIXED_TARGET_HR(double target) =>
+
+  static HrStrategyInitialization FIXED_TARGET_HR =
       (SISOPlant plant,
-       Firm firm, Random r, ZeroKnowledgeTrader seller, OneMarketCompetition scenario
-       ){
-    double p = r.nextDouble() * (scenario.purchaseMaxP - scenario.purchaseMinP) +
-               scenario.purchaseMinP;
-    double i = r.nextDouble() * (scenario.purchaseMaxI - scenario
-    .purchaseMinI)  + scenario.purchaseMinI;
-    double initialPrice = r.nextDouble() *
-                          (scenario.maxInitialPriceBuying - scenario.minInitialPriceBuying) +
-                          scenario.minInitialPriceBuying;
-    return new PIDAdaptive.FixedInflowBuyer(flowTarget:target,
-                                            initialPrice:initialPrice,p:p,
-                                            i:i,d:0.0);
+       Firm firm, Random r, ZeroKnowledgeTrader seller,
+       ParameterDatabase db,
+       String containerPath //this will probably be DB_ADDRESS.
+       )
+  {
+    return new PIDAdaptive.FixedInflowBuyerFromDB(db, "$containerPath.FIXED_TARGET_HR");
   };
 
   static final HrStrategyInitialization MARGINAL_MAXIMIZER_HR = (SISOPlant plant,
                                                                  Firm firm,
                                                                  Random r,
                                                                  ZeroKnowledgeTrader seller,
-                                                                 OneMarketCompetition scenario)
+                                                                 ParameterDatabase db,
+                                                                 String containerPath)
   {
-    double p = r.nextDouble() * (scenario.purchaseMaxP - scenario.purchaseMinP) +
-               scenario.purchaseMinP;
-    double i = r.nextDouble() * (scenario.purchaseMaxI - scenario
-    .purchaseMinI)  + scenario.purchaseMinI;
-    double initialPrice = r.nextDouble() *
-                          (scenario.maxInitialPriceBuying - scenario.minInitialPriceBuying) +
-                          scenario.minInitialPriceBuying;
-    AdaptiveStrategy s = new PIDAdaptive.MaximizerBuyer(plant,firm,r,
-                                                        initialPrice:initialPrice,p:p,i:i,d:0.0);
+    AdaptiveStrategy s = new PIDAdaptive.MaximizerBuyerFromDB(plant, firm, db,
+                                                              "$containerPath.MARGINAL_MAXIMIZER_HR");
     return s;
   };
 
@@ -97,66 +85,77 @@ class OneMarketCompetition extends Scenario
                                                             Firm firm,
                                                             Random r,
                                                             ZeroKnowledgeTrader seller,
-                                                            OneMarketCompetition scenario)
+                                                            ParameterDatabase db,
+                                                            String containerPath)
   {
-    double p = r.nextDouble() * (scenario.purchaseMaxP - scenario.purchaseMinP) +
-               scenario.purchaseMinP;
-    double i = r.nextDouble() * (scenario.purchaseMaxI - scenario
-    .purchaseMinI)  + scenario.purchaseMinI;
-    double initialPrice = r.nextDouble() *
-                          (scenario.maxInitialPriceBuying - scenario.minInitialPriceBuying) +
-                          scenario.minInitialPriceBuying;
-    AdaptiveStrategy s = new PIDAdaptive.PIDMaximizerBuyer(plant,firm,r,
-                                                           initialPrice:initialPrice,p:p,i:i,d:0.0,averagePIDPeriod:20);
+
+    AdaptiveStrategy s = new PIDAdaptive.PIDMaximizerBuyerFromDB(plant, firm, db,
+                                                                 "$containerPath.PID_MAXIMIZER_HR");
     return s;
   };
 
 
-  HrStrategyInitialization hrQuotaInitializer = BUY_ALL;
+  HrStrategyInitialization hrQuotaInitializer;
 
+
+  HrStrategyInitialization _generateHRQuotingFromDB(ParameterDatabase db)
+  {
+
+    String container = "$DB_ADDRESS.hrQuotaInitialization";
+    String strategyName = db.getAsString("$container.hrQuotaStrategy");
+
+    if (container == "BUY_ALL")
+      return BUY_ALL;
+    if (container == "MARSHALLIAN_QUOTA")
+      return MARSHALLIAN_QUOTA;
+    if (container == "KEYNESIAN_QUOTA")
+      return KEYNESIAN_QUOTA;
+    if (container == "KEYNESIAN_STOCKOUT_QUOTA")
+      return KEYNESIAN_STOCKOUT_QUOTA;
+
+
+    throw new Exception("I don't know how to instantiate $strategyName quota initializer");
+  }
 
 
   static final HrStrategyInitialization BUY_ALL = (SISOPlant plant, Firm firm,
                                                    Random r, ZeroKnowledgeTrader seller,
-                                                   OneMarketCompetition scenario) => new FixedValue();
+                                                   ParameterDatabase db,
+                                                   String containerPath)
+  =>
+  new FixedValue.FromDB(db, "$containerPath.BUY_ALL");
 
   /**
    * Useful when Marhsall meets infinitely elastic supply
    */
   static final HrStrategyInitialization MARSHALLIAN_QUOTA =
-  MARSHALLIAN_QUOTAS(1.0);
-  /**
-   * confusing? function that returns the function that creates the hr
-   * strategy. Useful, even though not intuitive
-   */
-  static HrStrategyInitialization MARSHALLIAN_QUOTAS(double initialTarget)
-  =>(SISOPlant plant,
-     Firm firm,
-     Random r, ZeroKnowledgeTrader seller,
-     OneMarketCompetition scenario) {
-    PIDMaximizer delegate = new PIDMaximizer.ForHumanResources(plant, null, r,20,100.0,1.0);
-    return new PIDMaximizerFacade(delegate, firm, plant,initialTarget);
+      (SISOPlant plant, Firm firm,
+       Random r, ZeroKnowledgeTrader seller,
+       ParameterDatabase db,
+       String containerPath)
+  {
+
+    PIDMaximizer delegate = new PIDMaximizer.ForHumanResourcesFromDB(plant, firm, db,
+                                                                     "$containerPath.MARSHALLIAN_QUOTA");
+
+    return new PIDMaximizerFacade(delegate, firm, plant,
+                                  db.getAsNumber("$containerPath.MARSHALLIAN_QUOTA.currentTarget")
+                                  );
   };
 
 
-
-
-  static final HrStrategyInitialization KEYNESIAN_QUOTA =  (SISOPlant plant, Firm firm,
-                                                            Random r, ZeroKnowledgeTrader seller,
-                                                            OneMarketCompetition scenario)
+  static final HrStrategyInitialization KEYNESIAN_QUOTA =
+      (SISOPlant plant, Firm firm,
+       Random r, ZeroKnowledgeTrader seller,
+       ParameterDatabase db,
+       String containerPath)
   {
-
-    double p = r.nextDouble() * (scenario.purchaseMaxP - scenario.purchaseMinP) +
-               scenario.purchaseMinP;
-    double i = r.nextDouble() * (scenario.purchaseMaxI - scenario
-    .purchaseMinI)  + scenario.purchaseMinI;
-
 
     //here price really is people to hire
     BufferInventoryAdaptive quotaStrategy =
-    new BufferInventoryAdaptive.simpleSeller(offset:1.0,p:p,d:0.0,
-                                             i:i,columnName: "quota");
-    //we want to change L given the seller results rather than our own
+    new BufferInventoryAdaptive.SimpleSellerFromDB(db, "$containerPath.KEYNESIAN_QUOTA");
+
+    //we want to change L given the seller results rather than hr
     quotaStrategy.targetExtractingStockingUp = new OtherDataExtractor(seller,
                                                                       quotaStrategy.targetExtractingStockingUp);
     quotaStrategy.originalTargetExtractor = new OtherDataExtractor(seller,
@@ -171,33 +170,25 @@ class OneMarketCompetition extends Scenario
 
 
   static final HrStrategyInitialization KEYNESIAN_STOCKOUT_QUOTA =
-  KEYNESIAN_STOCKOUT_QUOTAS(1.0);
-
-  static HrStrategyInitialization KEYNESIAN_STOCKOUT_QUOTAS(double
-                                                            initialTarget) {
-    return (SISOPlant
-            plant, Firm firm,
-            Random r, ZeroKnowledgeTrader seller,
-            OneMarketCompetition scenario) {
-      double p = r.nextDouble() * (scenario.purchaseMaxP - scenario.purchaseMinP) +
-                 scenario.purchaseMinP;
-      double i = r.nextDouble() * (scenario.purchaseMaxI - scenario
-      .purchaseMinI) + scenario.purchaseMinI;
+      (SISOPlant
+       plant, Firm firm,
+       Random r, ZeroKnowledgeTrader seller,
+       ParameterDatabase db,
+       String containerPath)
+  {
 
 
-      //here price really is people to hire
-      PIDAdaptive quotaStrategy =
-      new PIDAdaptive.StockoutSeller(initialPrice:initialTarget, p:p, d:0.0,
-                                     i:i);
-      //we want to change L given the seller results rather than our own
-      quotaStrategy.targetExtractor = new OtherDataExtractor(seller,
-                                                             quotaStrategy.targetExtractor);
-      quotaStrategy.cvExtractor = new OtherDataExtractor(seller,
-                                                         quotaStrategy.cvExtractor);
+    //here price really is people to hire
+    PIDAdaptive quotaStrategy =
+    new PIDAdaptive.StockoutSellerFromDB(db, "$containerPath.KEYNESIAN_STOCKOUT_QUOTA");
+    //we want to change L given the seller results rather than our own
+    quotaStrategy.targetExtractor = new OtherDataExtractor(seller,
+                                                           quotaStrategy.targetExtractor);
+    quotaStrategy.cvExtractor = new OtherDataExtractor(seller,
+                                                       quotaStrategy.cvExtractor);
 
-      return quotaStrategy;
-    };
-  }
+    return quotaStrategy;
+  };
 
 
   SalesStrategyInitialization salesPricingInitialization = BUFFER_PID;
@@ -206,13 +197,13 @@ class OneMarketCompetition extends Scenario
   /**
    * Price. Price never changes.
    */
-  static SalesStrategyInitialization FIXED_PRICE =  (SISOPlant plant, Firm firm,
-                                                     Random r,
-                                                     OneMarketCompetition
-                                                     scenario)
+  static SalesStrategyInitialization FIXED_PRICE = (SISOPlant plant, Firm firm,
+                                                    Random r,
+                                                    OneMarketCompetition
+                                                    scenario)
   {
     double price = r.nextDouble() * (scenario.minInitialPriceSelling - scenario
-    .maxInitialPriceSelling)  + scenario.minInitialPriceSelling;
+    .maxInitialPriceSelling) + scenario.minInitialPriceSelling;
     FixedValue fixedPrice = new FixedValue(price);
     return fixedPrice;
   };
@@ -233,7 +224,7 @@ class OneMarketCompetition extends Scenario
                           (scenario.maxInitialPriceSelling - scenario.minInitialPriceSelling) +
                           scenario.minInitialPriceSelling;
     return new BufferInventoryAdaptive.simpleSeller(offset:initialPrice,
-                                                    p:p,d:0.0,i:i);
+                                                    p:p, d:0.0, i:i);
   };
 
   /**
@@ -255,19 +246,18 @@ class OneMarketCompetition extends Scenario
     double initialPrice = r.nextDouble() *
                           (scenario.maxInitialPriceSelling - scenario.minInitialPriceSelling) +
                           scenario.minInitialPriceSelling;
-    return new PIDAdaptive.StockoutSeller(initialPrice:initialPrice,p:p,i:i,
+    return new PIDAdaptive.StockoutSeller(initialPrice:initialPrice, p:p, i:i,
                                           d:0.0);
   };
 
 
-
   static final SalesStrategyInitialization
-  PROFIT_MAXIMIZER_PRICING = (SISOPlant p,Firm firm,Random r,
+  PROFIT_MAXIMIZER_PRICING = (SISOPlant p, Firm firm, Random r,
                               OneMarketCompetition scenario)
   {
     double initialPrice = r.nextDouble() * (scenario.maxInitialPriceSelling -
                                             scenario
-                                            .minInitialPriceSelling)  + scenario.minInitialPriceSelling;
+                                            .minInitialPriceSelling) + scenario.minInitialPriceSelling;
 
     double pidMultiplier = r.nextDouble() * (scenario.salesMaxP - scenario
     .salesMinP) +
@@ -275,8 +265,8 @@ class OneMarketCompetition extends Scenario
                            .salesMinP;
 
 
-    PIDMaximizerFacade pricer = new PIDMaximizerFacade.PricingFacade(p,firm,r,
-                                                                     initialPrice,20,pidMultiplier,1.0);
+    PIDMaximizerFacade pricer = new PIDMaximizerFacade.PricingFacade(p, firm, r,
+                                                                     initialPrice, 20, pidMultiplier, 1.0);
     return pricer;
   };
 
@@ -295,7 +285,7 @@ class OneMarketCompetition extends Scenario
    * called after sales has been built for further tuning. By default we just
    * put a last price predictor in there
    */
-  TraderConsumer salesInitializer = (ZeroKnowledgeTrader sales){
+  TraderConsumer salesInitializer = (ZeroKnowledgeTrader sales) {
     sales.predictor = new LastPricePredictor();
   };
 
@@ -303,30 +293,45 @@ class OneMarketCompetition extends Scenario
    * called after hr has been built for further tuning. By default we just
    * put a last price predictor in there
    */
-  TraderConsumer hrIntializer = (ZeroKnowledgeTrader hr){
+  TraderConsumer hrIntializer = (ZeroKnowledgeTrader hr) {
     hr.predictor = new LastPricePredictor();
   };
 
-
-  SISOProductionFunction productionFunction = new LinearProductionFunction();
-
+  String DB_ADDRESS = "default.scenario.OneMarketCompetition";
 
 
-  start(Model model) {
+  SISOProductionFunction productionFunction;
+
+
+  start(Model model)
+  {
 
     Random random = model.random;
+
+    competitors = model.parameterDB.getAsNumber("$DB_ADDRESS.competitors");
+
+
+    if (laborMarket != null)//not overriden?
+      laborMarket = model.parameterDB.getAsInstance("$DB_ADDRESS.laborMarket",
+                                                    "${ExogenousBuyerMarket.DB_ADDRESS}");
 
 
     laborMarket.start(model.schedule);
     model.markets["labor"] = laborMarket;
 
     //build sales market
-
+    if (goodMarket != null)//not overriden?
+      goodMarket = model.parameterDB.getAsInstance("$DB_ADDRESS.goodMarket",
+                                                   "${ExogenousSellerMarket.DB_ADDRESS}");
     goodMarket.start(model.schedule);
     model.markets["gas"] = goodMarket;
 
+    //if it hasn't been overridden
+    if (productionFunction != null)
+      productionFunction = model.parameterDB.getAsInstance("$DB_ADDRESS.productionFunction");
 
-    for(int competitor =0; competitor< competitors; competitor++) {
+
+    for (int competitor = 0; competitor < competitors; competitor++) {
       Firm firm = new Firm();
 
       //build plant
@@ -339,18 +344,28 @@ class OneMarketCompetition extends Scenario
 
       //build sales
       ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader(
-          goodMarket, salesPricingInitialization(plant,firm,random,this) ,
-          salesQuotaInitialization(plant,firm,random,this) ,
-          new SimpleSellerTrading() ,firm);
+          goodMarket, salesPricingInitialization(plant, firm, random, this),
+          salesQuotaInitialization(plant, firm, random, this),
+          new SimpleSellerTrading(), firm);
       salesInitializer(seller);
       firm.addSalesDepartment(seller);
 
 
       //build hr
-      (maxInitialPriceBuying - minInitialPriceBuying) + minInitialPriceBuying;
+      if (hrPricingInitialization == null) //not overriden
+        hrPricingInitialization = _generateHRPricingFromDB(model.parameterDB);
+
+      if (hrQuotaInitializer == null) //not overriden
+        hrQuotaInitializer = _generateHRQuotingFromDB(model.parameterDB);
+
+
       ZeroKnowledgeTrader hr = new ZeroKnowledgeTrader(laborMarket,
-                                                       hrPricingInitialization(plant, firm, random, seller,this),
-                                                       hrQuotaInitializer(plant, firm, random, seller,this),
+                                                       hrPricingInitialization(plant, firm, random, seller,
+                                                                               model.parameterDB,
+                                                                               "$DB_ADDRESS.hrPricingInitialization"),
+                                                       hrQuotaInitializer(plant, firm, random, seller,
+                                                                          model.parameterDB,
+                                                                          "$DB_ADDRESS.hrQuotaInitialization"),
                                                        new SimpleBuyerTrading(), firm);
       hrIntializer(hr);
       firm.addPurchasesDepartment(hr);
@@ -362,8 +377,10 @@ class OneMarketCompetition extends Scenario
 
     }
   }
-
 }
+
+
+
 
 
 

@@ -240,6 +240,14 @@ class PIDAdaptive implements ControlStrategy
   this.fromDB(new FixedExtractor(db.getAsNumber("$containerPath.flowTarget","$DB_ADDRESS.flowTarget")),
               new SimpleExtractor("inflow"),db,containerPath);
 
+
+  PIDAdaptive.MaximizerBuyerFromDB(
+      SISOPlant plant, Firm firm,
+      ParameterDatabase db, String containerPath
+      ):
+  this.fromDB(new MarginalMaximizer.forHumanResourcesFromDB(plant,firm,db,containerPath),
+              new SimpleExtractor("inflow"),db,containerPath);
+
   //todo create DB version after the maximizer
   PIDAdaptive.MaximizerBuyer(SISOPlant plant, Firm firm, Random r,
                              {double initialPrice: 0.0,
@@ -268,6 +276,14 @@ class PIDAdaptive implements ControlStrategy
   this(new PIDMaximizer.ForHumanResources(plant,firm,r,averagePIDPeriod,piMultiplier,1.0),
        new SimpleExtractor("inflow"),
        offset:initialPrice, p:p,i:i,d:d,columnName:columnName);
+
+  PIDAdaptive.PIDMaximizerBuyerFromDB(
+      SISOPlant plant,
+      Firm firm,
+      ParameterDatabase db, String containerPath
+      ):
+  this.fromDB(new PIDMaximizer.ForHumanResourcesFromDB(plant,firm,db,containerPath),
+              new SimpleExtractor("inflow"),db,containerPath);
 
 
   PIDAdaptive.FixedInventoryBuyer({double inventoryTarget:1.0,

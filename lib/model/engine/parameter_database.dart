@@ -122,6 +122,31 @@ class ParameterDatabase
 
 
   /**
+   * get the parameter as a boolean, if possible. If you are looking for the parameter in : <br>
+   * strategy1.strategy2.parameter  <br>
+   * and if you don't find it then look in:  <br>
+   * strategy3.parameter  <br>
+   *[bestPath] would be "strategy1.strategy2.parameter" and [fallbackPath] would be "strategy3".parameter
+   * Throws an exception if it's not in either. Throws also an exception if the parameter is not a string but rather a map
+   */
+  bool getAsBoolean(String bestPath, [String fallbackPath=null])
+  {
+
+    Object parameter =  _lookup(bestPath,fallbackPath);
+
+    if(parameter ==null)
+      throw new Exception("Couldn't find the field neither as $bestPath nor $fallbackPath");
+
+    if(parameter is JsonObject)
+      throw new Exception("The parameter is a map, not a string! ${parameter.toString()}");
+
+    return parameter;
+
+
+  }
+
+
+  /**
    * if you need a number but you got a map it might be a random parameter. Check if it has a type and if so feed it to the
    * randomizer
    */

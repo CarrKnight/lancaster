@@ -276,6 +276,8 @@ class ZeroKnowledgeTrader implements Trader
 
   double get stockouts => _stockouts;
 
+  static const String DB_ADDRESS = "default.agent.ZeroKnowledgeTrader";
+
   /**
    * seller or sales-department targeting inflow=outflow+stockouts
    */
@@ -289,15 +291,67 @@ class ZeroKnowledgeTrader implements Trader
       inventory = new Inventory();
 
     ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader(market,
-    new PIDAdaptive.DefaultSeller(initialPrice:initialPrice),
-    new AllOwned(),
-    new SimpleSellerTrading(), inventory);
+                                                         new PIDAdaptive.DefaultSeller(offset:initialPrice),
+                                                         new AllOwned(),
+                                                         new SimpleSellerTrading(), inventory);
 
     //independent trader needs to reset its own counters
     if(givenInventory==null)
       seller.dawnEvents.add(ResetInventories(inventory));
     return seller;
   }
+
+  /**
+   * seller or sales-department targeting inflow=outflow+stockouts
+   */
+  factory ZeroKnowledgeTrader.PIDSellerFromDB(SellerMarket market,
+                                              ParameterDatabase db,
+                                              String containerPath,
+                                              {Inventory givenInventory : null})
+  {
+    //if no total inventory given, this is an independent trader
+    Inventory inventory = givenInventory;
+    if(givenInventory == null)
+      inventory = new Inventory();
+
+    ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader(market,
+                                                         //todo add default path when vararg comes
+                                                         new PIDAdaptive.DefaultSellerFromDB(db,"$containerPath.pidSellerPricing"),
+                                                         new AllOwned(),
+                                                         new SimpleSellerTrading(), inventory);
+
+    //independent trader needs to reset its own counters
+    if(givenInventory==null)
+      seller.dawnEvents.add(ResetInventories(inventory));
+    return seller;
+  }
+
+
+
+  factory ZeroKnowledgeTrader.PIDBuyerFromDB(BuyerMarket market,
+                                             ParameterDatabase db,
+                                             String containerPath,
+                                             {Inventory givenInventory : null})
+  {
+
+    Inventory inventory = givenInventory;
+    if(givenInventory == null)
+      inventory = new Inventory();
+
+    ZeroKnowledgeTrader buyer =
+    new ZeroKnowledgeTrader(market,
+                            new PIDAdaptive.FixedInflowBuyerFromDB(db,"$containerPath.pidBuyerPricing"),
+                            new FixedValue(),
+                            new SimpleBuyerTrading(),inventory);
+
+    //independent trader needs to reset its own counters
+    if(givenInventory==null)
+      buyer.dawnEvents.add(ResetInventories(inventory));
+
+    return buyer;
+
+  }
+
 
   factory ZeroKnowledgeTrader.PIDBuyer(BuyerMarket market,
                                        {double flowTarget:10.0,
@@ -313,10 +367,10 @@ class ZeroKnowledgeTrader implements Trader
       inventory = new Inventory();
 
     ZeroKnowledgeTrader buyer = new ZeroKnowledgeTrader(market,
-    new PIDAdaptive.FixedInflowBuyer(flowTarget:flowTarget,
-    initialPrice:initialPrice,p:p,i:i,d:d),
-    new FixedValue(),
-    new SimpleBuyerTrading(),inventory);
+                                                        new PIDAdaptive.FixedInflowBuyer(flowTarget:flowTarget,
+                                                                                         initialPrice:initialPrice,p:p,i:i,d:d),
+                                                        new FixedValue(),
+                                                        new SimpleBuyerTrading(),inventory);
 
     //independent trader needs to reset its own counters
     if(givenInventory==null)
@@ -325,11 +379,34 @@ class ZeroKnowledgeTrader implements Trader
     return buyer;
   }
 
+
+  factory ZeroKnowledgeTrader.PIDBufferSellerFromDB(SellerMarket market,
+                                                    ParameterDatabase db,
+                                                    String containerPath,
+                                                    {Inventory givenInventory:null})
+  {
+    Inventory inventory = givenInventory;
+    if(givenInventory == null)
+      inventory = new Inventory();
+
+    ZeroKnowledgeTrader seller =
+    new ZeroKnowledgeTrader(market,
+                            new BufferInventoryAdaptive.SimpleSellerFromDB(db,
+                                                                           "$containerPath.pidBufferSeller"),
+                            new AllOwned(),
+                            new SimpleSellerTrading(), inventory);
+
+    //independent trader needs to reset its own counters
+    if(givenInventory==null)
+      seller.dawnEvents.add(ResetInventories(inventory));
+
+    return seller;
+  }
   /**
    * seller or sales-department targeting inflow=outflow with buffer inventory
    */
   factory ZeroKnowledgeTrader.PIDBufferSeller(SellerMarket market,
-                                              {double depreciationRate:0.0,
+                                              {
                                               double initialPrice:100.0,
                                               double optimalInventory:100.0,
                                               double criticalInventory:10.0,
@@ -346,10 +423,10 @@ class ZeroKnowledgeTrader implements Trader
       inventory = new Inventory();
 
     ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader(market,
-    new BufferInventoryAdaptive.simpleSeller(optimalInventory:optimalInventory,
-    criticalInventory:criticalInventory,offset:initialPrice,p:p,d:d,i:i),
-   new AllOwned(),
-    new SimpleSellerTrading(), inventory);
+                                                         new BufferInventoryAdaptive.simpleSeller(optimalInventory:optimalInventory,
+                                                                                                  criticalInventory:criticalInventory,offset:initialPrice,p:p,d:d,i:i),
+                                                         new AllOwned(),
+                                                         new SimpleSellerTrading(), inventory);
 
     //independent trader needs to reset its own counters
     if(givenInventory==null)
@@ -378,9 +455,28 @@ class ZeroKnowledgeTrader implements Trader
                                                    Inventory givenInventory:null})
   {
     ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader.PIDSeller(market,
-    initialPrice:initialPrice,givenInventory:givenInventory);
+                                                                   initialPrice:initialPrice,
+                                                                   givenInventory:givenInventory);
     //add events
     addDailyInflowAndDepreciation(seller, dailyInflow, depreciationRate);
+    return seller;
+  }
+
+
+    /**
+     * PIDSeller with exogenous fixed inflow
+     */
+    factory ZeroKnowledgeTrader.PIDSellerFixedInflowFromDB(SellerMarket market,
+                                                           ParameterDatabase db,
+                                                           String containerPath,
+                                                     {Inventory givenInventory:null})
+  {
+    ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader.PIDSellerFromDB(market,
+                                                                   db,containerPath,givenInventory:givenInventory);
+    //add events
+    addDailyInflowAndDepreciation(seller,
+                                  db.getAsNumber("$containerPath.dailyInflow","$DB_ADDRESS.dailyInflow"),
+                                  db.getAsNumber("$containerPath.depreciationRate","$DB_ADDRESS.depreciationRate"));
     return seller;
   }
   /**
@@ -401,9 +497,9 @@ class ZeroKnowledgeTrader implements Trader
                                                          Inventory givenInventory : null})
   {
     ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader.PIDBufferSeller(market,
-    initialPrice:initialPrice,givenInventory:givenInventory,
-    optimalInventory:optimalInventory, criticalInventory:criticalInventory,
-    d:d,i:i,p:p);
+                                                                         initialPrice:initialPrice,givenInventory:givenInventory,
+                                                                         optimalInventory:optimalInventory, criticalInventory:criticalInventory,
+                                                                         d:d,i:i,p:p);
     //add events
     addDailyInflowAndDepreciation(seller, dailyInflow, depreciationRate);
     return seller;

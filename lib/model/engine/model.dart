@@ -7,6 +7,7 @@ part of lancaster.model;
 
 /**
  * a model is just:
+ *  - a parameter database
  *  - a schedule
  *  - a scenario
  *  - a randomizer
@@ -16,6 +17,8 @@ part of lancaster.model;
 class Model {
 
   final Schedule _schedule = new Schedule();
+
+  ParameterDatabase parameterDB;
 
   Random random;
 

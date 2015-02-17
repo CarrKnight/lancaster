@@ -30,6 +30,7 @@ abstract class SISOProductionFunction
 class LinearProductionFunction implements SISOProductionFunction
 {
 
+
   bool consumeInput;
 
   /**
@@ -37,8 +38,16 @@ class LinearProductionFunction implements SISOProductionFunction
    */
   double multiplier;
 
+  static final String DB_ADDRESS = "default.strategy.LinearProductionFunction";
 
-  LinearProductionFunction({this.consumeInput:true, this.multiplier:1.0});
+  LinearProductionFunction.FromDB(ParameterDatabase db, String container):
+  this(
+       db.getAsBoolean("$container.consumeInput","$DB_ADDRESS.consumeInput"),
+       db.getAsNumber("$container.multiplier","$DB_ADDRESS.multiplier")
+       );
+
+
+  LinearProductionFunction(this.consumeInput, this.multiplier);
   /**
    * how much gets produced given this inventory
    */
@@ -60,13 +69,23 @@ class ExponentialProductionFunction implements SISOProductionFunction
   /**
    * how much gets produced even with no input
    */
-  double freebie =0.0 ;
+  double freebie;
 
   double exponent;
 
   double multiplier;
 
-  ExponentialProductionFunction({this.multiplier:1.0,this.exponent:1.0});
+  static final String DB_ADDRESS = "default.strategy.ExponentialProductionFunction";
+
+  ExponentialProductionFunction.FromDB(ParameterDatabase db, String container):
+  this(
+      db.getAsNumber("$container.multiplier","$DB_ADDRESS.multiplier"),
+      db.getAsNumber("$container.exponent","$DB_ADDRESS.exponent"),
+      db.getAsNumber("$container.freebie","$DB_ADDRESS.freebie")
+      );
+
+
+  ExponentialProductionFunction(this.multiplier,this.exponent,this.freebie);
 
 
   /**
@@ -99,7 +118,7 @@ class SISOPlant
 
   SISOPlant.defaultSISO(Inventory inventory):
   this(inventory.getSection("labor"),inventory.getSection("gas"),
-  new LinearProductionFunction());
+  new LinearProductionFunction(true,1.0));
 
 
   SISOPlant( this.input,this.output, this.function);

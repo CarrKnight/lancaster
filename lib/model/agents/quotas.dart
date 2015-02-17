@@ -16,10 +16,15 @@ part of lancaster.model;
  */
 class FixedValue implements AdaptiveStrategy
 {
+  static const String  DB_ADDRESS = "default.strategy.FixedValue";
 
   double value;
 
   FixedValue([this.value=1000.0]);
+
+  FixedValue.FromDB(ParameterDatabase db, String container)
+  :
+  this(db.getAsNumber("$container.value","$DB_ADDRESS.value"));
 
   adapt(Trader t, Data data) {}
 

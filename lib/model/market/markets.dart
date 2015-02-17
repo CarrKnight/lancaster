@@ -170,6 +170,8 @@ class ExogenousSellerMarket extends SellerMarket with OneSideMarketClearer{
 
   ExogenousCurve demand;
 
+  static const String DB_ADDRESS = "default.market.ExogenousSellerMarket";
+
 
   double _moneyExchanged = 0.0;
 
@@ -179,6 +181,15 @@ class ExogenousSellerMarket extends SellerMarket with OneSideMarketClearer{
                                 String moneyType: "money"}):
   this(new LinearCurve(intercept,slope),goodType:goodType,moneyType:moneyType);
 
+
+  ExogenousSellerMarket.LinearFromDB(
+      ParameterDatabase db,
+      String containerPath
+      )
+  :this.linear(intercept : db.getAsNumber("$containerPath.intercept","$DB_ADDRESS.intercept"),
+               slope : db.getAsNumber("$containerPath.slope","$DB_ADDRESS.slope"),
+               goodType : db.getAsString("$containerPath.goodType","$DB_ADDRESS.goodType"),
+               moneyType : db.getAsString("$containerPath.moneyType","$DB_ADDRESS.moneyType"));
 
   /**
    * demand = w*L of the previous day
@@ -191,6 +202,19 @@ class ExogenousSellerMarket extends SellerMarket with OneSideMarketClearer{
     FixedBudget fixedBudget = new FixedBudget(budgetDemand,intercept);
     return fixedBudget;
   }
+
+
+  factory ExogenousSellerMarket.linkedToWagesFromModelFromDB(
+      Model model,
+      String laborType,
+      ParameterDatabase db,
+      String containerPath
+      )
+  => new ExogenousSellerMarket.linkedToWagesFromModel(model,
+                                     db.getAsString("$containerPath.laborType","$DB_ADDRESS.laborType"),
+                                     intercept : db.getAsNumber("$containerPath.intercept","$DB_ADDRESS.intercept"),
+                                     moneyType : db.getAsString("$containerPath.moneyType","$DB_ADDRESS.moneyType"));
+
 
   factory ExogenousSellerMarket.linkedToWagesFromModel( Model model,
                                                         String laborType,
@@ -282,6 +306,8 @@ class ExogenousBuyerMarket extends BuyerMarket with OneSideMarketClearer{
 
   final ExogenousCurve supply;
 
+  static const String DB_ADDRESS = "default.money.ExogenousBuyerMarket";
+
 
   double _moneyExchanged = 0.0;
 
@@ -292,8 +318,24 @@ class ExogenousBuyerMarket extends BuyerMarket with OneSideMarketClearer{
   this(new LinearCurve(intercept,slope),goodType:goodType,moneyType:moneyType);
 
 
-  ExogenousBuyerMarket.
-  infinitelyElastic(double price, {
+  ExogenousBuyerMarket.LinearFromDB(
+      ParameterDatabase db,
+      String containerPath
+      )
+  :this.linear(intercept : db.getAsNumber("$containerPath.intercept","$DB_ADDRESS.intercept"),
+               slope : db.getAsNumber("$containerPath.slope","$DB_ADDRESS.slope"),
+               goodType : db.getAsString("$containerPath.goodType","$DB_ADDRESS.goodType"),
+               moneyType : db.getAsString("$containerPath.moneyType","$DB_ADDRESS.moneyType"));
+
+
+  ExogenousBuyerMarket.InfinitelyElasticFromDB( ParameterDatabase db,
+                                                String containerPath)
+  :this.infinitelyElastic(db.getAsNumber("$containerPath.inelasticPrice","$DB_ADDRESS.inelasticPrice"),
+                          goodType : db.getAsString("$containerPath.goodType","$DB_ADDRESS.goodType"),
+                          moneyType : db.getAsString("$containerPath.moneyType","$DB_ADDRESS.moneyType"));
+
+
+  ExogenousBuyerMarket.infinitelyElastic(double price, {
   String goodType : "gas",
   String moneyType: "money" }):
   this(new InfinitelyElasticAsk(price),goodType:goodType,moneyType:moneyType,
