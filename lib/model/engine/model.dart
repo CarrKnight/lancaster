@@ -18,7 +18,7 @@ class Model {
 
   final Schedule _schedule = new Schedule();
 
-  ParameterDatabase parameterDB;
+  ParameterDatabase parameters;
 
   Random random;
 
@@ -36,6 +36,15 @@ class Model {
 
   Model.randomSeed([Scenario givenScenario = null]):
   this(new DateTime.now().millisecondsSinceEpoch,givenScenario);
+
+
+  Model.fromJSON(String json)
+  {
+    this.parameters = new ParameterDatabase(json);
+    random = parameters.random;
+    this.scenario = _generateScenarioFromDatabase(parameters);
+  }
+
 
   //starts the scenario, that's all
   void start()
@@ -58,6 +67,16 @@ abstract class Scenario{
 
 
   void start(Model model);
+}
+
+
+Scenario _generateScenarioFromDatabase(ParameterDatabase db)
+{
+  String strategyName = db.getAsString("run.scenario");
+  if (strategyName == "OneMarketCompetition")
+    return new OneMarketCompetition();
+
+  throw new Exception("don't know what $strategyName is regarding hr pricing!");
 }
 
 

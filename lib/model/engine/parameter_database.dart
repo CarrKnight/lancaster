@@ -29,9 +29,9 @@ class ParameterDatabase
   _root = new JsonObject.fromJsonString(json)
   {
 
-    Object seedParameter = _root["seed"];
+    Object seedParameter = _root["run.seed"];
     num seed;
-    if(seedParameter == null || !(seedParameter is num))
+    if(seedParameter == null || !(seedParameter  == "milliseconds"))
       seed = new DateTime.now().millisecondsSinceEpoch;
     else
       seed = seedParameter;
@@ -43,6 +43,73 @@ class ParameterDatabase
     _generators["empirical"] = DEFAULT_EMPIRICAL;
 
   }
+
+
+  /**
+   * merge with new json. The new object overwrites any conflict
+   */
+  mergeWithJSON(String json)
+  {
+
+    JsonObject toAdd = new JsonObject.fromJsonString(json);
+    mergeSecondIntoFirst(_root,toAdd);
+  }
+
+  mergeSecondIntoFirst(JsonObject first, JsonObject second)
+  {
+    //before we go any further, if there is a link in the original and no link in the new one, kill the link
+    if(first["link"] != null && second["link"]==null && second.length > 0)
+      first.remove("link");
+
+
+    //go through each key
+    List<String> keys = new List.from(first.keys);
+
+    for(String key in keys)
+    {
+      Object firstValue = first[key];
+      Object secondValue = second[key];
+
+      //if it doesn't exist in the second value, ignore it
+      if(secondValue == null)
+        continue;
+      if(firstValue is JsonObject)
+      {
+        //if they are both branches, recursively merge
+        if(secondValue is JsonObject)
+          mergeSecondIntoFirst(firstValue,secondValue);
+        else
+        {
+          //here it is neither null nor a branch, overwrites the old branch
+          assert(secondValue != null);
+          first[key] = secondValue;
+        }
+      }
+      else
+      {
+        //the old tree has a leaf here, if the second has anything it overwrites
+        if(secondValue != null)
+          first[key] = secondValue;
+      }
+    }
+
+
+    //now go through all the second object keys, if they don't exist in the first, add them immediately
+    for(String key in second.keys)
+    {
+      if(!first.containsKey(key))
+      {
+        first.isExtendable = true; //briefly make it extendable
+        first[key] = second[key];
+        first.isExtendable = false; //clamp it again!
+      }
+    }
+
+
+
+  }
+
+
   /**
    * get whatever is at [address]. null if the address is invalid
    */

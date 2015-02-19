@@ -265,11 +265,10 @@ class PIDMaximizer implements Extractor
 
   }
 
-
-
-  PIDMaximizer(Random random,int averagePIDPeriod, double PIMultiplier, double sigmoidCenter):
-  pid = new StickyPID.Random(new PIDController.standardPI(),random,
-                             averagePIDPeriod)
+  PIDMaximizer.FromPID(PIDController delegate, Random random,
+                       averagePIDPeriod, double PIMultiplier,
+                       double sigmoidCenter )
+  :pid = new StickyPID.Random(delegate,r,averagePIDPeriod)
   {
     ratioTransformer = (x)=>sigmoid(x,sigmoidCenter);
     pid.offset=currentTarget;
@@ -277,9 +276,16 @@ class PIDMaximizer implements Extractor
     (pid.delegate as PIDController).integrativeParameter *=PIMultiplier;
   }
 
+
+  PIDMaximizer(Random random,int averagePIDPeriod, double PIMultiplier, double sigmoidCenter):
+  this.FromPID(new PIDController.standardPI(),random,averagePIDPeriod,PIMultiplier,sigmoidCenter);
+
   PIDMaximizer.FromDB(ParameterDatabase db, String container)
   :
-  this(db.random,
+  this.FromPID(new PIDController(db.getAsNumber("$container.p","$DB_ADDRESS.p"),
+                                db.getAsNumber("$container.i","$DB_ADDRESS.i"),
+                                db.getAsNumber("$container.d","$DB_ADDRESS.d")),
+        db.random,
        db.getAsNumber("$container.averagePIDPeriod","$DB_ADDRESS.averagePIDPeriod"),
        db.getAsNumber("$container.PIMultiplier","$DB_ADDRESS.PIMultiplier"),
        db.getAsNumber("$container.sigmoidCenter","$DB_ADDRESS.sigmoidCenter")

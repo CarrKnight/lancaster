@@ -478,7 +478,7 @@ Data fixedWageMicro(bool keynesian,
   //fixed wages
   scenario.hrPricingInitialization = (SISOPlant plant,
                                       Firm firm,  Random r,  ZeroKnowledgeTrader seller,
-                                      OneMarketCompetition scenario)=> new FixedValue(wage);
+                                      ParameterDatabase db, String containerPath)=> new FixedValue(wage);
 
 
   if(keynesian){

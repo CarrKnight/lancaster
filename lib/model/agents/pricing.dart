@@ -435,7 +435,7 @@ class BufferInventoryAdaptive implements ControlStrategy
                                              i:db.getAsNumber("$containerPath.i","$DB_ADDRESS.i"),
                                              d:db.getAsNumber("$containerPath.d","$DB_ADDRESS.d"),
                                              offset:db.getAsNumber("$containerPath.offset","$DB_ADDRESS.offset"),
-                                             columnName:db.getAsString("$containerPath.columName","$DB_ADDRESS.columName"))
+                                             columnName:db.getAsString("$containerPath.columnName","$DB_ADDRESS.columnName"))
                ,db,containerPath);
 
 

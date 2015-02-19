@@ -269,6 +269,72 @@ main()
   });
 
 
+
+  String input4 =
+  '''
+  {
+  "container" :
+  {
+    "pruned" :
+    {
+      "variable1" : 5
+    },
+    "changed" : 12
+
+  },
+  "referencing":
+  {
+    "link": "container.changed"
+  }
+  }
+  ''';
+
+  group("Merge JSON works",()
+  {
+    test('keep adding stuff', (){
+
+      ParameterDatabase db = new ParameterDatabase(input4);
+      //reads correctly
+      expect(db.getAsNumber("container.pruned.variable1"),5);
+      db.mergeWithJSON('''{
+      "container":
+      {
+      "pruned" : 32
+      }
+      }''');
+      //old reference is gone
+      expect(() => db.getAsNumber("container.pruned.variable1"), throws);
+      expect(db.getAsNumber("container.pruned"),32);
+
+      //simple substitution
+      expect(db.getAsNumber("container.changed"),12);
+      db.mergeWithJSON('''{
+      "container":
+      {
+      "changed" : 32
+      }
+      }''');
+      expect(db.getAsNumber("container.changed"),32);
+
+
+      //link gets removed
+      expect(db.getAsNumber("referencing"),32);
+      db.mergeWithJSON('''{
+      "referencing":
+      {
+      "new" : 1
+      }
+      }''');
+      expect(() => db.getAsNumber("referencing"),throws);
+      expect(db.getAsNumber("referencing.new"),1);
+
+
+
+    });
+
+
+  });
+
 }
 
 

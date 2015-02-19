@@ -7,27 +7,27 @@ import 'package:unittest/unittest.dart';
 import 'package:lancaster/model/lancaster_model.dart';
 import 'package:lancaster/runs/yackm.dart';
 import 'dart:math';
+import 'dart:io';
 
 
 
 
 
 KeynesianInfiniteElasticity(bool marketDayOnly) {
-  Model model = new Model.randomSeed();
+
+
+
+  //gain access to DB files
+  Directory testDirectory = Directory.current;
+  File defaultParameters = new File("${testDirectory.path}${Platform.pathSeparator}default.json");
+  File testParameters = new File("${testDirectory.path}${Platform.pathSeparator}KeynesianInfiniteElasticity.json");
+
+  Model model = new Model.fromJSON(defaultParameters.readAsStringSync());
+  model.parameters.mergeWithJSON(testParameters.readAsStringSync());
+
   OneMarketCompetition experiment = new
-  OneMarketCompetition()
-    ..minInitialPriceSelling = 2.5
-    ..maxInitialPriceSelling = 2.5
-    ..laborMarket = new ExogenousBuyerMarket.infinitelyElastic(1.0,
-  goodType:"labor")
-    ..goodMarket = new ExogenousSellerMarket.linear(intercept:3.0,slope:-1.0);
+  OneMarketCompetition();
   model.scenario = experiment;
-
-  //small demand, requires small adjustments, this "P" actually is a
-  // multiplier when using  PROFIT_MAXIMIZER_PRICING
-  experiment.salesMinP = 1.0;
-  experiment.salesMaxP = 1.0;
-
 
   if(marketDayOnly)
     experiment.salesPricingInitialization =
@@ -35,11 +35,6 @@ KeynesianInfiniteElasticity(bool marketDayOnly) {
   else
     experiment.salesPricingInitialization =
     OneMarketCompetition.PROFIT_MAXIMIZER_PRICING;
-
-  experiment.hrPricingInitialization = (SISOPlant plant,
-                                        Firm firm,  Random r,  ZeroKnowledgeTrader seller,
-                                        OneMarketCompetition scenario)=> new FixedValue(1.0);
-  experiment.hrQuotaInitializer = OneMarketCompetition.KEYNESIAN_QUOTA;
 
 
   model.start();
@@ -234,9 +229,15 @@ main()
 
 squareRootProductionFixedWage(bool keynesian)
 {
+
+  //gain access to DB files
+  Directory testDirectory = Directory.current;
+  File defaultParameters = new File("${testDirectory.path}${Platform.pathSeparator}default.json");
+  File testParameters = new File("${testDirectory.path}${Platform.pathSeparator}SquareRootProductionFixedWage.json");
+
+
   Model model = new Model.randomSeed();
   OneMarketCompetition scenario = new OneMarketCompetition();
-  scenario.competitors = 1;
   //doesn't add slopes when predicting prices
   scenario.hrIntializer = (ZeroKnowledgeTrader sales) {
     sales.predictor = new
@@ -246,7 +247,6 @@ squareRootProductionFixedWage(bool keynesian)
     sales.predictor = new
     LastPricePredictor();
   };
-  scenario.productionFunction = new ExponentialProductionFunction(exponent:0.5);
 
   scenario.goodMarket = new ExogenousSellerMarket.linear(intercept:27.0,
   slope:-1.0);
