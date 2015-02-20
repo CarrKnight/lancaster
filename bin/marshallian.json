@@ -1,0 +1,36 @@
+{
+  "default": {
+    "scenario": {
+      "OneMarketCompetition": {
+        "salesPricingInitialization": {
+          "salesPricingStrategy": "STOCKOUT_SALES"
+        },
+        "hrPricingInitialization": {
+          "hrPricingStrategy": "FIXED_PRICE_HR",
+          "FIXED_PRICE_HR": {
+            "value": 1
+          }
+        },
+        "hrQuotaInitialization": {
+          "hrQuotaStrategy": "MARSHALLIAN_QUOTA",
+          "MARSHALLIAN_QUOTA": {
+            "currentTarget": 50,
+            "PIMultiplier": 100
+          }
+        },
+        "competitors": 1,
+        "productionFunction": {
+          "class": "ExponentialProductionFunction",
+          "multiplier": 1,
+          "exponent": 0.5,
+          "freebie": -5,
+          "consumeInput": true
+        },
+        "laborMarket": {
+          "constructor": "InfinitelyElasticFromDB",
+          "inelasticPrice": 1
+        }
+      }
+    }
+  }
+}

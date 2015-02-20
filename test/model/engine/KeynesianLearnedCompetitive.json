@@ -1,0 +1,27 @@
+{
+  "default": {
+    "scenario": {
+      "OneMarketCompetition": {
+        "salesPricingInitialization": {
+          "salesPricingStrategy": "PROFIT_MAXIMIZER_PRICING",
+          "PROFIT_MAXIMIZER_PRICING": {
+            "delegate": {
+              "PIMultiplier": 50
+            }
+          }
+        },
+        "hrPricingInitialization": {
+          "hrPricingStrategy": "STICKY_STOCKOUT_QUOTA_BUYER",
+          "STICKY_STOCKOUT_QUOTA_BUYER": {
+            "p": {
+              "max": 0.2
+            },
+            "i": {
+              "max": 0.2
+            }
+          }
+        }
+      }
+    }
+  }
+}

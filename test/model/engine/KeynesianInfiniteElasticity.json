@@ -1,0 +1,36 @@
+{
+  "default": {
+    "scenario": {
+      "OneMarketCompetition": {
+        "laborMarket": {
+          "constructor": "InfinitelyElasticFromDB",
+          "inelasticPrice": 1
+        },
+        "goodMarket": {
+          "intercept": 3,
+          "slope": -1
+        },
+        "salesPricingInitialization": {
+          "FIXED_PRICE": {
+            "value": 2.5
+          },
+          "PROFIT_MAXIMIZER_PRICING": {
+	    "delegate":{
+            "PIMultiplier": 1
+	   },
+            "initialPrice": 2.5
+          }
+        },
+        "hrPricingInitialization": {
+          "hrPricingStrategy": "FIXED_PRICE_HR",
+          "FIXED_PRICE_HR": {
+            "value": 1
+          }
+        },
+        "hrQuotaInitialization": {
+          "hrQuotaStrategy": "KEYNESIAN_QUOTA"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "default": {
+    "scenario": {
+      "OneMarketCompetition": {
+        "competitors": 1,
+        "productionFunction": {
+          "class": "ExponentialProductionFunction",
+          "multiplier": 1,
+          "exponent": 0.5,
+          "consumeInput": true
+        },
+        "laborMarket": {
+          "constructor": "InfinitelyElasticFromDB",
+          "inelasticPrice": 1
+        },
+        "goodMarket": {
+          "intercept": 27,
+          "slope": -1
+        },
+        "hrPricingInitialization": {
+          "hrPricingStrategy": "FIXED_PRICE_HR",
+          "FIXED_PRICE_HR": {
+            "value": 1
+          }
+        },
+        "salesPricingInitialization": {
+          "PROFIT_MAXIMIZER_PRICING": {
+            "delegate": {
+              "PIMultiplier": 100
+            },
+            "initialPrice": {
+              "type": "uniform",
+              "min": 0,
+              "max": 27
+            }
+          }
+        }
+      }
+    }
+  }
+}

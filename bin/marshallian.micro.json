@@ -1,0 +1,48 @@
+{
+  "default": {
+    "scenario": {
+      "OneMarketCompetition": {
+        "salesPricingInitialization": {
+          "salesPricingStrategy": "STOCKOUT_SALES",
+          "STOCKOUT_SALES": {
+            "offset": {
+              "type": "uniform",
+              "min": 0,
+              "max": 100
+            }
+          }
+        },
+        "hrPricingInitialization": {
+          "hrPricingStrategy": "FIXED_PRICE_HR",
+          "FIXED_PRICE_HR": {
+            "value": 50
+          }
+        },
+        "hrQuotaInitialization": {
+          "hrQuotaStrategy": "MARSHALLIAN_QUOTA",
+          "MARSHALLIAN_QUOTAS": {
+            "offset": {
+              "type": "uniform",
+              "min": 1,
+              "max": 100
+            }
+          }
+        },
+        "competitors": 1,
+        "productionFunction": {
+          "class": "LinearProductionFunction",
+          "multiplier": 1,
+          "consumeInput": true
+        },
+        "laborMarket": {
+          "constructor": "InfinitelyElasticFromDB",
+          "inelasticPrice": 50
+        },
+        "goodMarket": {
+          "intercept": 100,
+          "slope": -1
+        }
+      }
+    }
+  }
+}
