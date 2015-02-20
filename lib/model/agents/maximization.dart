@@ -268,7 +268,7 @@ class PIDMaximizer implements Extractor
   PIDMaximizer.FromPID(PIDController delegate, Random random,
                        averagePIDPeriod, double PIMultiplier,
                        double sigmoidCenter )
-  :pid = new StickyPID.Random(delegate,r,averagePIDPeriod)
+  :pid = new StickyPID.Random(delegate,random,averagePIDPeriod)
   {
     ratioTransformer = (x)=>sigmoid(x,sigmoidCenter);
     pid.offset=currentTarget;

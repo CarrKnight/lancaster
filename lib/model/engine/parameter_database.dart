@@ -52,10 +52,10 @@ class ParameterDatabase
   {
 
     JsonObject toAdd = new JsonObject.fromJsonString(json);
-    mergeSecondIntoFirst(_root,toAdd);
+    _mergeSecondIntoFirst(_root,toAdd);
   }
 
-  mergeSecondIntoFirst(JsonObject first, JsonObject second)
+  _mergeSecondIntoFirst(JsonObject first, JsonObject second)
   {
     //before we go any further, if there is a link in the original and no link in the new one, kill the link
     if(first["link"] != null && second["link"]==null && second.length > 0)
@@ -77,7 +77,7 @@ class ParameterDatabase
       {
         //if they are both branches, recursively merge
         if(secondValue is JsonObject)
-          mergeSecondIntoFirst(firstValue,secondValue);
+          _mergeSecondIntoFirst(firstValue,secondValue);
         else
         {
           //here it is neither null nor a branch, overwrites the old branch

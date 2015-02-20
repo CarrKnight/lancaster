@@ -51,14 +51,14 @@ main()
   fixedWageMacro(true,testing:false,
                  gasCsvName: "K_drop_gas.csv",
                  laborCsvName: "K_drop_wage.csv",
-                 totalSteps:20000,shockday:10000,endshockday:-1,shockSize:-0.2,
+                 totalSteps:20000,shockDay:10000,endShockDay:-1,shockSize:-0.2,
                  multiplier : 0.5,fixedCost: -1.0,
                  salesCSV : "K_drop_sales.csv", hrCSV: "K_drop_hr.csv");
   
   fixedWageMacro(false,testing:false,
                  gasCsvName: "M_drop_gas.csv",
                  laborCsvName: "M_drop_wage.csv",
-                 totalSteps:20000,shockday:10000,endshockday:-1,shockSize:-0.2,
+                 totalSteps:20000,shockDay:10000,endShockDay:-1,shockSize:-0.2,
                  multiplier : 0.5,fixedCost: -1.0,
                  salesCSV : "M_drop_sales.csv", hrCSV: "M_drop_hr.csv");
 }

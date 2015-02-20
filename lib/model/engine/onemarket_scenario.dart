@@ -50,7 +50,6 @@ class OneMarketCompetition extends Scenario
 
   List<Firm> firms = new List();
 
-  int competitors;
 
 
   /**
@@ -72,6 +71,8 @@ class OneMarketCompetition extends Scenario
       return PID_MAXIMIZER_HR;
     if (strategyName == "FIXED_PRICE_HR")
       return FIXED_PRICE_HR;
+    if (strategyName == "STICKY_STOCKOUT_QUOTA_BUYER")
+      return STICKY_STOCKOUT_QUOTA_BUYER;
 
     throw new Exception("don't know what $strategyName is regarding hr pricing!");
 
@@ -81,6 +82,24 @@ class OneMarketCompetition extends Scenario
   ExogenousBuyerMarket laborMarket;
 
   ExogenousSellerMarket goodMarket;
+
+
+  static HrStrategyInitialization STICKY_STOCKOUT_QUOTA_BUYER = (SISOPlant plant, Firm firm,
+                                                          Random r,
+                                                          ZeroKnowledgeTrader seller,
+                                                          ParameterDatabase db,
+                                                          String containerPath)
+  {
+
+    PIDAdaptive pricing = new PIDAdaptive.
+    StockoutQuotaBuyerFromDB(db,"$containerPath.STICKY_STOCKOUT_QUOTA_BUYER");
+
+
+    pricing.pid = new StickyPID.Random(pricing.pid,r,
+                                       db.getAsNumber("$containerPath.STICKY_STOCKOUT_QUOTA_BUYER.averagePIDPeriod"));
+    return pricing;
+  };
+
 
 
   /**
@@ -315,7 +334,7 @@ class OneMarketCompetition extends Scenario
 
     Random random = model.random;
 
-    competitors = model.parameters.getAsNumber("$DB_ADDRESS.competitors");
+    int competitors = model.parameters.getAsNumber("$DB_ADDRESS.competitors");
 
 
     if (laborMarket == null)//not overriden?
@@ -350,7 +369,7 @@ class OneMarketCompetition extends Scenario
 
 
       if(salesPricingInitialization == null) //not overriden
-        _generateSalesPricingFromDB(model.parameters);
+        salesPricingInitialization=_generateSalesPricingFromDB(model.parameters);
 
       //build sales
       ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader(

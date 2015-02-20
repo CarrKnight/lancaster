@@ -88,37 +88,37 @@ main()
 
 
   for(int i=0; i<5;i++) {
-    test("Marshallian Macro, ",
-        ()=>fixedWageMacro(false));
+    test("Marshallian Macro",
+        ()=>fixedWageMacro("marshallian.json"));
 
   }
 
   for(int i=0; i<5;i++) {
-    test("Keynesian Macro, ",
-        ()=>fixedWageMacro(true));
+    test("Keynesian Macro",
+        ()=>fixedWageMacro("keynesian.json"));
 
   }
 
   for(int i=0; i<5;i++) {
-    test("Marshallian Macro with shock ",
-             ()=>fixedWageMacro(false,totalSteps:20000,shockday:10000,shockSize:-1.0));
+    test("Marshallian Macro with shock",
+             ()=>fixedWageMacro("marshallian.json",totalSteps:20000,shockDay:10000,shockSize:-1.0));
 
   }
 
   for(int i=0; i<5;i++) {
     test("Keynesian Macro with shock ",
-             ()=>fixedWageMacro(true,totalSteps:20000,shockday:10000,shockSize:-1.0));
+             ()=>fixedWageMacro("keynesian.json",totalSteps:20000,shockDay:10000,shockSize:-1.0));
 
   }
   for(int i=0; i<5;i++) {
     test("Marshallian Recover from shock ",
-             ()=>fixedWageMacro(false,totalSteps:20000,shockday:10000,endshockday:15000,shockSize:-1.0));
+             ()=>fixedWageMacro("marshallian.json",totalSteps:20000,shockDay:10000,endShockDay:15000,shockSize:-1.0));
 
   }
 
   for(int i=0; i<5;i++) {
     test("Keynesian Recover with shock ",
-             ()=>fixedWageMacro(true,totalSteps:20000,shockday:10000,endshockday:15000,shockSize:-1.0));
+             ()=>fixedWageMacro("keynesian.json",totalSteps:20000,shockDay:10000,endShockDay:15000,shockSize:-1.0));
 
   }
   //one agent working as competitive
@@ -213,7 +213,7 @@ main()
 
 
   for(int i=0; i<5;i++) {
-    test("Keynesian Decreasing Productivity, fixed wage, ",
+    test("Keynesian Decreasing Productivity, fixed wage",
         ()=>squareRootProductionFixedWage(true));
 
   }
@@ -236,8 +236,9 @@ squareRootProductionFixedWage(bool keynesian)
   File testParameters = new File("${testDirectory.path}${Platform.pathSeparator}SquareRootProductionFixedWage.json");
 
 
-  Model model = new Model.randomSeed();
-  OneMarketCompetition scenario = new OneMarketCompetition();
+  Model model = new Model.fromJSON(defaultParameters.readAsStringSync());
+  model.parameters.mergeWithJSON(testParameters.readAsStringSync());
+  OneMarketCompetition scenario = model.scenario;
   //doesn't add slopes when predicting prices
   scenario.hrIntializer = (ZeroKnowledgeTrader sales) {
     sales.predictor = new
@@ -248,14 +249,7 @@ squareRootProductionFixedWage(bool keynesian)
     LastPricePredictor();
   };
 
-  scenario.goodMarket = new ExogenousSellerMarket.linear(intercept:27.0,
-  slope:-1.0);
-  scenario.laborMarket = new ExogenousBuyerMarket.infinitelyElastic(1.0,
-  goodType:"labor");
 
-  scenario.hrPricingInitialization = (SISOPlant plant,
-                                      Firm firm,  Random r,  ZeroKnowledgeTrader seller,
-                                      OneMarketCompetition scenario)=> new FixedValue(1.0);
   if(keynesian)
   {
     scenario.hrQuotaInitializer = OneMarketCompetition.KEYNESIAN_STOCKOUT_QUOTA;
@@ -265,10 +259,7 @@ squareRootProductionFixedWage(bool keynesian)
     };
     //this is the default
     // multiplier when using  PROFIT_MAXIMIZER_PRICING
-    scenario.salesMinP = 100.0;
-    scenario.salesMaxP = 100.0;
     scenario.salesPricingInitialization = OneMarketCompetition.PROFIT_MAXIMIZER_PRICING;
-    scenario.maxInitialPriceSelling=27.0;
   }
   else {
     scenario.hrQuotaInitializer = OneMarketCompetition.MARSHALLIAN_QUOTA;
@@ -303,8 +294,11 @@ squareRootProductionFixedWage(bool keynesian)
 
 oneMarketTest(bool learned, bool pidMaximizer, [int competitors=1])
 {
-  Model model = new Model.randomSeed();
-  OneMarketCompetition scenario = new OneMarketCompetition();
+  Directory testDirectory = Directory.current;
+  File defaultParameters = new File("${testDirectory.path}${Platform.pathSeparator}default.json");
+  Model model = new Model.fromJSON(defaultParameters.readAsStringSync());
+
+  OneMarketCompetition scenario = model.scenario;
   scenario.competitors = competitors;
 
   if(pidMaximizer)
