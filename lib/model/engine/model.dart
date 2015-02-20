@@ -89,13 +89,13 @@ typedef void ModelInitialization(Model model);
 class SimpleSellerScenario extends Scenario
 {
 
-  double dailyFlow;
+  num dailyFlow;
 
   ModelInitialization initializer;
 
-  final double intercept;
+  final num intercept;
 
-  final double slope;
+  final num slope;
 
   void start(Model model)=>initializer(model);
 
@@ -116,16 +116,16 @@ class SimpleSellerScenario extends Scenario
       model.markets["gas"] = market;
       //initial price 0
       for (int i = 0; i < competitors; i++) {
-        double p = random.nextDouble() * (maxP - minP) + minP;
-        double i = random.nextDouble() * (maxI - minI) + minI;
-        double initialPrice = random.nextDouble() *
+        num p = random.nextDouble() * (maxP - minP) + minP;
+        num i = random.nextDouble() * (maxI - minI) + minI;
+        num initialPrice = random.nextDouble() *
                               (maxInitialPrice - minInitialPrice) + minInitialPrice;
 
         PIDAdaptive pricing =
         new PIDAdaptive.StockoutSeller(initialPrice:initialPrice, p:p, d:0.0,
                                        i:i);
         ExogenousSellerScenario toReturn =new ExogenousSellerScenario._internal(
-                (double price){(pricing.pid as PIDController).offset = price;},()
+                (num price){(pricing.pid as PIDController).offset = price;},()
             =>pricing.value);
 
         ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader.PIDBufferSellerFixedInflow(dailyFlow,
@@ -152,9 +152,9 @@ class SimpleSellerScenario extends Scenario
       model.markets["gas"] = market;
       //initial price 0
       for (int i = 0; i < competitors; i++) {
-        double p = random.nextDouble() * (maxP - minP) + minP;
-        double i = random.nextDouble() * (maxI - minI) + minI;
-        double initialPrice = random.nextDouble() *
+        num p = random.nextDouble() * (maxP - minP) + minP;
+        num i = random.nextDouble() * (maxI - minI) + minI;
+        num initialPrice = random.nextDouble() *
                               (maxInitialPrice - minInitialPrice) + minInitialPrice;
         var inventory = new Inventory();
         PIDAdaptive pricing =
@@ -172,7 +172,7 @@ class SimpleSellerScenario extends Scenario
     };
   }
 
-  double get equilibriumPrice => intercept + slope *dailyFlow;
+  num get equilibriumPrice => intercept + slope *dailyFlow;
 
 
 }
@@ -182,7 +182,7 @@ class SimpleSellerScenario extends Scenario
  * A simple seller scenario where the sale price is set through this object.
  * Useful for an easy gui demo
  */
-typedef void PriceSetter(double newPrice);
+typedef void PriceSetter(num newPrice);
 
 
 class ExogenousSellerScenario extends Scenario
@@ -206,13 +206,13 @@ class ExogenousSellerScenario extends Scenario
   ExogenousSellerMarket market;
 
   factory ExogenousSellerScenario({initialPrice : 1.0,
-                                  double dailyFlow : 50.0,
-                                  double intercept:200.0,double slope:-2.0})
+                                  num dailyFlow : 50.0,
+                                  num intercept:200.0,num slope:-2.0})
   {
     FixedValue pricing = new FixedValue(initialPrice);
 
     ExogenousSellerScenario toReturn =new ExogenousSellerScenario._internal(
-            (double price){pricing.value = price;},()=>pricing.value);
+            (num price){pricing.value = price;},()=>pricing.value);
 
     toReturn.market = new ExogenousSellerMarket.linear(intercept:intercept,slope:slope);
 
@@ -242,23 +242,23 @@ class ExogenousSellerScenario extends Scenario
 
 
 
-  factory ExogenousSellerScenario.stockoutPID({double initialPrice : 1.0,
+  factory ExogenousSellerScenario.stockoutPID({num initialPrice : 1.0,
                                               minP:0.05,
                                               maxP:.1,minI:0.05,
                                               maxI:.1,
-                                              double dailyFlow : 50.0,
-                                              double intercept:200.0,
-                                              double slope:-2.0})
+                                              num dailyFlow : 50.0,
+                                              num intercept:200.0,
+                                              num slope:-2.0})
   {
     Random random = new Random();
-    double p = random.nextDouble() * (maxP - minP) + minP;
-    double i = random.nextDouble() * (maxI - minI) + minI;
+    num p = random.nextDouble() * (maxP - minP) + minP;
+    num i = random.nextDouble() * (maxI - minI) + minI;
 
     PIDAdaptive pricing =
     new PIDAdaptive.StockoutSeller(initialPrice:initialPrice, p:p, d:0.0,
                                    i:i);
     ExogenousSellerScenario toReturn =new ExogenousSellerScenario._internal(
-            (double price){(pricing.pid as PIDController).offset = price;},()
+            (num price){(pricing.pid as PIDController).offset = price;},()
         =>pricing.value);
     toReturn.market = new ExogenousSellerMarket.linear(intercept:intercept,slope:slope);
 
@@ -289,16 +289,16 @@ class ExogenousSellerScenario extends Scenario
   }
 
 
-  double get price=>priceGetter();
-  void set price(double value){priceSetter(value);}
+  num get price=>priceGetter();
+  void set price(num value){priceSetter(value);}
 
 
-  double get customersAttracted=>sellerData.getLatestObservation("stockouts")
+  num get customersAttracted=>sellerData.getLatestObservation("stockouts")
                                  +sellerData.getLatestObservation("outflow");
 
 
 
-  double equilibriumPrice;
+  num equilibriumPrice;
 
 
 
@@ -339,9 +339,9 @@ class SimpleScenario extends Scenario{
     //initial price 0
     Random random = new Random(seed);
     for(int i=0; i< competitors; i++) {
-      double p = random.nextDouble() * (maxP - minP) + minP;
-      double i = random.nextDouble() * (maxI - minI) + minI;
-      double initialPrice = random.nextDouble() *
+      num p = random.nextDouble() * (maxP - minP) + minP;
+      num i = random.nextDouble() * (maxI - minI) + minI;
+      num initialPrice = random.nextDouble() *
                             (maxInitialPrice - minInitialPrice) + minInitialPrice;
 
       ZeroKnowledgeTrader buyer = new ZeroKnowledgeTrader.PIDBuyer(market,
@@ -363,22 +363,22 @@ class SimpleFirmScenario extends Scenario
 
 
 
-  double minInitialPriceBuying = 0.0;
-  double maxInitialPriceBuying = 100.0;
-  double minInitialPriceSelling = 0.0;
-  double maxInitialPriceSelling = 100.0;
-  double demandIntercept=100.0; double demandSlope=-1.0;
-  double supplyIntercept=0.0; double supplySlope=1.0;
+  num minInitialPriceBuying = 0.0;
+  num maxInitialPriceBuying = 100.0;
+  num minInitialPriceSelling = 0.0;
+  num maxInitialPriceSelling = 100.0;
+  num demandIntercept=100.0; num demandSlope=-1.0;
+  num supplyIntercept=0.0; num supplySlope=1.0;
   //sales pid
-  double salesMinP=0.05; double salesMaxP=.5;
-  double salesMinI=0.05; double salesMaxI=.5;
+  num salesMinP=0.05; num salesMaxP=.5;
+  num salesMinI=0.05; num salesMaxI=.5;
   //purchases pid
-  double purchaseMinP=0.05; double purchaseMaxP=.5;
-  double purchaseMinI=0.05; double purchaseMaxI=.5;
+  num purchaseMinP=0.05; num purchaseMaxP=.5;
+  num purchaseMinI=0.05; num purchaseMaxI=.5;
   //plant
-  double productionMultiplier = 1.0;
+  num productionMultiplier = 1.0;
   //worker target
-  double workerTarget = 10.0;
+  num workerTarget = 10.0;
   Firm mainFirm;
   ExogenousBuyerMarket laborMarket;
   ExogenousSellerMarket goodmarket;
@@ -397,9 +397,9 @@ class SimpleFirmScenario extends Scenario
     model.markets["labor"]=laborMarket;
 
     //build hr
-    double p = random.nextDouble() * (purchaseMaxP - purchaseMinP) + purchaseMinP;
-    double i = random.nextDouble() * (purchaseMaxI - purchaseMinI) + purchaseMinI;
-    double initialPrice = random.nextDouble() *
+    num p = random.nextDouble() * (purchaseMaxP - purchaseMinP) + purchaseMinP;
+    num i = random.nextDouble() * (purchaseMaxI - purchaseMinI) + purchaseMinI;
+    num initialPrice = random.nextDouble() *
                           (maxInitialPriceBuying - minInitialPriceBuying) + minInitialPriceBuying;
     ZeroKnowledgeTrader hr = new ZeroKnowledgeTrader.PIDBuyer(laborMarket,
                                                               flowTarget:workerTarget,initialPrice:initialPrice,p:p,i:i,d:0.0,
@@ -423,7 +423,7 @@ class SimpleFirmScenario extends Scenario
 
 
     //build plant
-    LinearProductionFunction function = new LinearProductionFunction();
+    LinearProductionFunction function = new LinearProductionFunction(true,1.0);
     SISOPlant plant = new SISOPlant(mainFirm.getSection("labor"),
                                     mainFirm.getSection("gas"),function);
     mainFirm.addPlant(plant);

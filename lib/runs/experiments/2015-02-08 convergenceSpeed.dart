@@ -49,8 +49,8 @@ main()
  * try to get the day when equilibrium was reached by reading the data
  */
 int extractApproximateDateOfEquilibrium(Data gasMarketData,
-                                        {double correctQ: 5.0, double minQDistance : 0.75,
-                                        double correctP : 20.0, double minPDistance : 0.25})
+                                        {num correctQ: 5.0, num minQDistance : 0.75,
+                                        num correctP : 20.0, num minPDistance : 0.25})
 {
 
   Matcher qCloseEnough =  closeTo(correctQ, minQDistance);

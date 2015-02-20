@@ -17,7 +17,7 @@ class SliderDemoBase
 
 
   @NgTwoWay('price')
-  void set price(double value)
+  void set price(num value)
   {
     //whenever you set a new value also step!
     //this is a relatively silly way not to deal with mouse event listeners
@@ -27,7 +27,7 @@ class SliderDemoBase
     presentation.step();
 
   }
-  double get price=>presentation.price;
+  num get price=>presentation.price;
 
   bool get ready => customersAttracted.isFinite;
 
@@ -43,7 +43,7 @@ class SliderDemoBase
 
 
   ZKPresentation get agent => presentation.agent;
-  double customersAttracted = double.NAN;
+  num customersAttracted = double.NAN;
 }
 
 @Component(
@@ -82,7 +82,7 @@ class AugmentedSliderDemoGUI extends SliderDemoBase{
   }
 
 
-  void set price(double value)
+  void set price(num value)
   {
     //whenever you set a new value also step!
     //this is a relatively silly way not to deal with mouse event listeners
@@ -112,7 +112,7 @@ class SliderWithChartsDemoGUI extends SliderDemoBase{
   }
 
 
-  void set price(double value)
+  void set price(num value)
   {
     //whenever you set a new value also step!
     //this is a relatively silly way not to deal with mouse event listeners
@@ -151,10 +151,10 @@ class FixedProductionBase
   String get equality => correct ? "=" : price > wage ? ">" : "<";
   String get cssClass => correct ? "green_highlight" : "red_highlight";
 
-  double price = double.NAN;
-  double wage = double.NAN;
-  void set target(double value){presentation.hrTarget=value;}
-  double get target => presentation.hrTarget;
+  num price = double.NAN;
+  num wage = double.NAN;
+  void set target(num value){presentation.hrTarget=value;}
+  num get target => presentation.hrTarget;
   int get period => 100;
 }
 
@@ -206,8 +206,8 @@ class FinalDemoGUI
 
   bool get ready => price.isFinite;
 
-  double price = double.NAN;
-  double wage = double.NAN;
+  num price = double.NAN;
+  num wage = double.NAN;
   int get period => 10;
 
 }

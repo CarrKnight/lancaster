@@ -15,20 +15,20 @@ abstract class ExogenousCurve
   /**
    * how much is sold/bought at this offer price
    */
-  double quantityAtThisPrice(double price);
+  num quantityAtThisPrice(num price);
 
 
   /**
    * tell the curve this much [quantity] has been sold/bought
    */
-  double recordTrade(double quantity, double price);
+  num recordTrade(num quantity, num price);
 
   /**
    * restore original curve (no quantity traded)
    */
   void reset();
 
-  double get quantityTraded;
+  num get quantityTraded;
 
 }
 
@@ -36,24 +36,24 @@ abstract class ExogenousCurve
 class LinearCurve implements ExogenousCurve
 {
 
-  double intercept;
+  num intercept;
 
-  double slope;
+  num slope;
 
-  double quantityTraded = 0.0;
+  num quantityTraded = 0.0;
 
 
   LinearCurve(this.intercept, this.slope);
 
-  double quantityAtThisPrice(double price) =>
+  num quantityAtThisPrice(num price) =>
   (intercept + slope * price)-quantityTraded;
 
 
-  double hypotheticalQuantityAtThisPrice(double price)
+  num hypotheticalQuantityAtThisPrice(num price)
   =>(intercept + slope * price);
 
 
-  double recordTrade(double quantity, double price)=> quantityTraded+=quantity;
+  num recordTrade(num quantity, num price)=> quantityTraded+=quantity;
 
   void reset(){quantityTraded = 0.0;}
 
@@ -67,25 +67,25 @@ class LinearCurve implements ExogenousCurve
 class InfinitelyElasticAsk implements ExogenousCurve
 {
 
-  double quantityTraded = 0.0;
+  num quantityTraded = 0.0;
 
-  double minPrice;
+  num minPrice;
 
 
   InfinitelyElasticAsk([this.minPrice=0.0]);
 
-  double quantityAtThisPrice(double price) => price >= minPrice ?
+  num quantityAtThisPrice(num price) => price >= minPrice ?
   double.MAX_FINITE : 0.0;
 
 
-  double recordTrade(double quantity, double price)=> quantityTraded+=quantity;
+  num recordTrade(num quantity, num price)=> quantityTraded+=quantity;
 
   void reset(){quantityTraded = 0.0;}
 
 
 }
 
-typedef double ComputeBudget();
+typedef num ComputeBudget();
 
 /**
  * basically there is a fixed pool of money that can be spent
@@ -100,19 +100,19 @@ class FixedBudget implements ExogenousCurve
 
   final ComputeBudget computeBudget;
 
-  double quantityTraded =0.0;
+  num quantityTraded =0.0;
 
-  double budget = 0.0;
+  num budget = 0.0;
 
-  double intercept = 0.0;
+  num intercept = 0.0;
 
-  double recordTrade(double quantity, double price) {
+  num recordTrade(num quantity, num price) {
     budget -= quantity * price;
     quantityTraded+= quantity; //update counter
     assert(budget>=-1);
   }
 
-  double quantityAtThisPrice(double price) {
+  num quantityAtThisPrice(num price) {
     assert(price is double);
     assert(intercept is double);
     assert(budget is double);
@@ -127,7 +127,7 @@ class FixedBudget implements ExogenousCurve
     quantityTraded = 0.0;
     if(!cumulative)
       budget = 0.0;
-    double newBudget = computeBudget();
+    num newBudget = computeBudget();
     if(newBudget.isFinite)
       budget += newBudget;
   }
@@ -143,21 +143,21 @@ class FixedBudget implements ExogenousCurve
 class FixedSupply implements ExogenousCurve
 {
 
-  double dailyQuantity = 100.0;
+  num dailyQuantity = 100.0;
 
 
   FixedSupply(this.dailyQuantity);
 
-  double quantityTraded =0.0;
+  num quantityTraded =0.0;
 
 
-  double recordTrade(double quantity, double price) {
+  num recordTrade(num quantity, num price) {
     quantityTraded+= quantity; //update counter
     assert(dailyQuantity>=quantityTraded);
     return quantityTraded;
   }
 
-  double quantityAtThisPrice(double price) {
+  num quantityAtThisPrice(num price) {
     if(price > 0)
       return max(dailyQuantity-quantityTraded,0.0);
     else

@@ -33,16 +33,16 @@ main()
 */
   //cyclical tests!
   //demand shock at day 10000, recovery at day 15000
-  fixedWageMacro("keynesian.json",testing:false,
+  fixedWageMacro("keynesian.json", testing:false,
                  gasCsvName: "K_cycle_gas.csv",
                  laborCsvName: "K_cycle_wage.csv",
-                 totalSteps:20000,shockDay:10000,endShockDay:15000,shockSize:-0.2,
+                 totalSteps:20000, shockDay:10000, endShockDay:15000, shockSize:-0.2,
                  salesCSV : "K_cycle_sales.csv", hrCSV: "K_cycle_hr.csv");
 
-  fixedWageMacro("marshallian.json",testing:false,
+  fixedWageMacro("marshallian.json", testing:false,
                  gasCsvName: "M_cycle_gas.csv",
                  laborCsvName: "M_cycle_wage.csv",
-                 totalSteps:20000,shockDay:10000,endShockDay:15000,shockSize:-0.2,
+                 totalSteps:20000, shockDay:10000, endShockDay:15000, shockSize:-0.2,
                  salesCSV : "M_cycle_sales.csv", hrCSV: "M_cycle_hr.csv");
 
 
@@ -213,33 +213,33 @@ wageName = null, String gasPIDName = null, String wagePIDName = null])
 /**
  * run fixed wage macro experiments and return the output market data
  */
-Data fixedWageMacro(
-                    String jsonFileName,
-                    {
-                    bool testing : true,
-                    bool burnInventories : true,
-                    String gasCsvName: null,
-                    String laborCsvName: null,
-                    int totalSteps : 10000,
-                    String salesCSV : null,
-                    String hrCSV: null,
-                    //shocks
-                    int shockDay : -1,
-                    int endShockDay: -1,
-                    //negative if the shock lowers demand
-                    double shockSize : 0.0
-                    })
+Model initializeOneMarketModel(List<String> pathToJsonFromProjectRoot, String jsonFileName, List<String> additionalJSonFiles,
+                      bool burnInventories)
 {
+  String sep = Platform.pathSeparator;
+  if (pathToJsonFromProjectRoot == null)
+    pathToJsonFromProjectRoot = ["bin"];
+  Directory jsonDirectory = new Directory(findRootFolder());
 
-  String sep =Platform.pathSeparator;
-  Directory testDirectory = new Directory("${findRootFolder()}${sep}bin");
-  File defaultParameters = new File("${testDirectory.path}${Platform.pathSeparator}default.json");
+  for (String dir in pathToJsonFromProjectRoot)
+    jsonDirectory = new Directory("${jsonDirectory.path}${sep}$dir");
 
-  File additionalParameters = new File("${testDirectory.path}${Platform.pathSeparator}${jsonFileName}");
+
+  File defaultParameters = new File("${jsonDirectory.path}${sep}default.json");
+  File additionalParameters = new File("${jsonDirectory.path}${sep}${jsonFileName}");
 
 
   Model model = new Model.fromJSON(defaultParameters.readAsStringSync());
   model.parameters.mergeWithJSON(additionalParameters.readAsStringSync());
+
+  //if there are even more files, read them now
+  if (additionalJSonFiles != null)
+    for (String file in additionalJSonFiles)
+    {
+      File addOn = new File("${jsonDirectory.path}${sep}${file}");
+      model.parameters.mergeWithJSON(addOn.readAsStringSync());
+
+    }
 
   OneMarketCompetition scenario = model.scenario;
   //doesn't add slopes when predicting prices
@@ -249,19 +249,44 @@ Data fixedWageMacro(
   };
 
 
-  if(burnInventories)
-  scenario.salesInitializer = (ZeroKnowledgeTrader trader) {
-    trader.predictor = new LastPricePredictor();
-    trader.dawnEvents.add(BurnInventories());
-  };
+  if (burnInventories)
+    scenario.salesInitializer = (ZeroKnowledgeTrader trader) {
+      trader.predictor = new LastPricePredictor();
+      trader.dawnEvents.add(BurnInventories());
+    };
   else
     scenario.salesInitializer = (ZeroKnowledgeTrader sales) {
       sales.predictor = new
       LastPricePredictor();
     };
+  return model;
+}
 
-  //demand = total wages yesterday
+Data fixedWageMacro(
+    String jsonFileName,
+    {
+    List<String> pathToJsonFromProjectRoot : null, //if null, the default is to use root/bin folder
+    List<String> additionalJSonFiles : null,
+    bool testing : true,
+    bool burnInventories : true,
+    String gasCsvName: null,
+    String laborCsvName: null,
+    int totalSteps : 10000,
+    String salesCSV : null,
+    String hrCSV: null,
+    //shocks
+    int shockDay : -1,
+    int endShockDay: -1,
+    //negative if the shock lowers demand
+    num shockSize : 0.0
+    })
+{
+
+  var model = initializeOneMarketModel(pathToJsonFromProjectRoot, jsonFileName, additionalJSonFiles, burnInventories);
+
+  //demand = total wages yesterday, that's what makes it macro
   ExogenousSellerMarket goodMarket = new ExogenousSellerMarket.linkedToWagesFromModel (model, "labor");
+  OneMarketCompetition scenario = model.scenario;
   scenario.goodMarket = goodMarket;
   model.start();
 
@@ -404,77 +429,27 @@ void writeCSV(Map<String,List<double>> _dataMap, String fileName)
 /**
  * run fixed wage micro experiments and return the output market data
  */
-Data fixedWageMicro(bool keynesian,
+Data fixedWageMicro(String jsonFileName,
                     {
+                    List<String> pathToJsonFromProjectRoot : null, //if null, the default is to use root/bin folder
+                    List<String> additionalJSonFiles : null,
                     bool testing : true,
+                    bool burnInventories : true,
                     String gasCsvName: null,
                     String laborCsvName: null,
                     int totalSteps : 10000,
-                    //negative!
-                    double intercept : 100.0,
-                    double slope: -1.0,
-                    //wages
-                    double wage : 50.0,
+
                     String salesCSV : null,
                     String hrCSV: null,
                     //negative if the shock lowers demand
-                    double shockSize : 0.0
+                    num shockSize : 0.0
                     })
 {
-  Model model = new Model.randomSeed();
-  OneMarketCompetition scenario = new OneMarketCompetition();
-  //doesn't add slopes when predicting prices
-  scenario.hrIntializer = (ZeroKnowledgeTrader sales) {
-    sales.predictor = new
-    LastPricePredictor();
-  };
-  scenario.salesInitializer = (ZeroKnowledgeTrader sales) {
-    sales.predictor = new
-    LastPricePredictor();
-  };
-  //1 worker, 1 good
-  scenario.productionFunction = new LinearProductionFunction(true,1.0);
-
-  scenario.laborMarket = new ExogenousBuyerMarket.infinitelyElastic(wage,
-                                                                    goodType:"labor");
-  //demand = total wages yesterday
-  scenario.goodMarket = new ExogenousSellerMarket.linear(intercept:intercept, slope:slope);
-
-  //fixed wages
-  scenario.hrPricingInitialization = (SISOPlant plant,
-                                      Firm firm,  Random r,  ZeroKnowledgeTrader seller,
-                                      ParameterDatabase db, String containerPath)=> new FixedValue(wage);
+  Model model = initializeOneMarketModel(pathToJsonFromProjectRoot,
+                                         jsonFileName, additionalJSonFiles, burnInventories);
+  OneMarketCompetition scenario = model.scenario;
 
 
-  if(keynesian){
-    //start at 1 instead of 50 since there is no fixed cost
-    double initialL = model.random.nextDouble() * (scenario.maxInitialPriceSelling  - scenario.minInitialPriceSelling) +
-                      scenario.minInitialPriceBuying;
-    scenario.hrQuotaInitializer = OneMarketCompetition
-    .KEYNESIAN_STOCKOUT_QUOTAS(1.0);
-    scenario.salesInitializer = (ZeroKnowledgeTrader trader) {
-      trader.predictor = new LastPricePredictor();
-      trader.dawnEvents.add(BurnInventories());
-    };
-    //this is the default
-    // multiplier when using  PROFIT_MAXIMIZER_PRICING
-    scenario.salesMinP = 100.0;
-    scenario.salesMaxP = 100.0;
-    scenario.salesPricingInitialization = OneMarketCompetition.PROFIT_MAXIMIZER_PRICING;
-  }
-  else {
-    //marshallian
-    double initialL = model.random.nextDouble() * (scenario.maxInitialPriceSelling  - scenario.minInitialPriceSelling) +
-                      scenario.minInitialPriceSelling;
-    scenario.hrQuotaInitializer = OneMarketCompetition.MARSHALLIAN_QUOTAS(initialL);
-    scenario.salesPricingInitialization = OneMarketCompetition.STOCKOUT_SALES;
-    scenario.salesInitializer = (ZeroKnowledgeTrader trader) {
-      trader.predictor = new LastPricePredictor();
-      trader.dawnEvents.add(BurnInventories());
-    };
-
-  }
-  model.scenario = scenario;
   model.start();
 
   Market gas = model.markets["gas"];

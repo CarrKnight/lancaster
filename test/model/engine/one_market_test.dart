@@ -18,7 +18,7 @@ KeynesianInfiniteElasticity(bool marketDayOnly) {
 
 
   //gain access to DB files
-  Directory testDirectory = Directory.current;
+  Directory testDirectory = new Directory("${findRootFolder()}${Platform.pathSeparator}test${Platform.pathSeparator}model${Platform.pathSeparator}engine");
   File defaultParameters = new File("${testDirectory.path}${Platform.pathSeparator}default.json");
   File testParameters = new File("${testDirectory.path}${Platform.pathSeparator}KeynesianInfiniteElasticity.json");
 
@@ -75,13 +75,13 @@ main()
 
   for(int i=0; i<5;i++) {
     test("Marshallian Micro, ",
-             ()=>fixedWageMicro(false,totalSteps:3000));
+             ()=>fixedWageMicro("marshallian.micro.json",totalSteps:3000));
 
   }
 
   for(int i=0; i<5;i++) {
     test("Keynesian Micro, ",
-             ()=>fixedWageMicro(true,totalSteps:3000));
+             ()=>fixedWageMicro("keynesian.micro.json",totalSteps:3000));
 
   }
 
@@ -167,9 +167,9 @@ main()
       oneMarketTest(true,false);
     });
   //same, but with pid
-  for(int i=0;i<5;i++)
+  for(int i=0;i<500;i++)
     test("Learned Monopolist PID", (){ //knows the price impacts
-      oneMarketTest(true,false);
+      oneMarketTest(true,true);
     });
 
   for(int i=0;i<5;i++)
@@ -177,7 +177,7 @@ main()
       oneMarketTest(false,false);
     });
 
-  for(int i=0;i<5;i++)
+  for(int i=0;i<100;i++)
     test("Learning Monopolist PID", (){ //knows the price impacts
       oneMarketTest(false,true);
     });
@@ -231,7 +231,7 @@ squareRootProductionFixedWage(bool keynesian)
 {
 
   //gain access to DB files
-  Directory testDirectory = Directory.current;
+  Directory testDirectory = new Directory("${findRootFolder()}${Platform.pathSeparator}test${Platform.pathSeparator}model${Platform.pathSeparator}engine");
   File defaultParameters = new File("${testDirectory.path}${Platform.pathSeparator}default.json");
   File testParameters = new File("${testDirectory.path}${Platform.pathSeparator}SquareRootProductionFixedWage.json");
 
@@ -294,15 +294,18 @@ squareRootProductionFixedWage(bool keynesian)
 
 oneMarketTest(bool learned, bool pidMaximizer, [int competitors=1])
 {
-  Directory testDirectory = Directory.current;
+  Directory testDirectory = new Directory("${findRootFolder()}${Platform.pathSeparator}test${Platform.pathSeparator}model${Platform.pathSeparator}engine");
   File defaultParameters = new File("${testDirectory.path}${Platform.pathSeparator}default.json");
   Model model = new Model.fromJSON(defaultParameters.readAsStringSync());
 
   OneMarketCompetition scenario = model.scenario;
-  scenario.competitors = competitors;
+  model.parameters.setField("competitors","default.scenario.OneMarketCompetition",competitors);
 
   if(pidMaximizer)
     scenario.hrPricingInitialization = OneMarketCompetition.PID_MAXIMIZER_HR;
+  else
+    scenario.hrPricingInitialization = OneMarketCompetition.MARGINAL_MAXIMIZER_HR;
+
 
   //doesn't add slopes when predicting prices
   scenario.salesInitializer = (ZeroKnowledgeTrader sales) {
@@ -340,7 +343,7 @@ oneMarketTest(bool learned, bool pidMaximizer, [int competitors=1])
 
 
   //run the simulation!
-  for (int i = 0; i < 2500; i++) {
+  for (int i = 0; i < 10000; i++) {
     model.schedule.simulateDay();
   }
   Market gasMarket = model.markets["gas"];

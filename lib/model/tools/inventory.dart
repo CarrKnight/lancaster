@@ -27,15 +27,15 @@ class Inventory implements HasInventory{
 
 
 
-  receive(String goodType, double amount)=>
+  receive(String goodType, num amount)=>
   getSection(goodType).receive(amount);
 
 
-  remove(String goodType, double amount)=>
+  remove(String goodType, num amount)=>
   getSection(goodType).remove(amount);
 
 
-  double hasHowMuch(String goodType)=>getSection(goodType).amount;
+  num hasHowMuch(String goodType)=>getSection(goodType).amount;
 
   /**
    * zeroes inflows and outflows
@@ -46,8 +46,8 @@ class Inventory implements HasInventory{
 
   }
 
-  double inflow(String goodType)=> getSection(goodType)._inflow;
-  double outflow(String goodType)=> getSection(goodType)._outflow;
+  num inflow(String goodType)=> getSection(goodType)._inflow;
+  num outflow(String goodType)=> getSection(goodType)._outflow;
 
 
 
@@ -56,10 +56,10 @@ class Inventory implements HasInventory{
 abstract class HasInventory{
 
 
-  double receive(String goodType, double amount);
-  double remove(String goodType,double amount);
+  num receive(String goodType, num amount);
+  num remove(String goodType,num amount);
 
-  double hasHowMuch(String goodType);
+  num hasHowMuch(String goodType);
 
 }
 
@@ -72,22 +72,22 @@ abstract class HasInventory{
 class InventoryCrossSection
 {
 
-  double _amount=0.0;
+  num _amount=0.0;
 
-  double _inflow=0.0;
-  double _outflow=0.0;
+  num _inflow=0.0;
+  num _outflow=0.0;
 
   final String goodType;
 
   InventoryCrossSection(String goodType) :
   this.goodType = goodType;
 
-  receive(double amount){_amount+=amount; _inflow+=amount;}
-  remove(double amount){_amount-=amount; _outflow+=amount;}
+  receive(num amount){_amount+=amount; _inflow+=amount;}
+  remove(num amount){_amount-=amount; _outflow+=amount;}
 
-  double get amount =>_amount;
-  double get inflow =>_inflow;
-  double get outflow =>_outflow;
+  num get amount =>_amount;
+  num get inflow =>_inflow;
+  num get outflow =>_outflow;
 
 
   /**

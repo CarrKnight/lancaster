@@ -28,12 +28,12 @@ class KalmanFilter
   /**
    * A variance to subject the betas to
    */
-  double noiseVariance = 1.0;
+  num noiseVariance = 1.0;
 
 
-  double forgettingFactor = 1.0;
+  num forgettingFactor = 1.0;
 
-  double maxTraceToStopForgetting = 100.0;
+  num maxTraceToStopForgetting = 100.0;
 
 
 
@@ -41,7 +41,7 @@ class KalmanFilter
   /**
    * create an empty kalman filter
    */
-  KalmanFilter(int dimensions,[double covariancePrior=1000000.0]):
+  KalmanFilter(int dimensions,[num covariancePrior=1000000.0]):
   kGains = new List(dimensions),
   beta = new List.filled(dimensions,0.0),
   pCovariance = new List(dimensions)
@@ -52,7 +52,7 @@ class KalmanFilter
     }
   }
 
-  void addObservation(double observationWeight, double y,
+  void addObservation(num observationWeight, num y,
                       List<double> observation)
   {
   assert(observation.length == dimension);
@@ -74,11 +74,11 @@ class KalmanFilter
   }
 
 
-  void _updateBeta(double y, List<double> observation) {
-    double predicted = 0.0;
+  void _updateBeta(num y, List<double> observation) {
+    num predicted = 0.0;
     for(int i=0; i< dimension; i++)
       predicted += beta[i] * observation[i];
-    double residual = y - predicted;
+    num residual = y - predicted;
 
     List<double> weightedResidual = new List(dimension);
     for(int i=0; i < dimension; i++)
@@ -90,7 +90,7 @@ class KalmanFilter
 
   }
 
-  void _updateKGains(List<double> observation, double weight) {
+  void _updateKGains(List<double> observation, num weight) {
 
     //compute error dispersion
     //P*x
@@ -102,7 +102,7 @@ class KalmanFilter
       }
     }
 
-    double denominator = 0.0;
+    num denominator = 0.0;
     for(int i=0; i<dimension; i++)
       denominator += observation[i] * px[i];
     denominator += noiseVariance / weight;
@@ -117,7 +117,7 @@ class KalmanFilter
     }
   }
 
-  _forget(double trace) {
+  _forget(num trace) {
     if (trace < maxTraceToStopForgetting && forgettingFactor < 1.0 &&
     forgettingFactor > 0)
       for (int i = 0;i < dimension;i++)
@@ -125,12 +125,12 @@ class KalmanFilter
           pCovariance[i][j] /= forgettingFactor;
   }
 
-  double _updateP(List<List<double>> newP) {
-    double trace = 0.0;
+  num _updateP(List<List<double>> newP) {
+    num trace = 0.0;
     for (int i = 0;i < dimension;i++)
       for (int j = 0;j < dimension;j++)
         if (i == j) {
-          double diagonal = newP[i][j];
+          num diagonal = newP[i][j];
           pCovariance[i][j] = diagonal;
           trace += diagonal;
         }

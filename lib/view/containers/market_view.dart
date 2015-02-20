@@ -21,9 +21,9 @@ class MarketView{
 
 
 
-  double price = double.NAN;
+  num price = double.NAN;
 
-  double quantity = double.NAN;
+  num quantity = double.NAN;
 
   void _listenToModel(){
     _presentation.stream.listen((event){

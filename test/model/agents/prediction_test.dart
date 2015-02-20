@@ -98,52 +98,5 @@ main(){
     print(learner.delegate.slope);
 
   });
-
-  test("monopolist learners",(){
-    //fake/forced competitive scenario with separate and unused Kalman
-    // learners to test their abilities to learn
-    ZeroKnowledgeTrader salesDepartment;
-    ZeroKnowledgeTrader hrDepartment;
-
-
-    Model model = new Model.randomSeed();
-    OneMarketCompetition scenario = new OneMarketCompetition();
-
-    scenario.competitors=1; //monopolist
-    //forced competitive!
-    scenario.hrIntializer = (ZeroKnowledgeTrader hr) {
-      hr.predictor = new LastPricePredictor();
-      hrDepartment = hr;
-    };
-
-    scenario.salesInitializer = (ZeroKnowledgeTrader sales) {
-      sales.predictor = new LastPricePredictor();
-      salesDepartment = sales;
-    };
-
-
-    //fake learners
-    KalmanPricePredictor hrLearner = new KalmanPricePredictor("inflow",100,0.0,"offeredPrice",.99,10.0);
-    KalmanPricePredictor salesLearner = new KalmanPricePredictor("outflow",100,0.0,"offeredPrice",.99,10.0);
-
-    model.scenario = scenario;
-    model.start();
-    hrLearner.start(hrDepartment,model.schedule,hrDepartment.data);
-    salesLearner.start(salesDepartment,model.schedule,salesDepartment.data);
-
-
-    Market gas = model.markets["gas"];
-    Market labor = model.markets["labor"];
-
-    for (int i = 0; i < 5000; i++) {
-      model.schedule.simulateDay();
-    }
-
-
-    expect(hrLearner.delegate.slope,closeTo(1.0,.1));
-    expect(salesLearner.delegate.slope,closeTo(-1.0,.1));
-
-
-  });
 }
 

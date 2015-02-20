@@ -10,12 +10,12 @@ abstract class SISOProductionFunction
   /**
    * how much is produced given input
    */
-  double production(double input);
+  num production(num input);
 
   /**
    * how much of the input gets consumed
    */
-  double consumption(double input);
+  num consumption(num input);
 
 
 }
@@ -36,7 +36,7 @@ class LinearProductionFunction implements SISOProductionFunction
   /**
    * Consuming x input produces x*multiplier output
    */
-  double multiplier;
+  num multiplier;
 
   static final String DB_ADDRESS = "default.strategy.LinearProductionFunction";
 
@@ -51,12 +51,12 @@ class LinearProductionFunction implements SISOProductionFunction
   /**
    * how much gets produced given this inventory
    */
-  double production(double input) => input * multiplier;
+  num production(num input) => input * multiplier;
 
   /**
    * how much of the input would get consumed during production?
    */
-  double consumption(double input ) => consumeInput ? input : 0.0;
+  num consumption(num input ) => consumeInput ? input : 0.0;
 
 }
 
@@ -69,11 +69,11 @@ class ExponentialProductionFunction implements SISOProductionFunction
   /**
    * how much gets produced even with no input
    */
-  double freebie;
+  num freebie;
 
-  double exponent;
+  num exponent;
 
-  double multiplier;
+  num multiplier;
 
   static final String DB_ADDRESS = "default.strategy.ExponentialProductionFunction";
 
@@ -91,13 +91,13 @@ class ExponentialProductionFunction implements SISOProductionFunction
   /**
    * output = [multiplier]*input^[exponent]
    */
-  double production(double input) => max(pow(input,exponent) * multiplier +
+  num production(num input) => max(pow(input,exponent) * multiplier +
   freebie,0.0);
 
   /**
    * consume all
    */
-  double consumption(double input ) => input;
+  num consumption(num input ) => input;
 
 
 

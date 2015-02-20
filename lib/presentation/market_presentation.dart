@@ -50,7 +50,7 @@ class SimpleMarketPresentation extends Presentation<MarketEvent>{
   }
 
   factory SimpleMarketPresentation.seller(ExogenousSellerMarket market,
-                                          double dailyFlow,
+                                          num dailyFlow,
                                           DataGatherer equilibriumPrice)
   {
     SimpleMarketPresentation toReturn =
@@ -122,11 +122,11 @@ class SimpleMarketPresentation extends Presentation<MarketEvent>{
 
 class MarketEvent extends PresentationEvent{
 
-  final double price;
+  final num price;
 
   final int day;
 
-  final double quantity;
+  final num quantity;
 
   MarketEvent(this.day, this.price, this.quantity);
 

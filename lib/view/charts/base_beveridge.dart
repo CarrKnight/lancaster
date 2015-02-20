@@ -38,7 +38,7 @@ ShadowRootAware{
 
 
   static const dataSize = 5;
-  static const double aspectRatio=9.0/16.0;
+  static const num aspectRatio=9.0/16.0;
   static const int padding = 30;
   int xTicks = 10;
   int yTicks = 5;
@@ -533,9 +533,9 @@ ShadowRootAware{
 class BeveridgeDatum
 {
 
-  final double x;
+  final num x;
 
-  final double y;
+  final num y;
 
   final int r;
 

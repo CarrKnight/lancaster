@@ -32,11 +32,11 @@ final NumberGenerator DEFAULT_NORMAL = (JsonObject leaf,Random random)
 
   while(true)
   {
-    double u=random.nextDouble();
-    double v=1.7156*(random.nextDouble()-0.5);
-    double x=u-0.449871;
-    double y=v.abs()+0.386595;
-    double q=x*x+y*(0.19600*y-0.25472*x);
+    num u=random.nextDouble();
+    num v=1.7156*(random.nextDouble()-0.5);
+    num x=u-0.449871;
+    num y=v.abs()+0.386595;
+    num q=x*x+y*(0.19600*y-0.25472*x);
     if(!(q>0.27597 && (q>0.27846 || v*v>-4*log(u)*u*u)))
       return  mu + sigma * (v/u);
   }

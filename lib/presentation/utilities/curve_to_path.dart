@@ -12,7 +12,7 @@ part of lancaster.presentation;
 abstract class CurvePath
 {
 
-  List<List<double>> toPath(double minY,double maxY, double minX, double maxX);
+  List<List<double>> toPath(num minY,num maxY, num minX, num maxX);
 
 }
 
@@ -24,12 +24,12 @@ class LinearCurvePath implements CurvePath
 
   LinearCurvePath(this.curve);
 
-  List<List<double>> toPath(double minY, double maxY, double minX,
-                            double maxX) {
+  List<List<double>> toPath(num minY, num maxY, num minX,
+                            num maxX) {
 
     //linear is easy, we just need two points
-    double quantity1 =   (curve.intercept + curve.slope * minY );
-    double quantity2 =   (curve.intercept + curve.slope * maxY );
+    num quantity1 =   (curve.intercept + curve.slope * minY );
+    num quantity2 =   (curve.intercept + curve.slope * maxY );
 
 
     return [[quantity1,minY],[quantity2,maxY]];
@@ -45,8 +45,8 @@ class InfinitelyElasticPath implements CurvePath
 
   InfinitelyElasticPath(this.curve);
 
-  List<List<double>> toPath(double minY, double maxY, double minX,
-                            double maxX) {
+  List<List<double>> toPath(num minY, num maxY, num minX,
+                            num maxX) {
 
     //horizontal, easy.
     return [[minX,curve.minPrice],[maxX,curve.minPrice]];
@@ -64,20 +64,20 @@ class FixedBudgetPath implements CurvePath
   FixedBudgetPath(this.curve);
 
   //store here results so that i don't need to recompute this a million times
-  double lastBudget = double.NAN;
+  num lastBudget = double.NAN;
   List<List<double>> lastData = [];
 
-  List<List<double>> toPath(double minY, double maxY, double minX,
-                            double maxX) {
+  List<List<double>> toPath(num minY, num maxY, num minX,
+                            num maxX) {
 
     if(curve.budget == lastBudget)
       return lastData;
 
     lastBudget = curve.budget;
     lastData = [];
-    for(double i =0.0; i<= 1.0; i+=.05)
+    for(num i =0.0; i<= 1.0; i+=.05)
     {
-      double y = minY*(i)+maxY*(1.0-i);
+      num y = minY*(i)+maxY*(1.0-i);
       if(y != 0)
         lastData.add([lastBudget/y,y]);
 
@@ -99,8 +99,8 @@ class FixedSupplyPath implements CurvePath
 
   FixedSupplyPath(this.curve);
 
-  List<List<double>> toPath(double minY, double maxY, double minX,
-                            double maxX) {
+  List<List<double>> toPath(num minY, num maxY, num minX,
+                            num maxX) {
 
     //vertical easy
     return [[curve.dailyQuantity,minY],[curve.dailyQuantity,maxY]];
@@ -119,9 +119,9 @@ class DynamicHorizontalPath implements CurvePath
 
   DynamicHorizontalPath(this.yGetter);
 
-  List<List<double>> toPath(double minY, double maxY, double minX,
-                            double maxX) {
-    double y = yGetter();
+  List<List<double>> toPath(num minY, num maxY, num minX,
+                            num maxX) {
+    num y = yGetter();
     return [[minX,y],[maxX,y]];
 
   }
@@ -136,9 +136,9 @@ class DynamicVerticalPath implements CurvePath
 
   DynamicVerticalPath(this.xGetter);
 
-  List<List<double>> toPath(double minY, double maxY, double minX,
-                            double maxX) {
-    double x = xGetter();
+  List<List<double>> toPath(num minY, num maxY, num minX,
+                            num maxX) {
+    num x = xGetter();
     return [[x, minY],[x,maxY]];
 
   }

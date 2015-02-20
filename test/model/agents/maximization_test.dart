@@ -38,7 +38,7 @@ main(){
     when(buyer.predictPrice(-.5)).thenReturn(currentX-.5);
 
     //production: 1 input ==> 1 output
-    LinearProductionFunction func = new LinearProductionFunction();
+    LinearProductionFunction func = new LinearProductionFunction(true,1.0);
 
     //step it 100 times
     for(int i=0; i<100;i++)
@@ -84,7 +84,7 @@ main(){
     when(buyer.predictPrice(-.5)).thenReturn(currentX-.5);
 
     //production: 1 input ==> 1 output
-    LinearProductionFunction func = new LinearProductionFunction();
+    LinearProductionFunction func = new LinearProductionFunction(true,1.0);
 
     //step it 100 times
     for(int i=0; i<100;i++)
@@ -130,7 +130,7 @@ main(){
     when(buyer.predictPrice(-1.0)).thenReturn(currentX-1.0);
 
     //production: 1 input ==> 1 output
-    LinearProductionFunction func = new LinearProductionFunction();
+    LinearProductionFunction func = new LinearProductionFunction(true,1.0);
 
     //step it 100 times
     for(int i=0; i<10000;i++)

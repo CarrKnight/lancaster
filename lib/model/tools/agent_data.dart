@@ -116,7 +116,7 @@ class Data
   /**
    * returns latest observation or NaN if there is no other observation
    */
-  double getLatestObservation(String key){
+  num getLatestObservation(String key){
     assert( _consistency());
     var column = _dataMap[key];
     if(column == null)
@@ -144,7 +144,7 @@ class Data
    * after some days have passed, the column gets filled with enough [filler]
    * to have equal length as the other columns
    */
-  void addColumn(String name, DataGatherer dg, [double filler=double.NAN])
+  void addColumn(String name, DataGatherer dg, [num filler=double.NAN])
   {
     int rows = _dataMap.length == 0 ? 0 : _dataMap.values.first.length;
 
@@ -171,10 +171,10 @@ class Data
 
 
 abstract class Extractor{
-  double extract(Data data);
+  num extract(Data data);
 
 }
-typedef double ExtractFunction(double input);
+typedef num ExtractFunction(num input);
 
 class FunctionalExtractor implements Extractor
 {
@@ -200,7 +200,7 @@ class OtherDataExtractor implements Extractor
 
   OtherDataExtractor(this.trader, this.extractor);
 
-  double extract(Data data) =>extractor.extract(trader.data);
+  num extract(Data data) =>extractor.extract(trader.data);
 
 
 
@@ -208,7 +208,7 @@ class OtherDataExtractor implements Extractor
 
 
 
-typedef double Transformer(double input);
+typedef num Transformer(num input);
 
 /**
  * a simple "optimized" extractor. It stores a link to the observation list
@@ -243,7 +243,7 @@ class SimpleExtractor implements Extractor
 /**
  * very easy function with no argument returning gatherer
  */
-typedef  double DataGatherer();
+typedef  num DataGatherer();
 
 
 /**
@@ -267,7 +267,7 @@ class SumOfSimpleExtractors implements Extractor
 
   extract(Data data) {
 
-    double sum = 0.0;
+    num sum = 0.0;
     for(var extractor in extractors)
       sum+= extractor.extract(data);
 

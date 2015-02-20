@@ -33,21 +33,21 @@ abstract class Market{
     data.start(s);
   }
 
-  double get averageClosingPrice;
+  num get averageClosingPrice;
 
-  double get quantityTraded;
+  num get quantityTraded;
 
   /**
    * basically count the inflow of the registered sellers (a proxy for total
    * production)
    */
-  double get sellersInflow;
+  num get sellersInflow;
 
   /**
    * basically count the inflow of the registered sellers (a proxy for total
    * consumption)
    */
-  double get buyersOutflow;
+  num get buyersOutflow;
 
   /**
    * what is the good exchanged here?
@@ -80,7 +80,7 @@ abstract class AsksOrderBook{
   }
 
 
-  placeSaleQuote(Trader seller, double amount, double unitPrice) {
+  placeSaleQuote(Trader seller, num amount, num unitPrice) {
     assert(sellers.contains(seller));
     _asks.add(new _TradeQuote(seller,amount,unitPrice));
     //log it
@@ -130,7 +130,7 @@ class BidsOrderBook{
     _bids.sort((q1,q2)=>(q1.pricePerunit.compareTo(q2.pricePerunit)));
   }
 
-  placeBuyerQuote(Trader buyer,double amount,double unitPrice){
+  placeBuyerQuote(Trader buyer,num amount,num unitPrice){
     assert(buyers.contains(buyer));
     _bids.add(new _TradeQuote(buyer,amount,unitPrice) );
 
@@ -173,10 +173,10 @@ class ExogenousSellerMarket extends SellerMarket with OneSideMarketClearer{
   static const String DB_ADDRESS = "default.market.ExogenousSellerMarket";
 
 
-  double _moneyExchanged = 0.0;
+  num _moneyExchanged = 0.0;
 
-  ExogenousSellerMarket.linear( {double intercept : 100.0,
-                                double slope:-1.0,
+  ExogenousSellerMarket.linear( {num intercept : 100.0,
+                                num slope:-1.0,
                                 String goodType : "gas",
                                 String moneyType: "money"}):
   this(new LinearCurve(intercept,slope),goodType:goodType,moneyType:moneyType);
@@ -194,7 +194,7 @@ class ExogenousSellerMarket extends SellerMarket with OneSideMarketClearer{
   /**
    * demand = w*L of the previous day
    */
-  static FixedBudget linkedToWageDemand(Model model, String laborType, double intercept) {
+  static FixedBudget linkedToWageDemand(Model model, String laborType, num intercept) {
     var budgetDemand = () => model.markets[laborType].data.getLatestObservation
                              ("price") * model.markets[laborType].data.getLatestObservation
                              ("quantity") ;
@@ -221,7 +221,7 @@ class ExogenousSellerMarket extends SellerMarket with OneSideMarketClearer{
                                                         {
                                                         String goodType : "gas",
                                                         //additional budget or penalty
-                                                        double intercept : 0.0,
+                                                        num intercept : 0.0,
                                                         String moneyType: "money"})
   {
     var fixedBudget = linkedToWageDemand(model, laborType, intercept);
@@ -272,20 +272,20 @@ class ExogenousSellerMarket extends SellerMarket with OneSideMarketClearer{
   }
 
 
-  double get averageClosingPrice => demand.quantityTraded == 0 ? double.NAN :
+  num get averageClosingPrice => demand.quantityTraded == 0 ? double.NAN :
                                     _moneyExchanged/demand.quantityTraded;
 
-  double get quantityTraded=> demand.quantityTraded;
+  num get quantityTraded=> demand.quantityTraded;
 
   /**
    * since buyers aren't really agentized assume everything traded is consumed
    */
-  double get buyersOutflow => quantityTraded;
+  num get buyersOutflow => quantityTraded;
 
   /**
    * sum up all inflow of registered sellers
    */
-  double get sellersInflow =>
+  num get sellersInflow =>
   sellers.fold(0.0,(prev,e)=>prev+e.currentInflow);
 
 
@@ -309,10 +309,10 @@ class ExogenousBuyerMarket extends BuyerMarket with OneSideMarketClearer{
   static const String DB_ADDRESS = "default.money.ExogenousBuyerMarket";
 
 
-  double _moneyExchanged = 0.0;
+  num _moneyExchanged = 0.0;
 
-  ExogenousBuyerMarket.linear( {double intercept : 0.0,
-                               double slope:1.0,
+  ExogenousBuyerMarket.linear( {num intercept : 0.0,
+                               num slope:1.0,
                                String goodType : "gas",
                                String moneyType: "money" }):
   this(new LinearCurve(intercept,slope),goodType:goodType,moneyType:moneyType);
@@ -335,7 +335,7 @@ class ExogenousBuyerMarket extends BuyerMarket with OneSideMarketClearer{
                           moneyType : db.getAsString("$containerPath.moneyType","$DB_ADDRESS.moneyType"));
 
 
-  ExogenousBuyerMarket.infinitelyElastic(double price, {
+  ExogenousBuyerMarket.infinitelyElastic(num price, {
   String goodType : "gas",
   String moneyType: "money" }):
   this(new InfinitelyElasticAsk(price),goodType:goodType,moneyType:moneyType,
@@ -371,23 +371,23 @@ class ExogenousBuyerMarket extends BuyerMarket with OneSideMarketClearer{
   }
 
 
-  double get averageClosingPrice => supply.quantityTraded == 0 ? double.NAN :
+  num get averageClosingPrice => supply.quantityTraded == 0 ? double.NAN :
                                     _moneyExchanged/supply.quantityTraded;
 
-  double get quantityTraded=> supply.quantityTraded;
+  num get quantityTraded=> supply.quantityTraded;
 
 
   /**
    * Buyer outflow
    */
-  double get buyersOutflow =>   buyers.fold(0.0,(prev,b)=>prev+b.currentOutflow);
+  num get buyersOutflow =>   buyers.fold(0.0,(prev,b)=>prev+b.currentOutflow);
 
 
   /**
    * since buyers aren't really agentized assume everything on the market has
    * just been produced
    */
-  double get sellersInflow=> quantityTraded;
+  num get sellersInflow=> quantityTraded;
 
 
 
@@ -398,9 +398,9 @@ class ExogenousBuyerMarket extends BuyerMarket with OneSideMarketClearer{
 class _TradeQuote
 {
 
-  double _amount;
+  num _amount;
 
-  final double _pricePerUnit;
+  final num _pricePerUnit;
 
   final Trader _owner;
 
@@ -411,7 +411,7 @@ class _TradeQuote
   get pricePerunit=> _pricePerUnit;
   get amount=> _amount;
 
-  set amount(double newAmount){
+  set amount(num newAmount){
     _amount = newAmount;
     if(this.amount < 0)
       throw "A quote has negative amount!";
@@ -422,7 +422,7 @@ class _TradeQuote
 
 //easy functions for trading
 
-void sold(Trader seller, double amount, double price, [double stockouts = 0.0]){
+void sold(Trader seller, num amount, num price, [num stockouts = 0.0]){
 
   seller.earn(price*amount);
   seller.remove(amount);
@@ -430,7 +430,7 @@ void sold(Trader seller, double amount, double price, [double stockouts = 0.0]){
 
 }
 
-void bought(Trader buyer, double amount, double price, [double stockouts = 0.0]){
+void bought(Trader buyer, num amount, num price, [num stockouts = 0.0]){
 
   buyer.spend(price*amount);
   buyer.receive(amount);
@@ -439,8 +439,8 @@ void bought(Trader buyer, double amount, double price, [double stockouts = 0.0])
 
 }
 
-void tradeBetweenTwoAgents(Trader buyer, Trader seller, double amount,
-                           double price ){
+void tradeBetweenTwoAgents(Trader buyer, Trader seller, num amount,
+                           num price ){
   sold(seller,amount,price);
   bought(buyer,amount,price);
 }
@@ -454,9 +454,9 @@ class TradeEvent{
 
   final Trader buyer;
 
-  final double amount;
+  final num amount;
 
-  final double unitPrice;
+  final num unitPrice;
 
   final int day;
 
@@ -472,9 +472,9 @@ class QuoteEvent{
 
   final Trader seller;
 
-  final double amount;
+  final num amount;
 
-  final double unitPrice;
+  final num unitPrice;
 
   final int day;
 
@@ -542,7 +542,7 @@ class QuoteStream extends TimestampedStreamBase<QuoteEvent>{
 
 
 
-  void log(Trader trader,double amount, double unitPrice){
+  void log(Trader trader,num amount, num unitPrice){
     if(started && listenedTo) //if you can log, do log
       _controller.add(new QuoteEvent(trader,amount,unitPrice,_schedule.day));
   }
@@ -553,7 +553,7 @@ class QuoteStream extends TimestampedStreamBase<QuoteEvent>{
 
 class TradeStream extends TimestampedStreamBase<TradeEvent>{
 
-  void log(Trader seller,Trader buyer,double amount, double unitPrice){
+  void log(Trader seller,Trader buyer,num amount, num unitPrice){
     if(started && listenedTo) //if you can log, do log
       _controller.add(
           new TradeEvent(seller,buyer,amount,unitPrice,
@@ -577,10 +577,10 @@ class OneSideMarketClearer{
    * expects [book] to be already sorted where last is best.
    * Returns the total amount of money that was exchanged
    */
-  double clearMarket(ExogenousCurve curve, List<_TradeQuote> book,
+  num clearMarket(ExogenousCurve curve, List<_TradeQuote> book,
                      TradeStream tradeStreamer,bool bookIsForSales) {
 
-    double moneyExchanged = 0.0;
+    num moneyExchanged = 0.0;
 //as long as there are quotes
     while (book.isNotEmpty) {
 
@@ -593,9 +593,9 @@ class OneSideMarketClearer{
       if (maxDemandForThisPrice <= 0) //if the best price gets no sales, we are done
         break;
 
-      double amountTraded = min(maxDemandForThisPrice, best.amount);
+      num amountTraded = min(maxDemandForThisPrice, best.amount);
       assert(amountTraded.isFinite);
-      double stockouts = max(maxDemandForThisPrice - best.amount,0.0);
+      num stockouts = max(maxDemandForThisPrice - best.amount,0.0);
       //trade!
       if(bookIsForSales)
         sold(best.owner, amountTraded, best.pricePerunit,stockouts);
@@ -626,7 +626,7 @@ class OneSideMarketClearer{
 /**
  * what is the prevailing price in a one side market given [bestQuotePrice]
  */
-typedef double PricePolicy(double bestQuotePrice);
+typedef num PricePolicy(num bestQuotePrice);
 
 /**
  * standard price policy, trading price is the quote price.
@@ -638,7 +638,7 @@ final PricePolicy QUOTED_PRICE = (x)=>x;
  * price, that's the clearer responsbility, not the price policy. This is
  * useful for infinitely elastic markets and the price-taking it entails.
  */
-PricePolicy FIXED_PRICE(double price)
+PricePolicy FIXED_PRICE(num price)
 {
   return (x)=>price;
 }

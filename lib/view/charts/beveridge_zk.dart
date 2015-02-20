@@ -36,7 +36,7 @@ class BuyerBeveridge extends BeveridgePlot<ZKEvent>
 
 
 
-  static BeveridgeDatum _adapter(double inflow, double price, int day)
+  static BeveridgeDatum _adapter(num inflow, num price, int day)
   {
 
     return new BeveridgeDatum(inflow,price,8,
@@ -50,8 +50,8 @@ class BuyerBeveridge extends BeveridgePlot<ZKEvent>
   static BeveridgeDatum _extractor(ZKEvent e)
   {
 
-    double inflow = e.trader.currentInflow;
-    double price = e.trader.lastOfferedPrice;
+    num inflow = e.trader.currentInflow;
+    num price = e.trader.lastOfferedPrice;
     int day = e.day;
 
     return _adapter(inflow,price,day);
@@ -111,7 +111,7 @@ class SellerBeveridge extends BeveridgePlot<ZKEvent>
 
 
 
-  static BeveridgeDatum _adapter(double  outflow, double price, int day)
+  static BeveridgeDatum _adapter(num  outflow, num price, int day)
   {
 
     return new BeveridgeDatum(outflow,price,8,
@@ -125,8 +125,8 @@ class SellerBeveridge extends BeveridgePlot<ZKEvent>
   static BeveridgeDatum _extractor(ZKEvent e)
   {
 
-    double outflow = e.trader.currentOutflow;
-    double price = e.trader.lastOfferedPrice;
+    num outflow = e.trader.currentOutflow;
+    num price = e.trader.lastOfferedPrice;
     int day = e.day;
 
     return _adapter(outflow,price,day);

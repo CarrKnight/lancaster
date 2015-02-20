@@ -26,7 +26,7 @@ ShadowRootAware {
 
 
   static const dataSize = 5;
-  static const double aspectRatio=9.0/16.0;
+  static const num aspectRatio=9.0/16.0;
   static const int padding = 30;
   static int xTicks = 10;
   static int yTicks = 5;
@@ -128,7 +128,7 @@ ShadowRootAware {
     drawYAxis();
   }
 
-  updateScales(int day, double maxY)
+  updateScales(int day, num maxY)
   {
     if(maxY>=yScale.domain[1])
     {
@@ -279,7 +279,7 @@ ShadowRootAware {
         listening = true;
         //we don't care so much about the values of the event, what we care
         // about is that presentation layer has updated its daily observations
-        double maxY = 0.0;
+        num maxY = 0.0;
         //find the maximum Y today
         if(selectedColumns == null)
           maxY =_presentation.dailyObservations.values.fold(

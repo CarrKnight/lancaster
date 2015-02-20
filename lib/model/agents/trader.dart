@@ -17,33 +17,33 @@ abstract class Trader
    * this is usually to record the price and sales. It doesn't really change inventory,
    * that's already been done when this is called
    */
-  void notifyOfTrade(double quantity, double price, double stockouts);
+  void notifyOfTrade(num quantity, num price, num stockouts);
 
   /**
    * the last offered price
    */
-  double lastOfferedPrice;
+  num lastOfferedPrice;
 
   /**
    * the last closing price
    */
-  double get  lastClosingPrice;
+  num get  lastClosingPrice;
 
   /**
    * the outflow since the beginning of the day
    */
-  double get  currentOutflow;
+  num get  currentOutflow;
 
   /**
    * the inflow since the beginning of the day
    */
-  double get  currentInflow;
+  num get  currentInflow;
 
   /**
    * How many "stockouts" (customers we could have traded with at current
    * prices) we have seen today. Not every market gives out this information
    */
-  double get  stockouts;
+  num get  stockouts;
 
   /**
    * the maximum the trader is willing to trade. Willing doesn't mean able,
@@ -51,17 +51,17 @@ abstract class Trader
    * example a seller that could, given the price, sell 100 units a day but
    * throttles it down to 25 sales a day by imposing a quota of 25).
    */
-  double get quota;
+  num get quota;
 
-  double predictPrice(double expectedChangeInQuantity);
+  num predictPrice(num expectedChangeInQuantity);
 
-  void earn(double moneyAmount);
+  void earn(num moneyAmount);
 
-  void receive(double goodAmount);
+  void receive(num goodAmount);
 
-  void remove(double goodAmount);
+  void remove(num goodAmount);
 
-  void spend(double moneyAmount);
+  void spend(num moneyAmount);
 
   get good;
 
@@ -80,11 +80,11 @@ class DummyTrader implements Trader
   InventoryCrossSection _inventory;
   InventoryCrossSection _money;
 
-  double _lastClosingPrice = double.NAN;
+  num _lastClosingPrice = double.NAN;
 
-  double lastOfferedPrice = double.NAN;
+  num lastOfferedPrice = double.NAN;
 
-  double stockouts = double.NAN;
+  num stockouts = double.NAN;
 
 
   DummyTrader([String goodType= "gas"])
@@ -98,25 +98,25 @@ class DummyTrader implements Trader
   this(market.goodType);
 
 
-  void notifyOfTrade(double quantity, double price, double stockouts) {
+  void notifyOfTrade(num quantity, num price, num stockouts) {
     _lastClosingPrice = price;
     this.stockouts = stockouts;
   }
 
-  earn(double amount)=>_money.receive(amount);
+  earn(num amount)=>_money.receive(amount);
 
 
-  spend(double amount)=> _money.remove(amount);
+  spend(num amount)=> _money.remove(amount);
 
 
-  receive(double amount)=>_inventory.receive(amount);
+  receive(num amount)=>_inventory.receive(amount);
 
 
 
-  remove(double amount)=>_inventory.remove(amount);
+  remove(num amount)=>_inventory.remove(amount);
 
 
-  double get quota => double.MAX_FINITE;
+  num get quota => double.MAX_FINITE;
 
   get good =>  _inventory.amount;
 
@@ -124,15 +124,15 @@ class DummyTrader implements Trader
 
   get money =>_money.amount;
 
-  double get lastClosingPrice => _lastClosingPrice;
+  num get lastClosingPrice => _lastClosingPrice;
 
-  double get currentOutflow => double.NAN;
+  num get currentOutflow => double.NAN;
 
-  double get currentInflow => double.NAN;
+  num get currentInflow => double.NAN;
 
   String get goodType =>_inventory.goodType;
 
-  double predictPrice(double expectedChangeInQuantity)=> _lastClosingPrice;
+  num predictPrice(num expectedChangeInQuantity)=> _lastClosingPrice;
 
 
 
@@ -149,7 +149,7 @@ class ZeroKnowledgeTrader implements Trader
 
   Data _data;
 
-  double dailyInflow;
+  num dailyInflow;
 
   /**
    * how it prices its goods
@@ -178,11 +178,11 @@ class ZeroKnowledgeTrader implements Trader
   final Market market;
 
   //stats:
-  double _lastClosingPrice = double.NAN;
+  num _lastClosingPrice = double.NAN;
 
-  double _stockouts =0.0;
+  num _stockouts =0.0;
 
-  double lastOfferedPrice = double.NAN;
+  num lastOfferedPrice = double.NAN;
 
   final List<DawnEvent> dawnEvents = new List();
 
@@ -209,7 +209,7 @@ class ZeroKnowledgeTrader implements Trader
   /**
    * store the trade results
    */
-  void notifyOfTrade(double quantity, double price,double stockouts) {
+  void notifyOfTrade(num quantity, num price,num stockouts) {
     _lastClosingPrice=price;
     _stockouts += stockouts;
   }
@@ -237,25 +237,25 @@ class ZeroKnowledgeTrader implements Trader
 
   }
 
-  double get predictedSlope=>predictPrice(1.0)-predictPrice(0.0);
+  num get predictedSlope=>predictPrice(1.0)-predictPrice(0.0);
 
 
-  double predictPrice(double expectedChangeInQuantity) => predictor
+  num predictPrice(num expectedChangeInQuantity) => predictor
   .predictPrice(this,expectedChangeInQuantity);
 
 
-  double get quota => quoting.value;
+  num get quota => quoting.value;
 
-  earn(double amount)=>_money.receive(amount);
-
-
-  spend(double amount)=> _money.remove(amount);
+  earn(num amount)=>_money.receive(amount);
 
 
-  receive(double amount)=>_inventory.receive(amount);
+  spend(num amount)=> _money.remove(amount);
 
 
-  remove(double amount)=>_inventory.remove(amount);
+  receive(num amount)=>_inventory.receive(amount);
+
+
+  remove(num amount)=>_inventory.remove(amount);
 
 
 
@@ -268,13 +268,13 @@ class ZeroKnowledgeTrader implements Trader
 
   get money =>_money.amount;
 
-  double get lastClosingPrice=>_lastClosingPrice;
+  num get lastClosingPrice=>_lastClosingPrice;
 
-  double get currentOutflow =>_inventory.outflow;
+  num get currentOutflow =>_inventory.outflow;
 
-  double get currentInflow=> _inventory.inflow;
+  num get currentInflow=> _inventory.inflow;
 
-  double get stockouts => _stockouts;
+  num get stockouts => _stockouts;
 
   static const String DB_ADDRESS = "default.agent.ZeroKnowledgeTrader";
 
@@ -282,7 +282,7 @@ class ZeroKnowledgeTrader implements Trader
    * seller or sales-department targeting inflow=outflow+stockouts
    */
   factory ZeroKnowledgeTrader.PIDSeller(SellerMarket market,
-                                        {double initialPrice:100.0,
+                                        {num initialPrice:100.0,
                                         Inventory givenInventory : null})
   {
     //if no total inventory given, this is an independent trader
@@ -354,11 +354,11 @@ class ZeroKnowledgeTrader implements Trader
 
 
   factory ZeroKnowledgeTrader.PIDBuyer(BuyerMarket market,
-                                       {double flowTarget:10.0,
-                                       double initialPrice:0.0,
-                                       double p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
-                                       double i: PIDController.DEFAULT_INTEGRAL_PARAMETER,
-                                       double d: PIDController.DEFAULT_DERIVATIVE_PARAMETER,
+                                       {num flowTarget:10.0,
+                                       num initialPrice:0.0,
+                                       num p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
+                                       num i: PIDController.DEFAULT_INTEGRAL_PARAMETER,
+                                       num d: PIDController.DEFAULT_DERIVATIVE_PARAMETER,
                                        Inventory givenInventory : null})
   {
     //if no total inventory given, this is an independent trader
@@ -407,14 +407,14 @@ class ZeroKnowledgeTrader implements Trader
    */
   factory ZeroKnowledgeTrader.PIDBufferSeller(SellerMarket market,
                                               {
-                                              double initialPrice:100.0,
-                                              double optimalInventory:100.0,
-                                              double criticalInventory:10.0,
-                                              double p:
+                                              num initialPrice:100.0,
+                                              num optimalInventory:100.0,
+                                              num criticalInventory:10.0,
+                                              num p:
                                               PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
-                                              double i:
+                                              num i:
                                               PIDController.DEFAULT_INTEGRAL_PARAMETER,
-                                              double d:
+                                              num d:
                                               PIDController.DEFAULT_DERIVATIVE_PARAMETER,
                                               Inventory givenInventory:null})
   {
@@ -437,7 +437,7 @@ class ZeroKnowledgeTrader implements Trader
 
 //utility for factories
   static addDailyInflowAndDepreciation(ZeroKnowledgeTrader seller,
-                                       double dailyInflow, double depreciationRate) {
+                                       num dailyInflow, num depreciationRate) {
     seller.dawnEvents.add(FixedInflowEvent(dailyInflow));
     if (depreciationRate > 0.0) {
       assert(depreciationRate <= 1.0);
@@ -448,10 +448,10 @@ class ZeroKnowledgeTrader implements Trader
   /**
    * PIDSeller with exogenous fixed inflow
    */
-  factory ZeroKnowledgeTrader.PIDSellerFixedInflow(double dailyInflow,
+  factory ZeroKnowledgeTrader.PIDSellerFixedInflow(num dailyInflow,
                                                    SellerMarket market,
-                                                   {double depreciationRate:0.0,
-                                                   double initialPrice:100.0,
+                                                   {num depreciationRate:0.0,
+                                                   num initialPrice:100.0,
                                                    Inventory givenInventory:null})
   {
     ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader.PIDSeller(market,
@@ -482,17 +482,17 @@ class ZeroKnowledgeTrader implements Trader
   /**
    * PIDSeller with exogenous fixed inflow
    */
-  factory ZeroKnowledgeTrader.PIDBufferSellerFixedInflow(double dailyInflow,
+  factory ZeroKnowledgeTrader.PIDBufferSellerFixedInflow(num dailyInflow,
                                                          SellerMarket market,
-                                                         {double depreciationRate:0.0,
-                                                         double initialPrice:100.0,
-                                                         double optimalInventory:100.0,
-                                                         double criticalInventory:10.0,
-                                                         double p:
+                                                         {num depreciationRate:0.0,
+                                                         num initialPrice:100.0,
+                                                         num optimalInventory:100.0,
+                                                         num criticalInventory:10.0,
+                                                         num p:
                                                          PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
-                                                         double i:
+                                                         num i:
                                                          PIDController.DEFAULT_INTEGRAL_PARAMETER,
-                                                         double d:
+                                                         num d:
                                                          PIDController.DEFAULT_DERIVATIVE_PARAMETER,
                                                          Inventory givenInventory : null})
   {
@@ -559,7 +559,7 @@ class SimpleSellerTrading extends TradingStrategy<SellerMarket>
             AdaptiveStrategy pricing, AdaptiveStrategy quota) {
     pricing.adapt(trader,data);
     quota.adapt(trader,data);
-    double quoteSize = quota.value;
+    num quoteSize = quota.value;
     trader.lastOfferedPrice = pricing.value;
     if(quoteSize> 0) //if you have anything to sell
       market.placeSaleQuote(trader,quoteSize,trader.lastOfferedPrice);
@@ -590,7 +590,7 @@ class SimpleBuyerTrading extends TradingStrategy<BuyerMarket>
             AdaptiveStrategy pricing, AdaptiveStrategy quota) {
     pricing.adapt(trader,data);
     quota.adapt(trader,data);
-    double quoteSize = quota.value;
+    num quoteSize = quota.value;
     if(quoteSize > 0)
       market.placeBuyerQuote(trader,quota.value,pricing.value);
     trader.lastOfferedPrice = pricing.value;
@@ -606,10 +606,10 @@ class SimpleBuyerTrading extends TradingStrategy<BuyerMarket>
  */
 typedef void DawnEvent(ZeroKnowledgeTrader trader);
 
-DawnEvent FixedInflowEvent(double inflow)=>(ZeroKnowledgeTrader trader)=>
+DawnEvent FixedInflowEvent(num inflow)=>(ZeroKnowledgeTrader trader)=>
 trader.receive(inflow);
 
-DawnEvent DepreciationEvent(double depreciationRate)=>(ZeroKnowledgeTrader trader)=>
+DawnEvent DepreciationEvent(num depreciationRate)=>(ZeroKnowledgeTrader trader)=>
 trader.remove(depreciationRate*trader.good);
 
 /**

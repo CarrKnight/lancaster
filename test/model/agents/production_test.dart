@@ -11,7 +11,7 @@ import 'package:lancaster/model/lancaster_model.dart';
 main(){
   test("production function works",(){
     LinearProductionFunction function = new LinearProductionFunction
-    (multiplier:2.0,consumeInput:true);
+    (true,2.0);
 
     expect(function.production(100.0),200);
     expect(function.consumption(100.0),100);
@@ -30,7 +30,7 @@ main(){
 
   test("exponential function works",(){
     ExponentialProductionFunction function = new ExponentialProductionFunction
-    (multiplier:2.0,exponent:0.5);
+    (2.0,0.5,0.0);
 
     expect(function.production(100.0),20);
     expect(function.consumption(100.0),100);
@@ -45,8 +45,7 @@ main(){
 
 
   test("plant produces correctly",(){
-    LinearProductionFunction function = new LinearProductionFunction(multiplier:2.0,
-    consumeInput:true);
+    LinearProductionFunction function = new LinearProductionFunction(true,2.0);
     Inventory totalInventory = new Inventory();
 
 
@@ -68,8 +67,7 @@ main(){
 
 
   test("multiple productions",(){
-    LinearProductionFunction function = new LinearProductionFunction(multiplier:2.0,
-    consumeInput:true);
+    LinearProductionFunction function = new LinearProductionFunction(true,2.0);
     Inventory totalInventory = new Inventory();
     Schedule s = new Schedule();
 

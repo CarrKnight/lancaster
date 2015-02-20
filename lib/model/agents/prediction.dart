@@ -25,7 +25,7 @@ abstract class PricePredictor{
    * specific change in input. [quantityChange] is the  expected change in
    * input needed or output produced.
    */
-  double predictPrice(Trader trader,double quantityChange);
+  num predictPrice(Trader trader,num quantityChange);
 
 }
 
@@ -63,7 +63,7 @@ class LastPricePredictor implements PricePredictor
   /**
    * just return the last price
    */
-  double predictPrice(Trader trader, double changeInInput) =>
+  num predictPrice(Trader trader, num changeInInput) =>
   trader.lastClosingPrice;
 
   /**
@@ -87,7 +87,7 @@ class FixedSlopePredictor implements PricePredictor
   /**
    * the slope of the predictor
    */
-  double slope;
+  num slope;
 
   /**
    * create the slope predictor
@@ -110,13 +110,13 @@ class FixedSlopePredictor implements PricePredictor
   /**
    * [trader] last price + [currentQuantity] * slope
    */
-  double predictPrice(Trader trader, double quantityChange)
+  num predictPrice(Trader trader, num quantityChange)
   => trader.lastClosingPrice + quantityChange * slope;
 
 
 }
 
-typedef bool DataValidator(double x,double y);
+typedef bool DataValidator(num x,num y);
 
 /**
  * runs a kalman linear regression price~a+b*quantity and then predicts:
@@ -154,15 +154,15 @@ class KalmanPricePredictor implements PricePredictor
    * useful function if you need some observations removed. By default
    * accepts all
    */
-  DataValidator dataValidator = (double x, double y)  =>true;
+  DataValidator dataValidator = (num x, num y)  =>true;
 
   Data data;
 
 
 
   KalmanPricePredictor(this.xColumnName,this.burnoutRate, double
-  initialSlope, this.yColumnName, double forgettingRate,
-  double maxTrace):
+  initialSlope, this.yColumnName, num forgettingRate,
+  num maxTrace):
   delegate = new FixedSlopePredictor(initialSlope),
   filter = new KalmanFilter(2)
   {
@@ -183,7 +183,7 @@ class KalmanPricePredictor implements PricePredictor
   );
 
 
-  double predictPrice(Trader trader, double quantityChange)
+  num predictPrice(Trader trader, num quantityChange)
   =>delegate.predictPrice(trader,quantityChange);
 
 
@@ -211,8 +211,8 @@ class KalmanPricePredictor implements PricePredictor
       return;
     assert(yColumn.isNotEmpty);
 
-    double x = xColumn.last;
-    double y = yColumn.last;
+    num x = xColumn.last;
+    num y = yColumn.last;
 
     if(!x.isFinite || !y.isFinite || !dataValidator(x,y))
       //can't really use this observation!

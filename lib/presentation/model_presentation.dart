@@ -128,7 +128,7 @@ class SimpleFirmPresentation extends ModelPresentation
   super.empty(model);
 }
 
-typedef void DoubleSetter(double newValue);
+typedef void DoubleSetter(num newValue);
 /**
  * this is basically the "learned competitor" test gui
  */
@@ -144,7 +144,7 @@ class MarshallianMicroPresentation extends ModelPresentation
     //empty/useless setters
     hrTargetGetter = ()=> hr== null? double.NAN : hr.trader.data
    .getLatestObservation("pricer_target");
-    targetSetter = (double value){}; //doesn't set a thing
+    targetSetter = (num value){}; //doesn't set a thing
   }
 
   /**
@@ -214,7 +214,7 @@ class MarshallianMicroPresentation extends ModelPresentation
    */
   factory MarshallianMicroPresentation.fixedTarget(Model model,
                                        OneMarketCompetition scenario,
-                                       double initialTarget) {
+                                       num initialTarget) {
 
 
     //maximizes as PID
@@ -293,8 +293,8 @@ class MarshallianMicroPresentation extends ModelPresentation
   DataGatherer hrTargetGetter;
   DoubleSetter targetSetter;
 
-  double get hrTarget => hrTargetGetter();
-  set hrTarget(double value)=>targetSetter(value);
+  num get hrTarget => hrTargetGetter();
+  set hrTarget(num value)=>targetSetter(value);
 }
 
 
@@ -309,11 +309,11 @@ Presentation<SliderEvent>
 
   final ExogenousSellerScenario scenario;
 
-  double get price=>scenario.price;
-  void set price(double value){scenario.price = value;}
+  num get price=>scenario.price;
+  void set price(num value){scenario.price = value;}
 
 
-  double get customersAttracted=> scenario.customersAttracted;
+  num get customersAttracted=> scenario.customersAttracted;
 
   factory SliderDemoPresentation(Model model,
                                  ExogenousSellerScenario scenario) {
@@ -369,7 +369,7 @@ class SliderEvent extends PresentationEvent
 {
   final int day;
 
-  final double customersAttracted;
+  final num customersAttracted;
 
   SliderEvent(this.day, this.customersAttracted);
 

@@ -18,7 +18,7 @@ class FixedValue implements AdaptiveStrategy
 {
   static const String  DB_ADDRESS = "default.strategy.FixedValue";
 
-  double value;
+  num value;
 
   FixedValue([this.value=1000.0]);
 
@@ -44,13 +44,13 @@ class AllOwned implements AdaptiveStrategy
 
   static AllOwned instance = new AllOwned._internal();
 
-  double inventory;
+  num inventory;
 
   adapt(Trader t, Data data) {
     inventory = t.good;
   }
 
-  double get value=>inventory;
+  num get value=>inventory;
 
   factory AllOwned()=>instance;
 

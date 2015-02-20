@@ -3,16 +3,16 @@ part of lancaster.model;
 
 abstract class Controller
 {
-  set offset(double value);
+  set offset(num value);
 
-  double get offset;
+  num get offset;
 
-  double get manipulatedVariable;
+  num get manipulatedVariable;
 
   /**
    * "step" the controller to change the manipulated variable
    */
-  void adjust(double target, double controlledVariable);
+  void adjust(num target, num controlledVariable);
 
 }
 
@@ -22,34 +22,34 @@ abstract class Controller
 class PIDController implements Controller {
 
 
-  static const  double DEFAULT_PROPORTIONAL_PARAMETER = .1;
-  static const  double DEFAULT_INTEGRAL_PARAMETER = .1;
-  static const  double DEFAULT_DERIVATIVE_PARAMETER = 0.0;
+  static const  num DEFAULT_PROPORTIONAL_PARAMETER = .1;
+  static const  num DEFAULT_INTEGRAL_PARAMETER = .1;
+  static const  num DEFAULT_DERIVATIVE_PARAMETER = 0.0;
 
   /**
    * the a of the discrete PID controller
    */
-  double proportionalParameter;
+  num proportionalParameter;
 
   /**
    * the b of the discrete PID controller
    */
-  double integrativeParameter;
+  num integrativeParameter;
 
   /**
    * the c of the discrete PID controller
    */
-  double derivativeParameter;
+  num derivativeParameter;
 
   /**
    * offset + PID formula
    */
-  double _manipulatedVariable = 0.0;
+  num _manipulatedVariable = 0.0;
 
   /**
    * the offset: if the pid formula is 0 the MV is the offset
    */
-  double _offset = 0.0;
+  num _offset = 0.0;
 
   /**
    * when this is set to true the residual is -target+controlledVariable
@@ -59,14 +59,14 @@ class PIDController implements Controller {
   /**
    * the last residual
    */
-  double _currentError =double.NAN;
+  num _currentError =double.NAN;
 
   /**
    * the residual before last
    */
-  double _previousError = double.NAN;
+  num _previousError = double.NAN;
 
-  double _sumOfErrors = 0.0;
+  num _sumOfErrors = 0.0;
 
   PIDController.standardPI():
   this(PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
@@ -76,7 +76,7 @@ class PIDController implements Controller {
 
   PIDController(this.proportionalParameter, this.integrativeParameter, this.derivativeParameter);
 
-  set offset(double value){_offset=max(0.0,value);
+  set offset(num value){_offset=max(0.0,value);
   _manipulatedVariable = _offset;
   }
 
@@ -90,7 +90,7 @@ class PIDController implements Controller {
    */
   updateMV() {
 //PID FORMULA
-    double newMV = offset +
+    num newMV = offset +
     proportionalParameter * _currentError +
     integrativeParameter * _sumOfErrors;
     if (_previousError.isFinite)
@@ -107,13 +107,13 @@ class PIDController implements Controller {
     _manipulatedVariable = newMV;
   }
 
-  void adjust(double target, double controlledVariable)
+  void adjust(num target, num controlledVariable)
   {
     //compute error
     assert(target.isFinite);
     assert(controlledVariable.isFinite);
 
-    double residual = invertSign ? controlledVariable-target : target-controlledVariable;
+    num residual = invertSign ? controlledVariable-target : target-controlledVariable;
     assert(residual.isFinite);
     _previousError = _currentError;
     _currentError = residual;
@@ -126,15 +126,15 @@ class PIDController implements Controller {
 
 
 
-  double _sumOfErrorsNeededForFormulaToBe0(){
-    double numerator = 0 - offset - (proportionalParameter * _currentError);
+  num _sumOfErrorsNeededForFormulaToBe0(){
+    num numerator = 0 - offset - (proportionalParameter * _currentError);
     if(_previousError.isFinite)
       numerator-= derivativeParameter * (_currentError-_previousError);
     return numerator/integrativeParameter;
   }
 
-  void changeSumOfErrorsSoOutputIsX(double x){
-    double numerator = x - offset - (proportionalParameter * _currentError);
+  void changeSumOfErrorsSoOutputIsX(num x){
+    num numerator = x - offset - (proportionalParameter * _currentError);
     if(_previousError.isFinite)
       numerator-= derivativeParameter * (_currentError-_previousError);
     _sumOfErrors =  numerator/integrativeParameter;
@@ -173,7 +173,7 @@ class StickyPID implements Controller
   factory StickyPID.Random(Controller delegate, Random r, int
   decisionPeriod)
   {
-    double probability = 1.0/(1.0 + decisionPeriod.toDouble());
+    num probability = 1.0/(1.0 + decisionPeriod.toDouble());
     return new StickyPID(delegate,()=> r.nextDouble() < probability);
   }
 
@@ -200,12 +200,12 @@ class StickyPID implements Controller
   Function get adjustToday => _adjustToday;
 
 
-  set offset(double value)=> delegate.offset=value;
+  set offset(num value)=> delegate.offset=value;
   get offset=>delegate.offset;
 
   get manipulatedVariable=>delegate.manipulatedVariable;
 
-  void adjust(double target, double controlledVariable) {
+  void adjust(num target, num controlledVariable) {
     adjustedLast = _adjustToday();
     if (adjustedLast)
       delegate.adjust(target, controlledVariable);
@@ -229,16 +229,16 @@ class WindupStopFromAbove implements Controller
 
   WindupStopFromAbove(this.delegate, this.maximumValue);
 
-  set offset(double value)=>delegate.offset=value;
+  set offset(num value)=>delegate.offset=value;
 
-  double get offset => delegate.offset;
+  num get offset => delegate.offset;
 
-  double get manipulatedVariable=>delegate.manipulatedVariable;
+  num get manipulatedVariable=>delegate.manipulatedVariable;
 
-  void adjust(double target, double controlledVariable) {
+  void adjust(num target, num controlledVariable) {
 
     delegate.adjust(target,controlledVariable);
-    double maximum = maximumValue(target,controlledVariable);
+    num maximum = maximumValue(target,controlledVariable);
     if(delegate.manipulatedVariable > maximum +1 ) {
       delegate.changeSumOfErrorsSoOutputIsX(maximum);
   //    print("${delegate.manipulatedVariable} <----> $maximum");
