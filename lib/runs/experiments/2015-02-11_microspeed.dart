@@ -37,7 +37,7 @@ main()
   }
 
 
-  writeCSV(histogramKM.backingMap,"micro_converge_speed3.csv");
+  outputDataToCSV(histogramKM.backingMap,"micro_converge_speed3.csv");
 /*
   fixedWageMicro(true,testing:false,
                  gasCsvName: "K_micro_gas.csv",

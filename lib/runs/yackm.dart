@@ -37,13 +37,15 @@ main()
                  gasCsvName: "K_cycle_gas.csv",
                  laborCsvName: "K_cycle_wage.csv",
                  totalSteps:20000, shockDay:10000, endShockDay:15000, shockSize:-0.2,
-                 salesCSV : "K_cycle_sales.csv", hrCSV: "K_cycle_hr.csv");
+                 salesCSV : "K_cycle_sales.csv", hrCSV: "K_cycle_hr.csv",logName:"log.json",
+                 outputPath : ["bin","tmp"]);
 
   fixedWageMacro("marshallian.json", testing:false,
                  gasCsvName: "M_cycle_gas.csv",
                  laborCsvName: "M_cycle_wage.csv",
                  totalSteps:20000, shockDay:10000, endShockDay:15000, shockSize:-0.2,
-                 salesCSV : "M_cycle_sales.csv", hrCSV: "M_cycle_hr.csv");
+                 salesCSV : "M_cycle_sales.csv", hrCSV: "M_cycle_hr.csv",logName:"log2.json",
+                 outputPath : ["bin","tmp"]);
 
 
 /*
@@ -136,9 +138,9 @@ wageName = null])
   }
 
   if(gasName!=null)
-    writeCSV(gas.data.backingMap,gasName);
+    outputDataToCSV(gas.data.backingMap,gasName,defaultOutputPath);
   if(wageName!=null)
-    writeCSV(labor.data.backingMap,wageName);
+    outputDataToCSV(labor.data.backingMap,wageName,defaultOutputPath);
 
 }
 
@@ -199,13 +201,13 @@ wageName = null, String gasPIDName = null, String wagePIDName = null])
   }
 
   if(gasName!=null)
-    writeCSV(gas.data.backingMap,gasName);
+    outputDataToCSV(gas.data.backingMap,gasName,defaultOutputPath);
   if(wageName!=null)
-    writeCSV(labor.data.backingMap,wageName);
+    outputDataToCSV(labor.data.backingMap,wageName,defaultOutputPath);
   if(gasPIDName!=null)
-    writeCSV(gasPID.backingMap,gasPIDName);
+    outputDataToCSV(gasPID.backingMap,gasPIDName,defaultOutputPath);
   if(wagePIDName!=null)
-    writeCSV(wagePID.backingMap,wagePIDName);
+    outputDataToCSV(wagePID.backingMap,wagePIDName,defaultOutputPath);
 
 }
 
@@ -278,7 +280,9 @@ Data fixedWageMacro(
     int shockDay : -1,
     int endShockDay: -1,
     //negative if the shock lowers demand
-    num shockSize : 0.0
+    num shockSize : 0.0,
+    List<String> outputPath : null, //if null it outputs to docs
+    String logName : null
     })
 {
 
@@ -327,15 +331,28 @@ Data fixedWageMacro(
       expect(labor.quantityTraded, closeTo(100.0, 2.5));
     }
   }
+
+  if(outputPath == null)
+    outputPath = defaultOutputPath;
+
   if(gasCsvName!=null)
-    writeCSV(gas.data.backingMap,gasCsvName);
+    outputDataToCSV(gas.data.backingMap,gasCsvName,outputPath);
   if(laborCsvName!=null)
-    writeCSV(labor.data.backingMap,laborCsvName);
+    outputDataToCSV(labor.data.backingMap,laborCsvName,outputPath);
   if(salesCSV != null)
     //look at this long series of dot operations! Stay in school, kids!
-    writeCSV(scenario.firms.first.salesDepartments["gas"].data.backingMap,salesCSV);
+    outputDataToCSV(scenario.firms.first.salesDepartments["gas"].data.backingMap,salesCSV,outputPath);
   if(hrCSV != null)
-    writeCSV(scenario.firms.first.purchasesDepartments["labor"].data.backingMap,hrCSV);
+    outputDataToCSV(scenario.firms.first.purchasesDepartments["labor"].data.backingMap,hrCSV,outputPath);
+
+  if(logName != null)
+  {
+    File file = new File(getOutputPathForFile(logName,outputPath));
+    file.create().then((t)=>t.writeAsStringSync(model.parameters.log,flush:true));
+
+  }
+
+
 
   return gas.data;
 }
@@ -369,19 +386,24 @@ String findRootFolder()
   return current.path;
 }
 
-String getOutputPathForFile(String file){
+final List<String> defaultOutputPath = ["docs","yackm","rawdata"];
 
-  var root = findRootFolder();
-  return "${root}${Platform.pathSeparator}docs${Platform
-  .pathSeparator}yackm${Platform.pathSeparator}rawdata${Platform
-  .pathSeparator}$file";
+String getOutputPathForFile(String file, List<String> outputSubdirectory){
+
+  String sep = Platform.pathSeparator;
+  Directory outputDirectory = new Directory(findRootFolder());
+
+  for (String dir in outputSubdirectory)
+    outputDirectory = new Directory("${outputDirectory.path}${sep}${dir}");
+
+  return "${outputDirectory.path}${sep}${file}";
 }
 
 
 
-void writeCSV(Map<String,List<double>> _dataMap, String fileName)
+void outputDataToCSV(Map<String,List<double>> _dataMap, String fileName,List<String> outputSubDirectory)
 {
-  fileName = getOutputPathForFile(fileName);
+  fileName = getOutputPathForFile(fileName,outputSubDirectory);
   print("writing to $fileName");
   //create string
   StringBuffer toWrite = new StringBuffer();
@@ -442,7 +464,9 @@ Data fixedWageMicro(String jsonFileName,
                     String salesCSV : null,
                     String hrCSV: null,
                     //negative if the shock lowers demand
-                    num shockSize : 0.0
+                    num shockSize : 0.0,
+                    List<String> outputPath : null, //if null it outputs to docs
+                    String logName : null
                     })
 {
   Model model = initializeOneMarketModel(pathToJsonFromProjectRoot,
@@ -473,15 +497,28 @@ Data fixedWageMicro(String jsonFileName,
     expect(labor.quantityTraded, closeTo(50.0, 0.5));
   }
 
+
+
+  if(outputPath == null)
+    outputPath = defaultOutputPath;
+
   if(gasCsvName!=null)
-    writeCSV(gas.data.backingMap,gasCsvName);
+    outputDataToCSV(gas.data.backingMap,gasCsvName,outputPath);
   if(laborCsvName!=null)
-    writeCSV(labor.data.backingMap,laborCsvName);
+    outputDataToCSV(labor.data.backingMap,laborCsvName,outputPath);
   if(salesCSV != null)
     //look at this long series of dot operations! Stay in school, kids!
-    writeCSV(scenario.firms.first.salesDepartments["gas"].data.backingMap,salesCSV);
+    outputDataToCSV(scenario.firms.first.salesDepartments["gas"].data.backingMap,salesCSV,outputPath);
   if(hrCSV != null)
-    writeCSV(scenario.firms.first.purchasesDepartments["labor"].data.backingMap,hrCSV);
+    outputDataToCSV(scenario.firms.first.purchasesDepartments["labor"].data.backingMap,hrCSV,outputPath);
+
+  if(logName != null)
+  {
+    File file = new File(getOutputPathForFile(logName,outputPath));
+    file.create().then((t)=>t.writeAsStringSync(model.parameters.log,flush:true));
+
+  }
+
 
   return gas.data;
 }

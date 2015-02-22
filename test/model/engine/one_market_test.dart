@@ -167,7 +167,7 @@ main()
       oneMarketTest(true,false);
     });
   //same, but with pid
-  for(int i=0;i<500;i++)
+  for(int i=0;i<5;i++)
     test("Learned Monopolist PID", (){ //knows the price impacts
       oneMarketTest(true,true);
     });

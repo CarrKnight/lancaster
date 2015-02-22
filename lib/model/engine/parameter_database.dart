@@ -13,7 +13,12 @@ class ParameterDatabase
 {
 
 
+  /**
+   * this one here is the rea
+   */
   final JsonObject _root;
+
+  final JsonObject _log = new JsonObject();
 
 
   final Map<String,NumberGenerator> _generators = new Map();
@@ -182,6 +187,8 @@ class ParameterDatabase
     if(parameter is JsonObject)
       throw new Exception("The parameter is a map, not a string! ${parameter.toString()}");
 
+
+    logObject(parameter.toString(),bestPath);
     return parameter.toString();
 
 
@@ -207,6 +214,7 @@ class ParameterDatabase
     if(parameter is JsonObject)
       throw new Exception("The parameter is a map, not a string! ${parameter.toString()}");
 
+    logObject(parameter,bestPath);
     return parameter;
 
 
@@ -254,6 +262,9 @@ class ParameterDatabase
 
     if(parameter ==null)
       throw new Exception("Couldn't find the field neither as $bestPath nor $fallbackPath");
+
+    logObject(parameter,bestPath);
+
 
     if(parameter is JsonObject)
       return _generateNumber(parameter);
@@ -341,6 +352,31 @@ class ParameterDatabase
   }
 
 
+
+  void logObject(Object returned, String longPath )
+  {
+    List<String> address = longPath.split(".");
+    //remove last, that's the field name
+    String fieldName = address.last;
+    address.removeLast();
+
+    //navigate to point
+    JsonObject log = _log;
+    for(String key in address)
+    {
+      if(!log.containsKey(key))
+        log[key] = new JsonObject();
+      log = log[key];
+    }
+    //add field
+    log[fieldName] = returned;
+
+
+
+  }
+
+
+  String get log => _log.toString();
 
 
 

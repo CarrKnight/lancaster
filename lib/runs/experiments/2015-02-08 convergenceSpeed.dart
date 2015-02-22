@@ -36,7 +36,7 @@ main()
   }
 
 
-  writeCSV(histogramKM.backingMap,"convergeSpeed7.csv");
+  outputDataToCSV(histogramKM.backingMap,"convergeSpeed7.csv");
 
 
 
