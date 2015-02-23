@@ -20,11 +20,11 @@ main()
   Data histogramKM = new Data(["keynesian","marshallian"],
                                   (data)=>(s){
                                 data["keynesian"].add(extractApproximateDateOfEquilibrium(
-                                    fixedWageMicro(true,testing:false,totalSteps:15000)
+                                    fixedWageMicro("keynesian.micro.json",testing:false,totalSteps:5000)
                                     , correctP : 50.0, correctQ : 50.0, minPDistance: 0.25, minQDistance:0.25
                                     ));
                                 data["marshallian"].add(extractApproximateDateOfEquilibrium(
-                                    fixedWageMicro(false,testing:false,totalSteps:15000)
+                                    fixedWageMicro("marshallian.micro.json",testing:false,totalSteps:5000)
                                     , correctP : 50.0, correctQ : 50.0, minPDistance: 0.25, minQDistance:0.25
                                     ));
                               });
@@ -37,7 +37,7 @@ main()
   }
 
 
-  outputDataToCSV(histogramKM.backingMap,"micro_converge_speed3.csv");
+  outputDataToCSV(histogramKM.backingMap,"micro_converge_speed3.csv",["bin","tmp"]);
 /*
   fixedWageMicro(true,testing:false,
                  gasCsvName: "K_micro_gas.csv",

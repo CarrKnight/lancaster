@@ -192,7 +192,7 @@ class OneMarketCompetition extends Scenario
        String containerPath)
   {
 
-    PIDMaximizer delegate = new PIDMaximizer.ForHumanResourcesFromDB(plant, firm, db,
+    PIDMaximizer delegate = new PIDMaximizer.ForHumanResourcesFromDB(plant,null , db,
                                                                      "$containerPath.MARSHALLIAN_QUOTA");
 
     return new PIDMaximizerFacade(delegate, firm, plant,

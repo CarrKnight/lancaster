@@ -101,8 +101,8 @@ doubleHist<-function(filename)
   keynesian<-cleanColumn(data$keynesian)
   marshallian<-cleanColumn(data$marshallian)
   par(mfrow=c(2,1))
-  hist(keynesian,xlim=c(0,15000),main = "Keynesian Convergence Day")
-  hist(marshallian,xlim=c(0,15000),main = "Marshallian Convergence Day")
+  hist(keynesian,xlim=c(0,15000),main = "Keynesian Convergence Day",breaks=seq.int(from=1,to=15000,by=200))
+  hist(marshallian,xlim=c(0,15000),main = "Marshallian Convergence Day",breaks=seq.int(from=1,to=15000,by=200))
   par(mfrow=c(1,1))
 
   }

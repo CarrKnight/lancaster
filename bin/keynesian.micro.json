@@ -6,9 +6,19 @@
           "salesPricingStrategy": "PROFIT_MAXIMIZER_PRICING",
           "PROFIT_MAXIMIZER_PRICING": {
             "delegate": {
+              "p": {
+                "type": "uniform",
+                "min": 0.05,
+                "max": 0.5
+              },
+              "i": {
+                "type": "uniform",
+                "min": 0.05,
+                "max": 0.5
+              },
               "PIMultiplier": 100
             },
-             "initialPrice": {
+            "initialPrice": {
               "type": "uniform",
               "min": 0,
               "max": 100
