@@ -94,15 +94,15 @@ cleanColumn<-function(column){
   return(column)
 }
 
-doubleHist<-function(filename)
+doubleHist<-function(filename,maxT=15001)
   {
   
   data<-read.csv(file.path(rawdataFolder,filename))
   keynesian<-cleanColumn(data$keynesian)
   marshallian<-cleanColumn(data$marshallian)
   par(mfrow=c(2,1))
-  hist(keynesian,xlim=c(0,15000),main = "Keynesian Convergence Day",breaks=seq.int(from=1,to=15000,by=200))
-  hist(marshallian,xlim=c(0,15000),main = "Marshallian Convergence Day",breaks=seq.int(from=1,to=15000,by=200))
+  hist(keynesian,xlim=c(0,maxT),main = "Keynesian Convergence Day",breaks=seq.int(from=1,to=maxT,by=200))
+  hist(marshallian,xlim=c(0,maxT),main = "Marshallian Convergence Day",breaks=seq.int(from=1,to=maxT,by=200))
   par(mfrow=c(1,1))
 
   }
@@ -514,6 +514,7 @@ This gives rises to the following macro equilibrium
 $$
 
 Then I lower the demand by 0.2 when shocked and I get:
+>$$
 \begin{align*}
  L &= 10.24 \\
  p &= 12.8 \\
@@ -541,6 +542,293 @@ Sample runs look like this:
 
 ### Questions
 
+
+
+---------------------------------------
+
+#Difference in shock between Keynesian macro and Marshallian macro
+
+### Date 
+2015-02-24
+
+###Background Information
+
+The main difference between Keynesian and Marshallian world ought to be that in macro-settings Keynesian adjustments affect the demand as much as the supply; this should cause adjustment errors
+
+
+###References
+
+###Purpose
+
+To plot the difference in adjustment dynamics
+
+###Hypothesis
+
+Keynesian macro should undershoot or overshoot
+
+###Experiment
+
+We take the expected results of "convergence speed after drop" experiment:
+>$$
+\begin{align*}
+ L &= 16 \\
+ p &= 16 \\
+ Y &= 1
+\end{align*}
+$$
+
+And after a demand drop
+>$$
+\begin{align*}
+ L &= 10.24 \\
+ p &= 12.8 \\
+ Y &= 0.6
+\end{align*}
+$$
+
+I run the model for 10000 days before shocking it then see what happens in the next 2000 days. The results are, fortunately, pretty much what I expected:
+```{r, echo=FALSE,warning=FALSE}
+#really!
+
+keynesian_path<-file.path("~","code","lancaster","docs","yackm","rawdata","1000macro 2015-02-24","keynesian")
+
+
+#    _  _________   ___   _ _____ ____ ___    _    _   _ 
+#   | |/ / ____\ \ / / \ | | ____/ ___|_ _|  / \  | \ | |
+#   | ' /|  _|  \ V /|  \| |  _| \___ \| |  / _ \ |  \| |
+#   | . \| |___  | | | |\  | |___ ___) | | / ___ \| |\  |
+#   |_|\_\_____| |_| |_| \_|_____|____/___/_/   \_\_| \_|
+#                                                        
+filenames <- list.files(keynesian_path, pattern="*_sales.csv", full.names=TRUE)
+keynesian<-list()
+for(i in 1:length(filenames))
+{
+  data<-read.csv(filenames[[i]])
+  keynesian<-rbind(keynesian,cbind(data$quantity[9950:12000],9950:12000,paste(i)))
+  print(i)
+  
+}
+
+
+keynesian<-data.frame(keynesian)
+colnames(keynesian)<-c("value","time","variable")
+head(keynesian)
+
+keynesian$value<-as.numeric(as.character(keynesian$value))
+keynesian$time<-as.numeric(as.character(keynesian$time))
+keynesian$variable<-as.numeric(as.character(keynesian$variable))
+head(keynesian)
+
+
+library(ggplot2)
+keeynesian_plot<-ggplot() + geom_line(data=keynesian,
+                     aes(y=value,x=time,group= variable),alpha=0.5) +
+  ylim(0.3,1.05) + geom_hline(aes(yintercept = 0.6),col="blue",lty=2,lwd=1.5) +theme_gray(20) +
+  ggtitle("Keynesian Shock") +ylab("Quantity Traded")
+
+
+
+#    __  __    _    ____  ____  _   _    _    _     _     ___    _    _   _ 
+#   |  \/  |  / \  |  _ \/ ___|| | | |  / \  | |   | |   |_ _|  / \  | \ | |
+#   | |\/| | / _ \ | |_) \___ \| |_| | / _ \ | |   | |    | |  / _ \ |  \| |
+#   | |  | |/ ___ \|  _ < ___) |  _  |/ ___ \| |___| |___ | | / ___ \| |\  |
+#   |_|  |_/_/   \_\_| \_\____/|_| |_/_/   \_\_____|_____|___/_/   \_\_| \_|
+#                     
+marshallian_path<-file.path("~","code","lancaster","docs","yackm","rawdata","1000macro","marshallian")
+
+filenames <- list.files(marshallian_path, pattern="*_sales.csv", full.names=TRUE)
+marshallian<-list()
+for(i in 1:length(filenames))
+{
+  data<-read.csv(filenames[[i]])
+  marshallian<-rbind(marshallian,cbind(data$quantity[9950:12000],9950:12000,paste(i)))
+  print(i)
+  
+}
+
+
+marshallian<-data.frame(marshallian)
+colnames(marshallian)<-c("value","time","variable")
+head(marshallian)
+
+marshallian$value<-as.numeric(as.character(marshallian$value))
+marshallian$time<-as.numeric(as.character(marshallian$time))
+marshallian$variable<-as.numeric(as.character(marshallian$variable))
+head(marshallian)
+
+
+library(ggplot2)
+marshallian_plot<-ggplot() + geom_line(data=marshallian,
+                     aes(y=value,x=time,group= variable),alpha=0.5) +
+  ylim(0.3,1.05) + geom_hline(aes(yintercept = 0.6),col="blue",lty=2,lwd=1.5) + theme_gray(20) +
+  ggtitle("Marshallian Shock") +ylab("Quantity Traded")
+
+
+library(gridExtra)
+grid.arrange(keeynesian_plot,marshallian_plot,ncol=2)
+```
+
+Notice how Marshallian adjust to demand shock. The $y$  is traded quantity so when there is a demand shock and labor takes time to adjust the marshallian firm lowers prices which pushes quantity traded back up, but eventually production starts dropping as it is unprofitable and we go back to equilibrium.
+
+###Code used
+
+The code is in  ```runs/experiments/2015-02-23_overshoot.dart``` . 
+The results are  in ```docs/yackm/rawdata/1000macro 2015-02-24````, together with a copy of the input json used
+
+###Results
+
+Keynesian macro has overshooting and undershooting while marshallian world has none
+
+###Conclusion
+
+### Questions
+
+
+---------------------------------------
+
+#Increasing Flexibility Before the crisis
+
+### Date 
+2015-02-24
+
+###Background Information
+
+From the previous experiment we know that a shock in the Keynesian world might cause overshooting and undershooting. Time to see how a more aggressive adjustment policies affects it
+
+###References
+
+
+
+###Purpose
+
+To see whether the increasing P and I parameters bring faster changes or just bigger overshooting-undershooting
+
+
+###Hypothesis
+
+Increasing P and I parameters make matter worse
+
+###Experiment
+
+Same setup as usual:  
+>$$
+\begin{align*}
+ L &= 16 \\
+ p &= 16 \\
+ Y &= 1
+\end{align*}
+$$  
+that gets shocked to:  
+>$$
+\begin{align*}
+ L &= 10.24 \\
+ p &= 12.8 \\
+ Y &= 0.6
+\end{align*}
+$$  
+
+This time when the shock happens (at day 10,000) we also add .2 to the P and I parameters of the HR quota strategy, making it faster. I run 100 experiments with and without the speed adjustment, keeping seeds the same for more accurate comparison.
+
+```{r, echo=FALSE,warning=FALSE}
+#really!
+
+keynesian_path<-file.path("~","code","lancaster","docs","yackm","rawdata","pi speed shock2015-02-24 13:41:17.795")
+
+
+#    _  _________   ___   _ _____ ____ ___    _    _   _ 
+#   | |/ / ____\ \ / / \ | | ____/ ___|_ _|  / \  | \ | |
+#   | ' /|  _|  \ V /|  \| |  _| \___ \| |  / _ \ |  \| |
+#   | . \| |___  | | | |\  | |___ ___) | | / ___ \| |\  |
+#   |_|\_\_____| |_| |_| \_|_____|____/___/_/   \_\_| \_|
+#                                                        
+filenames <- list.files(keynesian_path, pattern="*_sales.csv", full.names=TRUE)
+keynesian<-list()
+for(i in 1:length(filenames))
+{
+  data<-read.csv(filenames[[i]])
+  keynesian<-rbind(keynesian,cbind(data$quantity[9950:12000],9950:12000,paste(i)))
+  print(i)
+  
+}
+
+
+keynesian<-data.frame(keynesian)
+colnames(keynesian)<-c("value","time","variable")
+head(keynesian)
+
+keynesian$value<-as.numeric(as.character(keynesian$value))
+keynesian$time<-as.numeric(as.character(keynesian$time))
+keynesian$variable<-as.numeric(as.character(keynesian$variable))
+head(keynesian)
+
+
+library(ggplot2)
+keeynesian_plot<-ggplot() + geom_line(data=keynesian,
+                     aes(y=value,x=time,group= variable),alpha=0.5) +
+  ylim(0.3,1.05) + geom_hline(aes(yintercept = 0.6),col="blue",lty=2,lwd=1.5) +theme_gray(20) +
+  ggtitle("Keynesian Shock") +ylab("Quantity Traded")
+
+
+
+#    _____ _     _______  _____ ____ ___ _     ___ _______   __
+#   |  ___| |   | ____\ \/ /_ _| __ )_ _| |   |_ _|_   _\ \ / /
+#   | |_  | |   |  _|  \  / | ||  _ \| || |    | |  | |  \ V / 
+#   |  _| | |___| |___ /  \ | || |_) | || |___ | |  | |   | |  
+#   |_|   |_____|_____/_/\_\___|____/___|_____|___| |_|   |_|  
+#                                                                                   
+flexible_path<-file.path("~","code","lancaster","docs","yackm","rawdata","pi speed shock2015-02-24 13:41:17.795")
+
+filenames <- list.files(flexible_path, pattern="*_sales_flexible.csv", full.names=TRUE)
+flexible<-list()
+for(i in 1:length(filenames))
+{
+  data<-read.csv(filenames[[i]])
+  flexible<-rbind(flexible,cbind(data$quantity[9950:12000],9950:12000,paste(i)))
+  print(i)
+  
+}
+
+
+flexible<-data.frame(flexible)
+colnames(flexible)<-c("value","time","variable")
+head(flexible)
+
+flexible$value<-as.numeric(as.character(flexible$value))
+flexible$time<-as.numeric(as.character(flexible$time))
+flexible$variable<-as.numeric(as.character(flexible$variable))
+head(flexible)
+
+
+library(ggplot2)
+flexible_plot<-ggplot() + geom_line(data=flexible,
+                     aes(y=value,x=time,group= variable),alpha=0.5) +
+  ylim(0.3,1.05) + geom_hline(aes(yintercept = 0.6),col="blue",lty=2,lwd=1.5) + theme_gray(20) +
+  ggtitle("Keynesian and Flexibility Shock ") +ylab("Quantity Traded")
+
+
+library(gridExtra)
+grid.arrange(keeynesian_plot,flexible_plot,ncol=2)
+
+```
+
+
+###Code used
+
+The code used is in ```2015-02-24_flexibility.dart``` in the ```\lib\runs\experiments```. The output is in ```docs/yackm/rawdata/pi speed shock2015-02-24 13:41:17.795```
+
+
+
+###Results
+
+The shock is worse, but i need to devise a couple of metrics to establish its size. Also, it might be that there is an "optimal" speed rather than "faster is worse".
+
+
+###Conclusion
+
+### Questions
+
+* Can I devise a good metric for overshooting-understhooting?
+* Can I do these experiments for multiple speed shocks and see which one gives me the optimal speed parameter?
 
 
 ---------------------------------------
@@ -577,3 +865,36 @@ Sample runs look like this:
 
 ### Questions
 
+---------------------------------------
+
+#title
+
+### Date 
+
+###Background Information
+
+
+###References
+
+###Purpose
+
+
+
+###Hypothesis
+
+
+###Experiment
+
+
+
+
+###Code used
+
+
+###Results
+
+
+
+###Conclusion
+
+### Questions

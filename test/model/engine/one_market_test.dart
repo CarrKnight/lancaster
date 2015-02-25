@@ -75,13 +75,13 @@ main()
 
   for(int i=0; i<5;i++) {
     test("Marshallian Micro, ",
-             ()=>fixedWageMicro("marshallian.micro.json",totalSteps:3000));
+             ()=>fixedWageMicro("marshallian.micro.json",totalSteps:5000));
 
   }
 
   for(int i=0; i<5;i++) {
     test("Keynesian Micro, ",
-             ()=>fixedWageMicro("keynesian.micro.json",totalSteps:3000));
+             ()=>fixedWageMicro("keynesian.micro.json",totalSteps:5000));
 
   }
 

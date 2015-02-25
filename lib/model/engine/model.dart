@@ -38,9 +38,9 @@ class Model {
   this(new DateTime.now().millisecondsSinceEpoch,givenScenario);
 
 
-  Model.fromJSON(String json)
+  Model.fromJSON(String json, [int seed = null])
   {
-    this.parameters = new ParameterDatabase(json);
+    this.parameters = new ParameterDatabase(json,seed);
     random = parameters.random;
     this.scenario = _generateScenarioFromDatabase(parameters);
   }

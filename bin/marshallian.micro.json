@@ -7,7 +7,7 @@
           "STOCKOUT_SALES": {
             "offset": {
               "type": "uniform",
-              "min": 0,
+              "min": 1,
               "max": 100
             }
           }

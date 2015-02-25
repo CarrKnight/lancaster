@@ -28,18 +28,22 @@ class ParameterDatabase
 
 
   /**
-   * navigate to [address]; returns null if the address is invalid
+   * navigate to [address]; returns null if the address is invalid. Can be given a [seed] (otherwise it is read from the
+   * db itself)
    */
-  ParameterDatabase(String json):
+  ParameterDatabase(String json, [int seed=null]):
   _root = new JsonObject.fromJsonString(json)
   {
 
-    Object seedParameter = _root["run.seed"];
-    num seed;
-    if(seedParameter == null || !(seedParameter  == "milliseconds"))
-      seed = new DateTime.now().millisecondsSinceEpoch;
-    else
-      seed = seedParameter;
+    if(seed == null) //if not provided by the code, write it straight in
+    {
+      Object seedParameter = _root["run.seed"];
+      if (seedParameter == null || !(seedParameter == "milliseconds"))
+        seed = new DateTime.now().millisecondsSinceEpoch;
+      else
+        seed = seedParameter;
+    }
+    logObject(seed,"run.seed");
     random = new Random(seed.toInt());
 
     //add default generators

@@ -216,7 +216,7 @@ wageName = null, String gasPIDName = null, String wagePIDName = null])
  * run fixed wage macro experiments and return the output market data
  */
 Model initializeOneMarketModel(List<String> pathToJsonFromProjectRoot, String jsonFileName, List<String> additionalJSonFiles,
-                      bool burnInventories)
+                      bool burnInventories, [int seed = null])
 {
   String sep = Platform.pathSeparator;
   if (pathToJsonFromProjectRoot == null)
@@ -231,7 +231,7 @@ Model initializeOneMarketModel(List<String> pathToJsonFromProjectRoot, String js
   File additionalParameters = new File("${jsonDirectory.path}${sep}${jsonFileName}");
 
 
-  Model model = new Model.fromJSON(defaultParameters.readAsStringSync());
+  Model model = new Model.fromJSON(defaultParameters.readAsStringSync(),seed);
   model.parameters.mergeWithJSON(additionalParameters.readAsStringSync());
 
   //if there are even more files, read them now
@@ -264,11 +264,18 @@ Model initializeOneMarketModel(List<String> pathToJsonFromProjectRoot, String js
   return model;
 }
 
+
+/**
+ * useful to apply conditions to a running scenario, model
+ */
+typedef void ScenarioConsumer(OneMarketCompetition scenario, Model model);
+
 Data fixedWageMacro(
     String jsonFileName,
     {
     List<String> pathToJsonFromProjectRoot : null, //if null, the default is to use root/bin folder
     List<String> additionalJSonFiles : null,
+    int seed : null,
     bool testing : true,
     bool burnInventories : true,
     String gasCsvName: null,
@@ -281,12 +288,14 @@ Data fixedWageMacro(
     int endShockDay: -1,
     //negative if the shock lowers demand
     num shockSize : 0.0,
+    bool dateDirectory : true, //put csvs in a directory with time stamp
     List<String> outputPath : null, //if null it outputs to docs
-    String logName : null
+    String logName : null,
+    ScenarioConsumer shockEffects : null
     })
 {
 
-  var model = initializeOneMarketModel(pathToJsonFromProjectRoot, jsonFileName, additionalJSonFiles, burnInventories);
+  var model = initializeOneMarketModel(pathToJsonFromProjectRoot, jsonFileName, additionalJSonFiles, burnInventories,seed);
 
   //demand = total wages yesterday, that's what makes it macro
   ExogenousSellerMarket goodMarket = new ExogenousSellerMarket.linkedToWagesFromModel (model, "labor");
@@ -301,9 +310,13 @@ Data fixedWageMacro(
   for (int i = 0; i < totalSteps; i++) {
     model.schedule.simulateDay();
     if(i==shockDay)
-      goodMarket.demand = ExogenousSellerMarket.linkedToWageDemand (model,
-                                                                    "labor",
-                                                                    shockSize);
+    {
+      goodMarket.demand = ExogenousSellerMarket.linkedToWageDemand(model,
+                                                                   "labor",
+                                                                   shockSize);
+      if(shockEffects != null)
+        shockEffects(scenario,model);
+    }
     if(i==endShockDay)
       goodMarket.demand = ExogenousSellerMarket.linkedToWageDemand (model,
                                                                     "labor", 0.0);
@@ -333,7 +346,13 @@ Data fixedWageMacro(
   }
 
   if(outputPath == null)
-    outputPath = defaultOutputPath;
+  {
+    outputPath = new List.from(defaultOutputPath);
+  }
+  if(dateDirectory)
+    outputPath.add(new DateTime.now().toString());
+
+  print(outputPath);
 
   if(gasCsvName!=null)
     outputDataToCSV(gas.data.backingMap,gasCsvName,outputPath);
@@ -500,7 +519,10 @@ Data fixedWageMicro(String jsonFileName,
 
 
   if(outputPath == null)
+  {
     outputPath = defaultOutputPath;
+    outputPath.add(new DateTime.now().toString());
+  }
 
   if(gasCsvName!=null)
     outputDataToCSV(gas.data.backingMap,gasCsvName,outputPath);
