@@ -14,14 +14,14 @@ Here I take the first chapter of Leijonhufvud's "Keynes and the Keynesian" and a
 
 
 
-So if a firm fails to buy enough inputs to meet its production targets or fails to sell all that it produces then it reacts by changing input or output prices.    
+If a firm fails to meet its production targets with the given wage and price it reacts by changing prices first.
 The key to understand Keynes' novelty to Leijonhufvud is that quantity adjustments are faster than price adjustments, so the dynamics go as follows:
 
 1. **Very short run**: prices are fixed, labor hired is the only thing that can change
 2. **Short run**: capital is still fixed, everything else can change.
 3. **Long run**: everything can change  
  
-So a firm failing to meet its production targets with the given wage and price will change its targets before trying to change its prices.  
+If a firm fails to meet its production targets with the given wage and price it reacts by changing targets first.
 This is still relatively mild stuff, whenever you assume sticky prices you are assuming something of a Keynesian dynamic.
 
 The point Leijonhufvud was making though was that Keynesian dynamics become self-fulfilling when studied in dysequilibrium when agents aren't perfectly rational. This was Clower's "*deviation-amplifying feedback-loop*" (nobody misses the 60s ways of naming things).  

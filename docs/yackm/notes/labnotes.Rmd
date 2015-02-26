@@ -605,7 +605,7 @@ for(i in 1:length(filenames))
 {
   data<-read.csv(filenames[[i]])
   keynesian<-rbind(keynesian,cbind(data$quantity[9950:12000],9950:12000,paste(i)))
-  print(i)
+  
   
 }
 
@@ -642,7 +642,7 @@ for(i in 1:length(filenames))
 {
   data<-read.csv(filenames[[i]])
   marshallian<-rbind(marshallian,cbind(data$quantity[9950:12000],9950:12000,paste(i)))
-  print(i)
+  
   
 }
 
@@ -747,7 +747,7 @@ for(i in 1:length(filenames))
 {
   data<-read.csv(filenames[[i]])
   keynesian<-rbind(keynesian,cbind(data$quantity[9950:12000],9950:12000,paste(i)))
-  print(i)
+  
   
 }
 
@@ -784,7 +784,7 @@ for(i in 1:length(filenames))
 {
   data<-read.csv(filenames[[i]])
   flexible<-rbind(flexible,cbind(data$quantity[9950:12000],9950:12000,paste(i)))
-  print(i)
+  
   
 }
 
@@ -833,27 +833,171 @@ The shock is worse, but i need to devise a couple of metrics to establish its si
 
 ---------------------------------------
 
-#title
+# Increasing productivity after a shock
 
-### Date 
+### Date
+
+2015-02-25
 
 ###Background Information
 
+An important hypothesis is whether increasing productivity might attenuate the crash.
 
 ###References
 
 ###Purpose
 
+Check if increasing $a$ in the production function improves or makes the crash worse.
 
 
 ###Hypothesis
 
+Increasing productivity means that equilibrium $L$ is even lower (same $Y$), so the crash should be worse since there is more to cut.
 
 ###Experiment
 
+I tried to run with $a$ going from $0.5$ to $1$ or $0.8$ but it just drives Keynesian insane. With that productivity it looks like the PI parameters should be lower to avoid too much noise. That's a problem though because changing parameters and productivity at the same time make the comparison imprecise. 
+So in this example I just increase $a$ to $0.6$.
+
+Graphically it's a bit hard to see the effects of increasing productivity:
+
+```{r,echo=FALSE,warning=FALSE}
+#    _  _________   ___   _ _____ ____ ___    _    _   _ 
+#   | |/ / ____\ \ / / \ | | ____/ ___|_ _|  / \  | \ | |
+#   | ' /|  _|  \ V /|  \| |  _| \___ \| |  / _ \ |  \| |
+#   | . \| |___  | | | |\  | |___ ___) | | / ___ \| |\  |
+#   |_|\_\_____| |_| |_| \_|_____|____/___/_/   \_\_| \_|
+#               
+keynesian_path<-file.path("~","code","lancaster","docs","yackm","rawdata","pi productivity shock2015-02-25 12:52:41.337")
+filenames <- list.files(keynesian_path, pattern="*_sales.csv", full.names=TRUE)
+keynesian<-list()
+for(i in 1:length(filenames))
+{
+  data<-read.csv(filenames[[i]])
+  keynesian<-rbind(keynesian,cbind(data$quantity[9950:12000],9950:12000,paste(i)))
+  
+  
+}
+
+
+keynesian<-data.frame(keynesian)
+colnames(keynesian)<-c("value","time","variable")
+head(keynesian)
+
+keynesian$value<-as.numeric(as.character(keynesian$value))
+keynesian$time<-as.numeric(as.character(keynesian$time))
+keynesian$variable<-as.numeric(as.character(keynesian$variable))
+head(keynesian)
+
+
+library(ggplot2)
+keeynesian_plot<-ggplot() + geom_line(data=keynesian,
+                     aes(y=value,x=time,group= variable),alpha=0.5) +
+  ylim(0.3,1.05) + geom_hline(aes(yintercept = 0.6),col="blue",lty=2,lwd=1.5) +theme_gray(20) +
+  ggtitle("Keynesian Shock")
 
 
 
+#    ____  ____   ___  ____  _   _  ____ _____ _____     _____ _______   __
+#   |  _ \|  _ \ / _ \|  _ \| | | |/ ___|_   _|_ _\ \   / /_ _|_   _\ \ / /
+#   | |_) | |_) | | | | | | | | | | |     | |  | | \ \ / / | |  | |  \ V / 
+#   |  __/|  _ <| |_| | |_| | |_| | |___  | |  | |  \ V /  | |  | |   | |  
+#   |_|   |_| \_\\___/|____/ \___/ \____| |_| |___|  \_/  |___| |_|   |_|  
+#                                                                                      
+productive_path<-file.path("~","code","lancaster","docs","yackm","rawdata","pi productivity shock2015-02-25 12:52:41.337")
+
+filenames <- list.files(productive_path, pattern="*_sales_productive.csv", full.names=TRUE)
+productive<-list()
+for(i in 1:length(filenames))
+{
+  data<-read.csv(filenames[[i]])
+  productive<-rbind(productive,cbind(data$quantity[9950:12000],9950:12000,paste(i)))
+  
+  
+}
+
+
+productive<-data.frame(productive)
+colnames(productive)<-c("value","time","variable")
+head(productive)
+
+productive$value<-as.numeric(as.character(productive$value))
+productive$time<-as.numeric(as.character(productive$time))
+productive$variable<-as.numeric(as.character(productive$variable))
+head(productive)
+
+
+library(ggplot2)
+productive_plot<-ggplot() + geom_line(data=productive,
+                     aes(y=value,x=time,group= variable),alpha=0.5) +
+  ylim(0.3,1.05) + geom_hline(aes(yintercept = 0.6),col="blue",lty=2,lwd=1.5) + theme_gray(20) +
+  ggtitle("Keynesian and Productivity Shock ")
+
+
+library(gridExtra)
+grid.arrange(keeynesian_plot,productive_plot,ncol=2)
+
+```
+
+But a look at the metrics make it very clear that increasing productivity both make undershooting more likely and increases its overall severity. It reaches equilibrium slightly faster (but barely so). This are the metrics for keynesian shock alone:
+
+```{r,echo=FALSE,warning=FALSE}
+
+#    __  __ _____ _____ ____  ___ ____ ____  
+#   |  \/  | ____|_   _|  _ \|_ _/ ___/ ___| 
+#   | |\/| |  _|   | | | |_) || | |   \___ \ 
+#   | |  | | |___  | | |  _ < | | |___ ___) |
+#   |_|  |_|_____| |_| |_| \_\___\____|____/ 
+#                                            
+
+library(dplyr)
+everDipBelowLevel<-function(data,level=0.5)
+{
+  return(nrow(filter(data,value<level))>0)
+}
+
+equilibriumDay<-function(data,closeTo=0.6,by=0.025,shockday=10001)
+{
+  data<-filter(data,time>shockday)
+  fails<-filter(data,value>closeTo+by | value < closeTo-by)
+  max(fails$time+1)
+}
+
+# log(t)*squared error
+timeSquaredDeviation<-function(data,equilibrium=0.6,shockday=10001)
+{
+  data<-filter(data,time>shockday)
+  return(sum(log(data$time)*(data$value-equilibrium)^2))
+}
+
+
+keynesian.metrics<-list(undershoots=NULL,equilibrium=NULL,distance=NULL)
+productive.metrics<-list(undershoots=NULL,equilibrium=NULL,distance=NULL)
+for(i in 1:100)
+{
+  run<-filter(keynesian,variable==i)
+  keynesian.metrics$undershoots<-c(keynesian.metrics$undershoots,everDipBelowLevel(run))
+  run<-filter(keynesian,variable==i)
+  keynesian.metrics$equilibrium<-c(keynesian.metrics$equilibrium,equilibriumDay(run))
+  run<-filter(keynesian,variable==i)
+  keynesian.metrics$distance<-c(keynesian.metrics$distance,timeSquaredDeviation(run))
+  
+  run<-filter(productive,variable==i)
+  productive.metrics$undershoots<-c(productive.metrics$undershoots,everDipBelowLevel(run))
+  run<-filter(productive,variable==i)
+  productive.metrics$equilibrium<-c(productive.metrics$equilibrium,equilibriumDay(run))
+  run<-filter(productive,variable==i)  
+  productive.metrics$distance<-c(productive.metrics$distance,timeSquaredDeviation(run))
+  
+}
+summary(as.data.frame(keynesian.metrics))
+```
+
+and these are the metrics with the productivity shock:
+```{r,echo=FALSE}
+summary(as.data.frame(productive.metrics))
+
+```
 ###Code used
 
 
