@@ -367,7 +367,8 @@ Data fixedWageMacro(
   if(logName != null)
   {
     File file = new File(getOutputPathForFile(logName,outputPath));
-    file.create().then((t)=>t.writeAsStringSync(model.parameters.log,flush:true));
+    file.createSync();
+    file.writeAsStringSync(model.parameters.log,flush:true);
 
   }
 
