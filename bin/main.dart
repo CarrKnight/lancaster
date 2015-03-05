@@ -13,7 +13,6 @@ main(){
 
   //simple macro to show it reaches equilibrium
   List<String> outputPath = ["bin", "paper", "simple_macro"];
-
   for(int i=0; i<100; i++)
   {
     fixedWageMacro("keynesian.json",
@@ -98,9 +97,60 @@ main(){
                    outputPath: outputPath,
                    gasCsvName: "${i}_sales.csv",
                    laborCsvName: "${i}_hr.csv.csv",
-                   logName:"${i}_flexible_log.json",
+                   logName:"${i}_log.json",
                    totalSteps:20000, shockDay:10000, endShockDay:-1, shockSize:-0.2,
                    dateDirectory:false,seed : i);
+
+
+  }
+
+
+  //increase in productivity concurrent with demand shock
+  outputPath = ["bin", "paper", "productivity_shock"];
+  for (int i = 0; i < 100; i++)
+  {
+    fixedWageMacro("keynesian.json", pathToJsonFromProjectRoot: ["bin"],
+                   additionalJSonFiles : ["shock.experiment.json"],
+                   testing:false,
+                   outputPath: outputPath,
+                   gasCsvName: "${i}_sales_productive.csv",
+                   laborCsvName: "${i}_hr_productive.csv",
+                   logName:"${i}_productive_log.json",
+                   totalSteps:20000, shockDay:10000, endShockDay:-1, shockSize:-0.2,
+                   dateDirectory:false, seed : i, //fix the seed!
+                   //increase PI parameter in lieu of speed
+                   shockEffects : (OneMarketCompetition scenario, model)
+                   {
+                     (scenario.firms.first.plants.first.function as ExponentialProductionFunction).multiplier =
+                     0.6;
+                   });
+
+    fixedWageMacro("keynesian.json", pathToJsonFromProjectRoot: ["bin"],
+                   additionalJSonFiles : ["shock.experiment.json"],
+                   testing:false,
+                   outputPath: outputPath,
+                   gasCsvName: "${i}_sales.csv",
+                   laborCsvName: "${i}_hr.csv.csv",
+                   logName:"${i}_log.json",
+                   totalSteps:20000, shockDay:10000, endShockDay:-1, shockSize:-0.2,
+                   dateDirectory:false, seed : i);
+  }
+
+
+  outputPath = ["bin", "paper", "micro"];
+
+  for( int i=0 ;i< 1000; i++)
+  {
+    fixedWageMicro("keynesian.micro.json",testing:false,totalSteps:5000,
+                   outputPath : outputPath, gasCsvName: "${i}_K_sales.csv",
+                   laborCsvName :"${i}_K_hr.csv",
+                   logName:"{i}_K_log.json");
+
+
+    fixedWageMicro("marshallian.micro.json",testing:false,totalSteps:5000,
+                   outputPath : outputPath, gasCsvName: "${i}_M_sales.csv",
+                   laborCsvName :"${i}_M_hr.csv",
+                   logName:"{i}_M_log.json");
 
 
   }

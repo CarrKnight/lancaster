@@ -480,7 +480,7 @@ Data fixedWageMicro(String jsonFileName,
                     String gasCsvName: null,
                     String laborCsvName: null,
                     int totalSteps : 10000,
-
+                    int seed : null,
                     String salesCSV : null,
                     String hrCSV: null,
                     //negative if the shock lowers demand
@@ -490,7 +490,8 @@ Data fixedWageMicro(String jsonFileName,
                     })
 {
   Model model = initializeOneMarketModel(pathToJsonFromProjectRoot,
-                                         jsonFileName, additionalJSonFiles, burnInventories);
+                                         jsonFileName, additionalJSonFiles,
+                                         burnInventories,seed);
   OneMarketCompetition scenario = model.scenario;
 
 
@@ -538,7 +539,8 @@ Data fixedWageMicro(String jsonFileName,
   if(logName != null)
   {
     File file = new File(getOutputPathForFile(logName,outputPath));
-    file.create().then((t)=>t.writeAsStringSync(model.parameters.log,flush:true));
+    file.createSync();
+    file.writeAsStringSync(model.parameters.log,flush:true);
 
   }
 
