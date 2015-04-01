@@ -15,6 +15,7 @@
       <excludeFolder url="file://$MODULE_DIR$/test/presentation/packages" />
       <excludeFolder url="file://$MODULE_DIR$/test/testresources/packages" />
       <excludeFolder url="file://$MODULE_DIR$/web/blog/packages" />
+      <excludeFolder url="file://$MODULE_DIR$/web/nonangular/packages" />
       <excludeFolder url="file://$MODULE_DIR$/web/packages" />
       <excludeFolder url="file://$MODULE_DIR$/web/scenario/onemarket/packages" />
       <excludeFolder url="file://$MODULE_DIR$/web/scenario/packages" />

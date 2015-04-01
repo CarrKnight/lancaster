@@ -14,13 +14,13 @@
 \addbibresource{bibliography.bib}
 \providecommand{\keywords}[1]{\textbf{\textit{Index terms---}} #1}
 
-<<preamble,echo=FALSE,cache=FALSE,results=FALSE,message=FALSE>>=
+<<echo=FALSE,cache=FALSE,results=FALSE,message=FALSE>>=
 library(ggplot2)
 library(reshape2)
 library(gridExtra)
 library(dplyr)
 
-opts_chunk$set(dev="png",echo=FALSE,cache=FALSE,comment=NA, out.width='\\linewidth',fig.width=16,fig.height=9,dpi=500,message=FALSE,warning=FALSE)
+opts_chunk$set(dev="png",echo=FALSE,cache=FALSE,comment=NA, out.width='\\linewidth',fig.width=16,fig.height=9,dpi=100,message=FALSE,warning=FALSE)
 options(scipen = 1, digits = 2)
 paperDirectory<-file.path("~","code","lancaster","bin","paper")
 @
@@ -42,12 +42,17 @@ I focus on the path the economy takes when the equilibrium changes.
 Higher flexibility can aggravate the disequilibrium and the social costs associated with a recession.
 More flexibility is not always beneficial.
 
-I base my model on Leijonhufvud's statement in "Keynes and the Keynesians" that the difference between Keynesian and Marshallian economics is  how agents react to disequilibrium. %CITE
-To Leijonhufvud, Marshallian agents react to mismatches in demand by first changing prices and only later changing production. Keynesian agents instead react first by adjusting quantity and production and only later prices.
+I base my model on Leijonhufvud's "Keynes and the Keynesians" where the difference between Keynesian and Marshallian economics is how agents adapt to disequilibrium. %CITE
+To Leijonhufvud, Marshallian agents react to mismatches in demand by first adjusting prices and only later changing production. Keynesian agents instead react first by adjusting quantities and only later prices.
 I implement this idea and show how these differences have no effect in microeconomics but do so in macroeconomics.
 
 
 \section{Literature Review}
+
+
+%http://www.wheatresources.com/VWCC/ECO201/
+
+%RBC has "feedback" in expectations
 
 \section{Microeconomics}
 
@@ -66,13 +71,13 @@ I simulate the trial and error process by a PI controller:
 \[ p_{t+1} = \alpha e_t + \beta \sum_{i=0}^t e_i \]
 
 By manipulating $p_t$ the Marshallian agent changes demand $y^d$ until it equals supply $y^s$. Within each market day the Marshallian agent treats its own good supply as given but over time it can use the price it discovers to guide production.
-At the end of each day there is a small fixed probability (in this simulation $\frac {1}{20}$) of change labor input and therefore $y^s$.
-The decision is simple marginal optimization: increase labor hired when $\text{MB}>\text{MC}$ and viceversa.
-This is also done by trial and error and a PI controller where the error in this case is defined as $e_t = \frac{\text{MB}}{\text{MC}}-1$. 
+At the end of each day there is a small fixed probability (in this simulation $\frac {1}{20}$) to change supply $y^s$ by adjusting labor hired.
+The decision is simple marginal optimization: increase production while $\text{MB}>\text{MC}$ and viceversa.
+The firm again adjusts by trial and error and with a separate PI controller whose error is $e_t = \frac{\text{MB}}{\text{MC}}-1$. 
 
 In the references I go through more complicated scenarios with multiple firms and markets, monopoly power and learning. 
 But this minimal setup is enough for this paper.
-Lab so a firm has only two degrees of freedom, $p$ and $L$, which are set by two independent PI controllers.
+Here a firm has only two degrees of freedom, price set $p$ and labor hired $L$. Each set by an independent PI controllers.
 
 \subsection{Keynesian Agents}
 
@@ -96,9 +101,13 @@ Firms in all simulations always find the equilibrium as shown in figure~\ref{fig
 
 \begin{figure}[h!!]
     \centering
-<<dependson="preamble">>=
-#really!
-
+<<cache=TRUE>>=
+#reload libraries because in cache
+library(ggplot2)
+library(reshape2)
+library(gridExtra)
+library(dplyr)
+paperDirectory<-file.path("~","code","lancaster","bin","paper")
 
 keynesian_path<-file.path(paperDirectory,"micro")
 
@@ -241,6 +250,10 @@ test<-ks.test(marshallian.metrics$value,keynesian.metrics$value)
 
 full.metrics$keynesian<-factor(full.metrics$keynesian)
 levels(full.metrics$keynesian)<-c("Marshallian","Keynesian")
+keynesian<-NULL
+
+marshallian<-NULL
+marshallian.hr<-NULL
 
 @
     \caption{The path of $y$ traded for a 1000 Keynesian and Marshallian simulations. Regardless of initial conditions and PI parameters, the runs all reach equilibrium.}
@@ -267,8 +280,9 @@ ggplot(data=full.metrics) + geom_histogram(aes(x=value,fill=keynesian),colour = 
 
 Here I present a minimal macroeconomic model and show how Marshallian and Keynesian dynamics diverge.
 The main reason they do is that Keynesian adjustment has side effects.
-Marshallian firms perform as in the microeconomic scenario as they manipulate prices and so demand while keeping supply fixed.
-Keynesian firms on the other hand manipulate labor directly and in a macroeconomics that changes both supply and demand at the same time, since demand is just total remuneration.
+Keynesian firms manipulate labor directly; in microeconomics that meant changing only good supply but in macroeconomics good demand is equal to labor income so that hiring and firing workers move good demand as well.
+Marshallian firms instead manipulate prices which moves demand without affecting supply.
+
 
 There is a single firm in the world. 
 It is programmed to act as in perfect competition and targets \( \text{MB=MC} \).
@@ -303,7 +317,7 @@ The computer simulation proceeds just like the previous microeconomic section ex
 Both Keynesian and Marshallian firms are able to achieve equilibrium. Two sample runs are shown in the figure~\ref{fig:two_macro_simple}.
 \begin{figure}[h!!]
     \centering
-<<dependson="preamble">>=
+<<>>=
 keynesian_path<-file.path(paperDirectory,"simple_macro")
 filenames <- list.files(keynesian_path, pattern="*K_gas.csv", full.names=TRUE)
 keynesian<-list()
@@ -388,7 +402,7 @@ I run 100 simulations each for Keynesian and Marshallian firms, where the $p$ an
 
 \subsection{Keynesian and Marshallian firms generate very different dynamics when reacting to a demand shock}
 \label{sec:shock}
-Because initial conditions matter, rather than studying the dynamics toward equilibrium ab ovo, I first let the model reach equilibrium then subject ti to a demand shock and see how the firms differ in adapting to it.
+Because initial conditions matter, rather than studying the dynamics toward equilibrium ab ovo, I first let the model reach equilibrium then subject it to a demand shock and see how the firms differ in adapting to it.
 I run the same simulation as before, but after 10,000 days the output demand is shocked by $s$\$:
 \[ 
 Y = \frac{L}{p} - s
@@ -405,7 +419,7 @@ When $s=0.2$ the new equilibrium  becomes:
 Figure~\ref{fig:shock_comparison} shows the difference in adjustment dynamics between Keynesian and Marshallian firms. Marshallian firms react to the sudden drop in demand by lowering price so that quantity traded briefly recovers after the shock. Eventually though the lower prices feed into the profit maximization PI which cuts production towards the new equilibrium. Keynesian firms instead react to the drop in demand by immediately firing workers. While firing workers lowers supply it also decreases demand as unemployed workers don't consume. The Keynesian firm can't change supply without changing demand as well. 
 \begin{figure}[h!!]
     \centering
-<<dependson="preamble">>=
+<<>>=
 #really!
 
 keynesian_path<-file.path(paperDirectory,"shock_reaction")
@@ -664,7 +678,7 @@ What is less obvious is that the Marshallian firm is also better off than the Ke
 ggplot(data=surpluses) + geom_boxplot(aes(y=value,x=keynesian,fill=keynesian)) + 
   facet_wrap(~variable,scales = "free_y") + scale_x_discrete(labels=c("Marshallian","Keynesian")) +
   theme_gray(30) + xlab("") + guides(fill=FALSE) + scale_fill_brewer(palette=4) +
-  ggtitle("Surplus in Marshallian and Keynesian world ") + ylab("Surplus Difference from Immediate Equilibrium")
+  ggtitle("Surplus in Marshallian and Keynesian world ") + ylab(expression(paste("Surplus ",Delta," from Immediate Equilibrium")))
 
 #ggplot(data=keynesian_full) + geom_line(aes(y=value*price-lag(labor)-equilibriumProfits,
 #                                            x=time,group=variable,col=factor(1)),,alpha=0.5) +
@@ -681,7 +695,7 @@ The reason Marshallian firms can over-produce for longer and still make consiste
 To see this focus on market day equilibria.
 Figure~\ref{fig:market_day_equilibria} shows the daily difference between what is produced and what is demanded.
 The plots make clear that Marshallian firms sell almost all their output almost all the time. Keynesian firms instead waste most daily output due to over-production and inability to make supply match demand.
-In other words, the Marshallian firm takes longer to get to the new equilibrium but proceeds over a more efficient path where demand and supply match for most of the time. Keynesian firms take fewer days but demand and supply never match while the new equilibrium is reached.
+In other words, the Marshallian firm takes longer to get to the new equilibrium but proceeds over a more efficient path where demand and supply match for most of the time. Keynesian firms get to equilibrium faster but demand and supply never match until then.
 
 \begin{figure}[h!!]
     \centering
@@ -697,7 +711,7 @@ ggplot(data=keynesian_full) + geom_line(aes(y=0.5*labor^0.5-1-(lag(labor)/price 
     \label{fig:market_day_equilibria}
 \end{figure}
 
-While overproduction serves a signalling purpose in this model as it pushes Keynesian firms to the new equilibrium quickly, it is an inherently wasteful and expensive signal that costs more to society than the slower alternative.
+Overproduction is signalling purpose in this model as it pushes Keynesian firms to the new equilibrium quickly, it is an inherently wasteful and expensive signal that costs more to society than the slower alternative.
 
 \subsection{Increasing labor flexibility during a recession makes it worse}
 
@@ -1160,7 +1174,7 @@ levels(full.metrics$variable)<-c("Average Deviation","Equilibrium Day")
 
 ggplot(data=full.metrics) + geom_boxplot(aes(y=value,x=keynesian,fill=keynesian)) + 
   facet_wrap(~variable,scales = "free_y") + scale_x_discrete(labels=c("Productive","Control")) +
-  theme_gray(30) + xlab("") + guides(fill=FALSE) + ggtitle("Comparison of equilibrium metrics with and without productivity shock ")
+  theme_gray(30) + xlab("") + guides(fill=FALSE) + ggtitle("Equilibrium metrics with and without productivity shock ")
  
 @
     \caption{Comparison between the Keynesian equilibrium metrics with and without productivity shock.}

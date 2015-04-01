@@ -541,7 +541,6 @@ Data fixedWageMicro(String jsonFileName,
     File file = new File(getOutputPathForFile(logName,outputPath));
     file.createSync();
     file.writeAsStringSync(model.parameters.log,flush:true);
-
   }
 
 
