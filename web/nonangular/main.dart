@@ -8,7 +8,7 @@ import 'package:lancaster/view/lancaster_view_angularless.dart';
 
 void main() {
 
-  SliderDemoGUI gui = new SliderDemoGUI("#sliderdemo");
+  SliderDemoGUI gui = new SliderDemoGUI.WithCharts("#sliderdemo");
 
 
 }

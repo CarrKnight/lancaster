@@ -13,7 +13,19 @@ import 'dart:math' as MATH;
 import 'dart:async';
 import 'dart:collection';
 import 'dart:svg';
-import 'package:matcher/src/error_matchers.dart';
+
+import 'package:charted/scale/scale.dart';
+import 'package:charted/charted.dart' ;
+import 'package:charted/svg/svg.dart' ;
+import 'package:charted/selection/selection.dart';
 
 
 part 'angular-less/scenario/sliderdemo.dart';
+part 'angular-less/components/controlbar.dart';
+part 'angular-less/components/slider.dart';
+part 'angular-less/components/base_beveridge.dart';
+part 'angular-less/components/beveridge_plot.dart';
+part 'angular-less/components/tooltip.dart';
+part 'angular-less/components/base_timeseries.dart';
+part 'angular-less/components/price_chart.dart';
+part 'angular-less/containers/zk_charts.dart';

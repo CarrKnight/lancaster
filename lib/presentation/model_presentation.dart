@@ -52,23 +52,22 @@ class ModelPresentation
   SimpleMarketPresentation gasPresentation;
 
 
+  final StreamController<StepEvent> _stepSteamer = new  StreamController.broadcast();
 
+
+  /**
+   * a stream with no information but that fires every time there is a step!
+   */
+  Stream<StepEvent> get stepStream => _stepSteamer.stream;
 
   /**
    * a way for the view to step the model without taking a reference to it
    */
-  void step()=> _model.schedule.simulateDay();
-
-  /**
-   * a way for the view to step the model 100 times without taking a reference
-   * to it
-   */
-  void step100Times(){
-    for(int i=0; i<100; i++)
-    {
-      _model.schedule.simulateDay();
-    }
+  void step(){_model.schedule.simulateDay();
+    _stepSteamer.add(new StepEvent(day) );
   }
+
+
 
   /**
    * easy way to see what day is it from view
@@ -372,6 +371,15 @@ class SliderEvent extends PresentationEvent
   final num customersAttracted;
 
   SliderEvent(this.day, this.customersAttracted);
+
+
+}
+
+class StepEvent extends PresentationEvent
+{
+  final int day;
+
+  StepEvent(this.day);
 
 
 }

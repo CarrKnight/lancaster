@@ -59,7 +59,6 @@ class ControlBarBase{
 
   bool get running => stepper!=null;
   void step()=>_presentation.step();
-  void step100Days()=>_presentation.step100Times();
 
 }
 
