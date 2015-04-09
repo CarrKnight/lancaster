@@ -231,3 +231,65 @@ class SliderDemoGUI extends SliderDemoBase
 
 
 
+class ProductionDemoGUI
+{
+
+  MarshallianMicroPresentation presentation;
+
+  ZKPresentation get hr => presentation.hr;
+  ZKPresentation get sales => presentation.sales;
+
+  ProductionDemoGUI._internal(String json) {
+
+
+    Model model = new Model.fromJSON(json);
+    //make sure it's the right scenario
+    OneMarketCompetition scenario = model.scenario;
+
+
+    presentation = new MarshallianMicroPresentation.fixedTarget(model,scenario);
+
+
+    //listen to the presentation to update prices
+    presentation.hr.stream.listen((event)=>wage=event.trader.lastOfferedPrice);
+    presentation.sales.stream.listen((event)=>price=event.trader
+    .lastOfferedPrice);
+
+  }
+
+
+  factory ProductionDemoGUI.FixedProduction(String json,String selector)
+  {
+    ProductionDemoGUI base = new ProductionDemoGUI._internal(json);
+
+    HTML.Element  root = HTML.querySelector(selector);
+    //clear if you must
+    while(root.hasChildNodes())
+      root.firstChild.remove();
+
+    //you need a control bar
+    HTML.DivElement controlBar = new HTML.DivElement();
+    root.append(controlBar);
+    ControlBar bar = new ControlBar(controlBar,base.presentation,"FixedProduction",
+                                        ()=>new ProductionDemoGUI.FixedProduction(json,selector),speed:150);
+    //you also need a double beveridge
+    HTML.DivElement parent = new HTML.DivElement();
+    root.append(parent);
+    DoubleBeveridge beveridge = new DoubleBeveridge(parent,base.hr,base.sales);
+
+
+
+  }
+
+  bool get ready => price.isFinite;
+  bool get correct => price == wage;
+  String get equality => correct ? "=" : price > wage ? ">" : "<";
+  String get cssClass => correct ? "green_highlight" : "red_highlight";
+
+  num price = double.NAN;
+  num wage = double.NAN;
+  void set target(num value){presentation.hrTarget=value;}
+  num get target => presentation.hrTarget;
+  int get period => 100;
+
+}

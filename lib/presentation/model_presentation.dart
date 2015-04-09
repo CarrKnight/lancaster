@@ -134,6 +134,7 @@ typedef void DoubleSetter(num newValue);
 class MarshallianMicroPresentation extends ModelPresentation
 {
 
+  //the first firm sales department gets presented. If there are more, the others are ignored!
   ZKPresentation sales;
   ZKPresentation hr;
 
@@ -155,11 +156,7 @@ class MarshallianMicroPresentation extends ModelPresentation
     MarshallianMicroPresentation presentation =
     new MarshallianMicroPresentation._internal(model);
 
-    //maximizes as PID
-    scenario.hrPricingInitialization = OneMarketCompetition.PID_MAXIMIZER_HR;
 
-    //single agent
-    scenario.competitors = 1;
     //acts as competitor
     scenario.hrIntializer = (ZeroKnowledgeTrader sales) {
       sales.predictor = new
@@ -209,20 +206,17 @@ class MarshallianMicroPresentation extends ModelPresentation
 
 
   /**
-   * the target is fixed but can be changed from the outside
+   * burn inventories, add a bit more curves assuming the target is fixed
    */
   factory MarshallianMicroPresentation.fixedTarget(Model model,
-                                       OneMarketCompetition scenario,
-                                       num initialTarget) {
+                                       OneMarketCompetition scenario) {
 
 
     //maximizes as PID
-    scenario.hrPricingInitialization = OneMarketCompetition.FIXED_TARGET_HR
-    (initialTarget);
     scenario.salesPricingInitialization = OneMarketCompetition.STOCKOUT_SALES;
 
     //single agent
-    scenario.competitors = 1;
+
     //acts as competitor
     scenario.hrIntializer = (ZeroKnowledgeTrader sales) {
       sales.predictor = new

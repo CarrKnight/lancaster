@@ -20,56 +20,95 @@ class ZKSellerSimple
   ZKSellerSimple(this._parent, this._presentation)
   {
 
-    _parent.style.width = "100%";
+    _TwoDivsSideBySide frame = new _TwoDivsSideBySide(_parent,"Beveridge Curve","Time Chart");
 
 
-    HTML.DivElement left = new HTML.DivElement()
-    ..style.border ="0px"
-    ..style.padding ="0px"
-    ..style.width ="50%"
-    ..style.float ="left"
-    ;
-    _parent.append(left);
+    new SellerBeveridge(frame.left,_presentation);
 
-    new SellerBeveridge(left,_presentation);
 
-    HTML.DivElement right = new HTML.DivElement()
-      ..style.border ="0px"
-      ..style.padding ="0px"
-      ..style.width ="50%"
-      ..style.float ="right"
-    ;
-    _parent.append(right);
 
-    new ZKStockoutTimeSeriesChart(_presentation,right);
+    new ZKStockoutTimeSeriesChart(_presentation,frame.right);
 
-    HTML.DivElement clearer = new HTML.DivElement();
-    clearer.style.clear="both";
 
-    _parent.append(clearer);
 
   }
 
 
 }
-/*
-parent {
-    width: 100%;
 
-}
-div#one {
-    border: 0px;
-    padding: 0px;
-
-    width: 50%;
-    float: left;
-}
-div#two {
-    border: 0px;
-    padding: 0px;
-
-    width: 50%;
-
-    float: right;
-}
+/**
+ * Two beverdige curves, hr and sales, side by side
  */
+class DoubleBeveridge
+{
+  final HTML.DivElement _parent;
+
+  final ZKPresentation hr;
+
+  final ZKPresentation sales;
+
+  DoubleBeveridge(this._parent, this.hr, this.sales) {
+    _TwoDivsSideBySide frame = new _TwoDivsSideBySide(_parent, "Labor Market", "Goods Market");
+
+    new BuyerBeveridge(frame.left,hr);
+
+    new SellerBeveridge(frame.right,sales);
+
+  }
+
+
+}
+
+class _TwoDivsSideBySide
+{
+  final HTML.DivElement left;
+
+  final HTML.HeadingElement leftTitle;
+
+  final HTML.DivElement right;
+
+  final HTML.HeadingElement rightTitle;
+
+  final HTML.DivElement parent;
+
+  final HTML.DivElement clearer;
+
+  _TwoDivsSideBySide(this.parent, String titleOnLeft, String titleOnRight):
+  right = new HTML.DivElement(),
+  rightTitle = new HTML.HeadingElement.h5(),
+  left = new HTML.DivElement(),
+  leftTitle = new HTML.HeadingElement.h5(),
+  clearer = new HTML.DivElement()
+  {
+    parent.style.width = "100%";
+
+
+    left
+      ..style.border ="0px"
+      ..style.padding ="0px"
+      ..style.width ="50%"
+      ..style.float ="left"
+    ;
+    parent.append(left);
+    leftTitle.text = titleOnLeft;
+    left.append(leftTitle);
+
+
+    right
+      ..style.border ="0px"
+      ..style.padding ="0px"
+      ..style.width ="50%"
+      ..style.float ="right"
+    ;
+    parent.append(right);
+    rightTitle.text = titleOnRight;
+    right.append(rightTitle);
+
+
+    clearer.style.clear="both";
+
+    parent.append(clearer);
+  }
+
+
+}
