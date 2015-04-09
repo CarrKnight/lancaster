@@ -10,11 +10,12 @@ void main() {
 
 
   //need to read the scenario json
-  var path = 'fixed_target.json';
+  var path = 'default.json';
   HttpRequest.getString(path)
   .then((String fileContents) {
     print(fileContents);
-    new ProductionDemoGUI.FixedProduction(fileContents,"#sliderdemo");
+    new ProductionDemoGUI.DoubleBeveridge(fileContents,"#sliderdemo");
+    //only changes JSON when it comes to fixed production. Pretty cool!
   })
   .catchError((Error error) {
     print(error.toString());

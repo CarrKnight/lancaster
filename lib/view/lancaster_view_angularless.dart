@@ -14,9 +14,9 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:svg';
 
-import 'package:charted/scale/scale.dart';
 import 'package:charted/charted.dart' ;
-import 'package:charted/svg/svg.dart' ;
+import 'package:charted/svg/axis.dart' ;
+import 'package:charted/core/scales.dart' ;
 import 'package:charted/selection/selection.dart';
 
 

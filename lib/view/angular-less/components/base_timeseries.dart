@@ -88,7 +88,7 @@ abstract class BaseTimeSeriesChart<E extends PresentationEvent>{
       ..attr("id", "xaxis")
       ..attr('transform', "translate(0,${height - padding})")
       ..attr("class", "axis");
-    xAxis.axis(xAxisContainer);
+    xAxis.draw(xAxisContainer);
   }
 
   drawYAxis() {
@@ -96,7 +96,7 @@ abstract class BaseTimeSeriesChart<E extends PresentationEvent>{
       ..attr("id", "yaxis")
       ..attr('transform', "translate(${padding},0)")
       ..attr("class", "axis");
-    yAxis.axis(yAxisContainer);
+    yAxis.draw(yAxisContainer);
   }
 
   void _buildAxesAndScale(Selection axisGroup) {
@@ -112,32 +112,27 @@ abstract class BaseTimeSeriesChart<E extends PresentationEvent>{
       ..range = [height - padding, padding];
 
 
-    xAxis = new SvgAxis()
-      ..orientation = ORIENTATION_BOTTOM
-      ..scale = xScale
-      ..suggestedTickCount = xTicks;
+    xAxis = new SvgAxis(ORIENTATION_BOTTOM)
+      ..scale = xScale;
 
     drawXAxis();
 
-    yAxis = new SvgAxis()
-      ..orientation = ORIENTATION_LEFT
-      ..scale = yScale
-      ..suggestedTickCount = yTicks;
-
+    yAxis = new SvgAxis(ORIENTATION_LEFT)
+      ..scale = yScale;
     drawYAxis();
   }
 
   updateScales(int day, num maxY)
   {
-    if(maxY>=yScale.domain[1])
+    if(maxY>=yScale.domain.last)
     {
-      yScale.domain[1] = maxY;
+      yScale.domain = [0,maxY];
       yAxisContainer.remove();
       drawYAxis();
     }
 
-    if(xScale.domain[1]<=day) {
-      xScale.domain[1] += DAY_SCALE_INCREASE;
+    if(xScale.domain.last<=day) {
+      xScale.domain = [0,day+DAY_SCALE_INCREASE];
       xAxisContainer.remove();
       drawXAxis();
     }
@@ -220,7 +215,7 @@ abstract class BaseTimeSeriesChart<E extends PresentationEvent>{
       //if valid
       var observation = obs[i];
       if (observation >= 0 && observation.isFinite) {
-        points.add(new MATH.Point(xScale.apply(i), yScale.apply(observation)));
+        points.add(new MATH.Point(xScale.scale(i), yScale.scale(observation)));
         //an invalid observation is a break, draw what you got
       }
       else if (points.isNotEmpty) {
@@ -314,8 +309,7 @@ abstract class BaseTimeSeriesChart<E extends PresentationEvent>{
     //you need to redraw everything!
     recomputeMetrics();
 
-
-    chartLocation.firstChild.remove();
+    chartLocation.lastChild.remove();
     //redraw it!
     _reset();
     _buildChart();

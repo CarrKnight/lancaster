@@ -119,25 +119,21 @@ abstract class BeveridgePlot<E extends PresentationEvent>{
       ..range = [height-padding,padding];
 
 
-    xAxis = new SvgAxis()
-      ..orientation = ORIENTATION_BOTTOM
-      ..scale = xScale
-      ..suggestedTickCount=xTicks;
+    xAxis = new SvgAxis(ORIENTATION_BOTTOM)
+      ..scale = xScale;
 
     xAxisContainer = axisGroup.append("g")
       ..attr('transform', "translate(0,${height - padding})")
       ..attr("class","axis");
-    xAxis.axis(xAxisContainer);
+    xAxis.draw(xAxisContainer);
 
-    yAxis = new SvgAxis()
-      ..orientation = ORIENTATION_LEFT
-      ..scale = yScale
-      ..suggestedTickCount=yTicks;
+    yAxis = new SvgAxis(ORIENTATION_LEFT)
+      ..scale = yScale;
 
     yAxisContainer = axisGroup.append("g")
       ..attr('transform', "translate(${padding},0)")
       ..attr("class","axis");
-    yAxis.axis(yAxisContainer);
+    yAxis.draw(yAxisContainer);
   }
 
   /***
@@ -333,8 +329,8 @@ abstract class BeveridgePlot<E extends PresentationEvent>{
     drawnCircles.forEach(( event,circle){
 
       //set it up
-      circle.setAttribute("cx",(xScale.apply(event.x)).toString());
-      circle.setAttribute("cy",yScale.apply(event.y).toString());
+      circle.setAttribute("cx",(xScale.scale(event.x)).toString());
+      circle.setAttribute("cy",yScale.scale(event.y).toString());
       circle.setAttribute("r",event.r.toString());
       //linked hash set should be able to deal with this!
       circle.setAttribute("opacity",MATH.pow((i+1)/(drawnCircles.length+1), 2)
@@ -488,7 +484,7 @@ abstract class BeveridgePlot<E extends PresentationEvent>{
     _recomputeMetrics();
 
     //remove previous svg
-    _chartLocation.firstChild.remove();
+    _chartLocation.lastChild.remove();
     //redraw it!
     _reset();
     _buildChart();
@@ -557,7 +553,7 @@ String generatePathFromXYObs(List<List<double>> obs, Scale xScale,
 //if valid
     var observation = obs[i];
     if (observation.every((e)=>e>=0&&e.isFinite)) {
-      points.add(new MATH.Point(xScale.apply(observation[0]), yScale.apply
+      points.add(new MATH.Point(xScale.scale(observation[0]), yScale.scale
       (observation[1])));
 //an invalid observation is a break, draw what you got
     }

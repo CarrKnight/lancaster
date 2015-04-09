@@ -206,7 +206,7 @@ class MarshallianMicroPresentation extends ModelPresentation
 
 
   /**
-   * burn inventories, add a bit more curves assuming the target is fixed
+   * burn inventories, add a bit more curves assuming the target is fixed (also make the target settable)
    */
   factory MarshallianMicroPresentation.fixedTarget(Model model,
                                        OneMarketCompetition scenario) {

@@ -258,7 +258,7 @@ class ProductionDemoGUI
   }
 
 
-  factory ProductionDemoGUI.FixedProduction(String json,String selector)
+  factory ProductionDemoGUI.DoubleBeveridge(String json,String selector)
   {
     ProductionDemoGUI base = new ProductionDemoGUI._internal(json);
 
@@ -270,13 +270,57 @@ class ProductionDemoGUI
     //you need a control bar
     HTML.DivElement controlBar = new HTML.DivElement();
     root.append(controlBar);
-    ControlBar bar = new ControlBar(controlBar,base.presentation,"FixedProduction",
-                                        ()=>new ProductionDemoGUI.FixedProduction(json,selector),speed:150);
+    ControlBar bar = new ControlBar(controlBar,base.presentation,"DoubleBeveridge",
+                                        ()=>new ProductionDemoGUI.DoubleBeveridge(json,selector),speed:150);
     //you also need a double beveridge
     HTML.DivElement parent = new HTML.DivElement();
     root.append(parent);
     DoubleBeveridge beveridge = new DoubleBeveridge(parent,base.hr,base.sales);
 
+
+
+  }
+
+  /**
+   * let the user play with a slider to set targets
+   */
+  factory ProductionDemoGUI.ExogenousProduction(String json,String selector)
+  {
+    ProductionDemoGUI base = new ProductionDemoGUI._internal(json);
+
+    HTML.Element  root = HTML.querySelector(selector);
+    //clear if you must
+    while(root.hasChildNodes())
+      root.firstChild.remove();
+
+    //you need a control bar
+    HTML.DivElement controlBar = new HTML.DivElement();
+    root.append(controlBar);
+    ControlBar bar = new ControlBar(controlBar,base.presentation,"ExogenousProduction",
+                                        ()=>new ProductionDemoGUI.ExogenousProduction(json,selector),speed:50);
+    //little div telling what the price and wages are right now
+    HTML.DivElement parent = new HTML.DivElement();
+    root.append(parent);
+    HTML.SpanElement teller =new HTML.SpanElement();
+    parent.append(teller);
+    base.presentation.stepStream.listen((event){
+      if(base.ready)
+      {
+        teller.text = "Price: ${base.price} ${base.equality} ${base.wage} : Wage";
+        teller.classes = ["${base.cssClass}"];
+      }
+      else{
+        teller.text = "";
+      }
+    });
+
+
+    //now add a slider
+    HTML.DivElement sliderRoot = new HTML.DivElement();
+    root.append(sliderRoot);
+
+    Slider slider = new Slider(sliderRoot,"Target Workers: ",(newValue)=>base.target=newValue,
+                               initialValue:base.target.toDouble());
 
 
   }

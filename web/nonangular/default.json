@@ -161,7 +161,7 @@
           }
         },
         "salesPricingInitialization": {
-          "salesPricingStrategy": "BUFFER_PID",
+          "salesPricingStrategy": "STOCKOUT_SALES",
           "FIXED_PRICE": {
             "value": {
               "type": "uniform",
