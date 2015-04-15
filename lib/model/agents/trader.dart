@@ -609,6 +609,8 @@ typedef void DawnEvent(ZeroKnowledgeTrader trader);
 DawnEvent FixedInflowEvent(num inflow)=>(ZeroKnowledgeTrader trader)=>
 trader.receive(inflow);
 
+
+
 DawnEvent DepreciationEvent(num depreciationRate)=>(ZeroKnowledgeTrader trader)=>
 trader.remove(depreciationRate*trader.good);
 

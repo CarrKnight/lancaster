@@ -17,17 +17,19 @@ class ZKSellerSimple
 
   final ZKPresentation _presentation;
 
-  ZKSellerSimple(this._parent, this._presentation)
+  ZKSellerSimple(this._parent, this._presentation,{double resizeScale : 1.0})
   {
 
     _TwoDivsSideBySide frame = new _TwoDivsSideBySide(_parent,"Beveridge Curve","Time Chart");
 
-
-    new SellerBeveridge(frame.left,_presentation);
-
+    frame.parent.style.zoom = "$resizeScale";
 
 
-    new ZKStockoutTimeSeriesChart(_presentation,frame.right);
+    new SellerBeveridge(frame.left,_presentation,resizeScale : resizeScale);
+
+
+
+    new ZKStockoutTimeSeriesChart(_presentation,frame.right,resizeScale : resizeScale);
 
 
 

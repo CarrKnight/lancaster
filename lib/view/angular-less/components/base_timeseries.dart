@@ -28,6 +28,7 @@ abstract class BaseTimeSeriesChart<E extends PresentationEvent>{
   static int yTicks = 5;
   int width;
   int height;
+  double _resizeScale = 1.0;
 
   /**
    * the presentation object which is our interface to the model itself
@@ -59,12 +60,14 @@ abstract class BaseTimeSeriesChart<E extends PresentationEvent>{
    *    \_/\_/(_/\_)(__)(____/
    */
 
-  BaseTimeSeriesChart(this._presentation, this.chartLocation) {
+  BaseTimeSeriesChart(this._presentation, this.chartLocation,{double resizeScale : 1.0}) {
+    _resizeScale = resizeScale;
     recomputeMetrics();
     _buildChart();
 
     //start listening for resizes
     HTML.window.onResize.listen((event)=>resize());
+
   }
 
   int minimumDays = 100;
@@ -297,6 +300,7 @@ abstract class BaseTimeSeriesChart<E extends PresentationEvent>{
 
   recomputeMetrics() {
     width = chartLocation.borderEdge.width;
+    width = (width*_resizeScale).round();
     height = (width * aspectRatio).round();
     xTicks = MATH.max(width/50, 2).round();
     yTicks = MATH.max(width/50, 2).round();

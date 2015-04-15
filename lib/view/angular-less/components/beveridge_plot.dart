@@ -134,19 +134,20 @@ class SellerBeveridge extends BeveridgePlot<ZKEvent>
 
 
   factory SellerBeveridge(HTML.DivElement container,
-                          Presentation<ZKEvent> presentation)
+                          Presentation<ZKEvent> presentation,{double resizeScale : 1.0})
   {
     SellerBeveridge toReturn = new   SellerBeveridge._internal(container,
-    presentation);
+    presentation,resizeScale : resizeScale);
     toReturn.repositoryGetter = (ZKPresentation p)=>p.repository;
     return toReturn;
   }
 
 //this.dailyDataExtractor, this.dataInitializer
   SellerBeveridge._internal(HTML.DivElement container,
-                            Presentation<ZKEvent> presentation)
+                            Presentation<ZKEvent> presentation,
+                            {double resizeScale : 1.0})
   :
-  super(container,presentation,_extractor,_initializer);
+  super(container,presentation,_extractor,_initializer,resizeScale:resizeScale);
 
 
 

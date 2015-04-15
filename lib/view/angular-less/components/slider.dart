@@ -37,7 +37,8 @@ class Slider
   Slider(this.sliderContainer, this.variableName, this.input,
          {double min: 0.0,
          double max: 100.0,
-         double initialValue: 1.0}) {
+         double initialValue: 1.0,
+         double by: 1.0}) {
 
     sliderContainer.classes = ["center","horizontal","layout"];
 
@@ -46,9 +47,10 @@ class Slider
     sliderContainer.append(counter);
 
     _slider = new HTML.RangeInputElement();
-    _slider.min = "0";
-    _slider.max = "100";
-    _slider.value = "2.2";
+    _slider.min = "$min";
+    _slider.max = "$max";
+    _slider.value = "$initialValue";
+    _slider.step = "$by";
     _slider.onChange.listen((e){
       input(double.parse(_slider.value));
       counter.text = "$variableName ${_slider.value}";

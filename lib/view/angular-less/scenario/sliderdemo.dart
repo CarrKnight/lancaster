@@ -145,6 +145,8 @@ class SliderDemoBase
 class SliderDemoGUI extends SliderDemoBase
 {
 
+
+
   //price is a computed property (really just a delegation from presentation)
   void set price(num value)
   {
@@ -163,7 +165,7 @@ class SliderDemoGUI extends SliderDemoBase
     //build the model objects
     ExogenousSellerScenario scenario = new ExogenousSellerScenario(initialPrice : 1.0);
     this.presentation = new SliderDemoPresentation(
-        new Model(new DateTime.now().millisecondsSinceEpoch,scenario),scenario
+        new Model(new DateTime.now().millisecondsSinceEpoch,scenario),scenario,50.0
         );
 
     //listen to the stream
@@ -182,7 +184,7 @@ class SliderDemoGUI extends SliderDemoBase
     ExogenousSellerScenario scenario = new ExogenousSellerScenario.stockoutPID
     (initialPrice:1.0);
     this.presentation = new SliderDemoPresentation(
-        new Model(new DateTime.now().millisecondsSinceEpoch,scenario),scenario);
+        new Model(new DateTime.now().millisecondsSinceEpoch,scenario),scenario,50.0);
     //listen to the stream
     this.presentation.stream.listen((event){
       customersAttracted=event.customersAttracted;
@@ -200,12 +202,28 @@ class SliderDemoGUI extends SliderDemoBase
     root.append(slider);
   }
 
-  SliderDemoGUI.WithCharts(String selector)
+
+}
+
+
+class ChartsDemoGUI
+{
+
+
+  SliderDemoPresentation presentation;
+
+  /**
+   * HTML objects
+   */
+  //the root
+  HTML.Element _root;
+
+  ChartsDemoGUI.WithCharts(String selector)
   {
     ExogenousSellerScenario scenario = new ExogenousSellerScenario.stockoutPID
     (initialPrice:1.0);
     this.presentation = new SliderDemoPresentation(
-        new Model(new DateTime.now().millisecondsSinceEpoch,scenario),scenario);
+        new Model(new DateTime.now().millisecondsSinceEpoch,scenario),scenario,50.0);
     //listen to the stream
     this.presentation.stream.listen((event){
       customersAttracted=event.customersAttracted;
@@ -215,20 +233,103 @@ class SliderDemoGUI extends SliderDemoBase
 
     var root = HTML.querySelector(selector);
     HTML.DivElement controlBar = new HTML.DivElement();
-    ControlBar bar = new ControlBar(controlBar,presentation,"PID",(){});
+    ControlBar bar = new ControlBar(controlBar,presentation,"PID",()
+    {
+      //clear if you must
+      while(root.hasChildNodes())
+        root.firstChild.remove();
+      new ChartsDemoGUI.WithCharts(selector);
+    });
     root.append(controlBar);
     var chart = new HTML.DivElement();
     root.append(chart);
 
     new ZKSellerSimple(chart,presentation.agent);
-    HTML.DivElement slider = new HTML.DivElement();
-    _buildSlider(slider);
-    root.append(slider);
+
   }
 
+  /**
+   * with charts + slider to change target
+   */
+  ChartsDemoGUI.ChangeInEndowment(String selector,{double resizeScale : 1.0})
+  {
+    ExogenousSellerScenario scenario = new ExogenousSellerScenario.stockoutPID
+    (initialPrice:1.0,dailyFlow:20.0);
+    this.presentation = new SliderDemoPresentation(
+        new Model(new DateTime.now().millisecondsSinceEpoch,scenario),scenario,20.0);
+    //listen to the stream
+    this.presentation.stream.listen((event){
+      customersAttracted=event.customersAttracted;
+      _updateView();
+    });
+
+
+    var root = HTML.querySelector(selector);
+    HTML.DivElement controlBar = new HTML.DivElement();
+    ControlBar bar = new ControlBar(controlBar,presentation,"PID",()
+    {
+      //clear if you must
+      while(root.hasChildNodes())
+        root.firstChild.remove();
+      new ChartsDemoGUI.ChangeInEndowment(selector,resizeScale:resizeScale);
+    });
+    root.append(controlBar);
+    var chart = new HTML.DivElement();
+    root.append(chart);
+
+    new ZKSellerSimple(chart,presentation.agent,resizeScale: resizeScale);
+
+    HTML.DivElement slider = new HTML.DivElement();
+    slider.style.zoom = "$resizeScale";
+    root.append(slider);
+    new Slider(slider,"Daily Endowment",(value)=>presentation.inflow=value,initialValue:presentation.inflow);
+
+  }
+
+  ChartsDemoGUI.ChangeInDemand(String selector, {double resizeScale : 1.0})
+  {
+    ExogenousSellerScenario scenario = new ExogenousSellerScenario.stockoutPID
+    (initialPrice:1.0,dailyFlow:20.0);
+    this.presentation = new SliderDemoPresentation(
+        new Model(new DateTime.now().millisecondsSinceEpoch,scenario),scenario,20.0);
+    //listen to the stream
+    this.presentation.stream.listen((event){
+      customersAttracted=event.customersAttracted;
+      _updateView();
+    });
+
+
+    var root = HTML.querySelector(selector);
+    HTML.DivElement controlBar = new HTML.DivElement();
+    controlBar.style.zoom = "$resizeScale";
+    ControlBar bar = new ControlBar(controlBar,presentation,"PID",()
+    {
+      //clear if you must
+      while(root.hasChildNodes())
+        root.firstChild.remove();
+      new ChartsDemoGUI.ChangeInDemand(selector,resizeScale:resizeScale);
+    });
+    root.append(controlBar);
+    var chart = new HTML.DivElement();
+    root.append(chart);
+
+    new ZKSellerSimple(chart,presentation.agent,resizeScale: resizeScale);
+
+
+    HTML.DivElement slider = new HTML.DivElement();
+    slider.style.zoom = "$resizeScale";
+    root.append(slider);
+    new Slider(slider,"Demand Intercept",(value)=>presentation.intercept=value,
+               initialValue:presentation.intercept, max: 300.0);
+    slider = new HTML.DivElement();
+    slider.style.zoom = "$resizeScale";
+    root.append(slider);
+    new Slider(slider,"Demand Slope",(value)=>presentation.slope=value,
+               initialValue:presentation.slope, max: -0.5,min: -3.0,by:0.1);
+
+  }
 
 }
-
 
 
 class ProductionDemoGUI

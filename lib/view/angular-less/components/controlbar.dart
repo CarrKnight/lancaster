@@ -89,6 +89,7 @@ class ControlBar
 
 
     HTML.SpanElement speedometer = new HTML.SpanElement();
+    speedometer.style.fontSize = "0.5em";
     speedometer.text=" $speed ms";
 
     //listen to it
@@ -111,7 +112,7 @@ class ControlBar
     container.append(playButton);
     container.append(resetButton);
     container.append(dayCounter);
-    container.append(new HTML.BRElement());
+  //  container.append(new HTML.BRElement());
     container.append(label);
     container.append(speedometer);
 

@@ -48,6 +48,7 @@ abstract class BeveridgePlot<E extends PresentationEvent>{
   int yTicks = 5;
   int width;
   int height;
+  double _resizeScale = 1.0;
 
   /***
    *     ____  _  _  __ _  ____   __   _  _  ____  __ _  ____  __   __    ____
@@ -80,8 +81,9 @@ abstract class BeveridgePlot<E extends PresentationEvent>{
   final HTML.DivElement _chartLocation;
 
   BeveridgePlot(this._chartLocation, this._presentation,
-                this.dailyDataExtractor, this.dataInitializer)
+                this.dailyDataExtractor, this.dataInitializer, {resizeScale : 1.0})
   {
+    this._resizeScale = resizeScale;
     _recomputeMetrics();
     _buildChart();
 
@@ -230,6 +232,7 @@ abstract class BeveridgePlot<E extends PresentationEvent>{
       (name));
 
 
+      print("name $name");
       path.setAttribute("d", generatePathFromXYObs(curve.toPath(0.0,
                                                                 100.0, 0.0,
                                                                 100.0)
@@ -492,6 +495,7 @@ abstract class BeveridgePlot<E extends PresentationEvent>{
 
   _recomputeMetrics() {
     width = _chartLocation.borderEdge.width;
+    width = (width*_resizeScale).round();
     height = (width * aspectRatio).round();
     xTicks = MATH.max(width/50, 2).round();
     yTicks = MATH.max(width/50, 2).round();
@@ -552,7 +556,7 @@ String generatePathFromXYObs(List<List<double>> obs, Scale xScale,
   for (int i = 0; i < obs.length; i++) {
 //if valid
     var observation = obs[i];
-    if (observation.every((e)=>e>=0&&e.isFinite)) {
+    if (observation.every((e)=>e.isFinite)) {
       points.add(new MATH.Point(xScale.scale(observation[0]), yScale.scale
       (observation[1])));
 //an invalid observation is a break, draw what you got
@@ -566,6 +570,7 @@ String generatePathFromXYObs(List<List<double>> obs, Scale xScale,
     segments.add("M ${points.map((pt) => '${pt.x},${pt.y} ').join('L')}");
   }
 
+  print("segments: $segments");
   return segments.join();
 
 

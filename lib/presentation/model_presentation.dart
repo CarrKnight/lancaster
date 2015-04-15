@@ -305,19 +305,29 @@ Presentation<SliderEvent>
   num get price=>scenario.price;
   void set price(num value){scenario.price = value;}
 
+  /**
+   * linear demand
+   */
+  LinearCurve demand;
+
+
+  num _inflow;
 
   num get customersAttracted=> scenario.customersAttracted;
 
   factory SliderDemoPresentation(Model model,
-                                 ExogenousSellerScenario scenario) {
+                                 ExogenousSellerScenario scenario, num _inflow) {
     SliderDemoPresentation presentation = new SliderDemoPresentation._internal
     (model,scenario);
+
+    presentation._inflow=_inflow;
 
     model.schedule.scheduleRepeating(Phase.GUI,(schedule)=>presentation
     ._broadcastEndDay(model.schedule));
     presentation.agent = new ZKPresentation(scenario.seller);
     presentation.agent.start(model.schedule);
-    presentation.agent.repository.addDynamicVLine(()=>50.0,"Supply");
+    presentation.agent.repository.addDynamicVLine(()=>presentation._inflow,"Supply");
+    presentation.demand = scenario.market.demand; //i know it's linear
     presentation.agent.repository.addCurve(scenario.market.demand,"Demand");
     var trader = presentation.agent.trader;
     presentation.agent.addDailyObserver("customers",
@@ -334,7 +344,25 @@ Presentation<SliderEvent>
 
 
 
+  num get inflow => _inflow;
+
+  set inflow(num value){
+    _inflow = value;
+    scenario.seller.dawnEvents.clear();
+    scenario.seller.dawnEvents.add(BurnInventories());
+    ZeroKnowledgeTrader.addDailyInflowAndDepreciation(scenario.seller,_inflow,0.0);
+  }
+
+
   Map<String, List<double>> get dailyObservations => null;
+
+  num get intercept => demand.intercept;
+
+  set intercept(double value) => demand.intercept = value;
+
+  num get slope => demand.slope;
+
+  set slope(double value) => demand.slope = value;
 
 
 

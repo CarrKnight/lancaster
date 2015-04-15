@@ -59,9 +59,9 @@ class ZKStockoutTimeSeriesChart extends BaseTimeSeriesChart
 {
 
 
-  ZKStockoutTimeSeriesChart(Presentation p, HTML.DivElement e)
+  ZKStockoutTimeSeriesChart(Presentation p, HTML.DivElement e, {double resizeScale : 1.0})
   :
-  super(p, e);
+  super(p, e,resizeScale : resizeScale);
 
   List<String> get selectedColumns => ["inflow", "customers"];
 }
