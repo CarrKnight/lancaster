@@ -125,6 +125,48 @@ class BuyerBeveridge extends BeveridgePlot<ZKEvent>
 }
 
 
+/**
+ * one day this might be the catch all, for now very very corner case only
+ */
+class SupplyAndDemandPlot extends BeveridgePlot<ZKEvent>
+{
+
+  factory SupplyAndDemandPlot.PresentationCase(HTML.DivElement container,
+                                               Presentation<ZKEvent> presentation,
+                                               ExponentialProductionFunction production,
+                                               ExogenousCurve demand,
+                                               {double resizeScale : 1.0})
+  {
+
+    //add the two curves to the repository
+    CurveRepository demandAndSupply = new CurveRepository();
+    demandAndSupply.addCurve(demand,"Demand");
+    demandAndSupply.addCurvePath(new ExponentialMarginalCostPath(()=>1.0,production), "Supply");
+    SupplyAndDemandPlot plot = new SupplyAndDemandPlot._internal(container,presentation,resizeScale:resizeScale);
+    //todo you only need one of these two, figure out which!
+  //  plot.curveRepository = demandAndSupply;
+    print("curves ${demandAndSupply.curves}");
+    plot.repositoryGetter = (presentation)=>demandAndSupply;
+    assert(plot.curveRepository == demandAndSupply);
+
+    return plot;
+    
+
+  }
+
+
+  SupplyAndDemandPlot._internal(HTML.DivElement container,
+                                Presentation<ZKEvent> presentation,
+                                {double resizeScale : 1.0})
+  :
+  super(container,presentation,SellerBeveridge._extractor,SellerBeveridge._initializer,resizeScale:resizeScale);
+
+
+
+
+
+}
+
 
 /**
  * beveridge plot for a buying zero-knowledge agent (focuses on inflow)
@@ -196,5 +238,8 @@ class SellerBeveridge extends BeveridgePlot<ZKEvent>
     return data;
 
   }
+
+
+
 
 }

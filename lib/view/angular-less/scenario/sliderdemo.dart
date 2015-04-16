@@ -224,11 +224,6 @@ class ChartsDemoGUI
     (initialPrice:1.0);
     this.presentation = new SliderDemoPresentation(
         new Model(new DateTime.now().millisecondsSinceEpoch,scenario),scenario,50.0);
-    //listen to the stream
-    this.presentation.stream.listen((event){
-      customersAttracted=event.customersAttracted;
-      _updateView();
-    });
 
 
     var root = HTML.querySelector(selector);
@@ -257,11 +252,7 @@ class ChartsDemoGUI
     (initialPrice:1.0,dailyFlow:20.0);
     this.presentation = new SliderDemoPresentation(
         new Model(new DateTime.now().millisecondsSinceEpoch,scenario),scenario,20.0);
-    //listen to the stream
-    this.presentation.stream.listen((event){
-      customersAttracted=event.customersAttracted;
-      _updateView();
-    });
+
 
 
     var root = HTML.querySelector(selector);
@@ -293,10 +284,6 @@ class ChartsDemoGUI
     this.presentation = new SliderDemoPresentation(
         new Model(new DateTime.now().millisecondsSinceEpoch,scenario),scenario,20.0);
     //listen to the stream
-    this.presentation.stream.listen((event){
-      customersAttracted=event.customersAttracted;
-      _updateView();
-    });
 
 
     var root = HTML.querySelector(selector);
@@ -336,16 +323,22 @@ class ProductionDemoGUI
 {
 
   MarshallianMicroPresentation presentation;
+  OneMarketCompetition scenario;
+  Model model;
 
   ZKPresentation get hr => presentation.hr;
   ZKPresentation get sales => presentation.sales;
 
-  ProductionDemoGUI._internal(String json) {
+  ProductionDemoGUI._internal(String json,[bool macro=false]) {
 
 
-    Model model = new Model.fromJSON(json);
+
+    model = new Model.fromJSON(json);
+
+    scenario = model.scenario;
     //make sure it's the right scenario
-    OneMarketCompetition scenario = model.scenario;
+    if(macro)
+      scenario.goodMarket = new ExogenousSellerMarket.linkedToWagesFromModel("labor");
 
 
     presentation = new MarshallianMicroPresentation.fixedTarget(model,scenario);
@@ -359,9 +352,9 @@ class ProductionDemoGUI
   }
 
 
-  factory ProductionDemoGUI.DoubleBeveridge(String json,String selector)
+  factory ProductionDemoGUI.DoubleBeveridge(String json,String selector, [bool macro=false])
   {
-    ProductionDemoGUI base = new ProductionDemoGUI._internal(json);
+    ProductionDemoGUI base = new ProductionDemoGUI._internal(json,macro);
 
     HTML.Element  root = HTML.querySelector(selector);
     //clear if you must
@@ -372,7 +365,7 @@ class ProductionDemoGUI
     HTML.DivElement controlBar = new HTML.DivElement();
     root.append(controlBar);
     ControlBar bar = new ControlBar(controlBar,base.presentation,"DoubleBeveridge",
-                                        ()=>new ProductionDemoGUI.DoubleBeveridge(json,selector),speed:150);
+                                        ()=>new ProductionDemoGUI.DoubleBeveridge(json,selector,macro),speed:150);
     //you also need a double beveridge
     HTML.DivElement parent = new HTML.DivElement();
     root.append(parent);
@@ -426,6 +419,9 @@ class ProductionDemoGUI
 
   }
 
+
+
+
   bool get ready => price.isFinite;
   bool get correct => price == wage;
   String get equality => correct ? "=" : price > wage ? ">" : "<";
@@ -437,4 +433,51 @@ class ProductionDemoGUI
   num get target => presentation.hrTarget;
   int get period => 100;
 
+}
+
+
+class SupplyAndDemandGUI
+{
+  OneMarketFixedWagesPresentation presentation;
+
+  SupplyAndDemandPlot plot;
+
+  HTML.Element  root;
+
+  SupplyAndDemandGUI(String json, String selector) {
+
+
+
+    Model model = new Model.fromJSON(json);
+
+    OneMarketCompetition scenario = model.scenario;
+    //make sure it's the right scenario
+
+
+    OneMarketFixedWagesPresentation presentation = new OneMarketFixedWagesPresentation(model,scenario);
+
+
+    root = HTML.querySelector(selector);
+    //clear if you must
+    while(root.hasChildNodes())
+      root.firstChild.remove();
+
+    //you need a control bar
+    HTML.DivElement controlBar = new HTML.DivElement();
+    root.append(controlBar);
+    ControlBar bar = new ControlBar(controlBar,presentation,"Supply And Demand",
+                                        ()=>new SupplyAndDemandGUI(json,selector),speed:80);
+    //you also need a double beveridge
+    HTML.DivElement parent = new HTML.DivElement();
+    root.append(parent);
+    plot = new SupplyAndDemandPlot.PresentationCase(parent,presentation.sales,
+                                                    presentation.production,presentation.demand,
+                                                    resizeScale : 0.5);
+    plot.maxX = 20;
+  //  plot.maxY = 20;
+
+
+
+
+  }
 }

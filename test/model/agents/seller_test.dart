@@ -21,7 +21,7 @@ main(){
 
     Schedule schedule = new Schedule();
 
-    market.start(schedule);
+    market.start(schedule,null); //model reference not needed
     seller.start(schedule);
 
     for(int i=0; i<200; i++)
@@ -46,7 +46,7 @@ main(){
 
     Schedule schedule = new Schedule();
 
-    market.start(schedule);
+    market.start(schedule,null); //model reference not needed
     seller.start(schedule);
 
     for(int i=0; i<200; i++)
@@ -73,7 +73,7 @@ main(){
 
     Schedule schedule = new Schedule();
 
-    market.start(schedule);
+    market.start(schedule,null); //model reference not needed
     seller.start(schedule);
 
     //has fixed inflow of 40

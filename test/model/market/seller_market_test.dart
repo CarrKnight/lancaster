@@ -25,7 +25,7 @@ buyerTests(){
     //create a q=p supply market
     ExogenousBuyerMarket market = new ExogenousBuyerMarket.linear
     (intercept:0.0, slope:1.0);
-    market.start(schedule);
+    market.start(schedule,null); //model reference not needed
 
     DummyTrader buyer = new DummyTrader();
     market.buyers.add(buyer);
@@ -51,7 +51,7 @@ buyerTests(){
     //create a q=p supply market
     ExogenousBuyerMarket market = new ExogenousBuyerMarket.linear
     (intercept:0.0, slope:1.0);
-    market.start(schedule);
+    market.start(schedule,null); //model reference not needed
 
     DummyTrader buyer = new DummyTrader();
     market.buyers.add(buyer);
@@ -78,7 +78,7 @@ buyerTests(){
     //create a q=p supply market
     ExogenousBuyerMarket market = new ExogenousBuyerMarket.linear
     (intercept:0.0, slope:1.0);
-    market.start(schedule);
+    market.start(schedule,null); //model reference not needed
 
     DummyTrader buyer = new DummyTrader();
     market.buyers.add(buyer);
@@ -103,7 +103,7 @@ buyerTests(){
     //create a q=p supply market
     ExogenousBuyerMarket market = new ExogenousBuyerMarket.linear
     (intercept:0.0, slope:1.0);
-    market.start(schedule);
+    market.start(schedule,null); //model reference not needed
 
     DummyTrader buyer1 = new DummyTrader();
     DummyTrader buyer2 = new DummyTrader();
@@ -136,7 +136,7 @@ buyerTests(){
     //create a q=p supply market
     ExogenousBuyerMarket market = new ExogenousBuyerMarket.linear
     (intercept:0.0, slope:1.0);
-    market.start(schedule);
+    market.start(schedule,null); //model reference not needed
 
     DummyTrader buyer1 = new DummyTrader();
     DummyTrader buyer2 = new DummyTrader();
@@ -171,7 +171,7 @@ buyerTests(){
     //create a q=101-p demand market
     ExogenousBuyerMarket market = new ExogenousBuyerMarket.linear(intercept:100.0,
     slope:-1.0);
-    market.start(schedule);
+    market.start(schedule,null); //model reference not needed
     var buyer = new MockDummyTrader();
     market.buyers.add(buyer);
 
@@ -197,7 +197,7 @@ infinitelyElasticBuyer(){
     //create a q=p supply market
     ExogenousBuyerMarket market = new ExogenousBuyerMarket.infinitelyElastic
     (100.0);
-    market.start(schedule);
+    market.start(schedule,null); //model reference not needed
 
     DummyTrader buyer = new DummyTrader();
     market.buyers.add(buyer);
@@ -224,7 +224,7 @@ infinitelyElasticBuyer(){
     //create a q=p supply market
     ExogenousBuyerMarket market = new ExogenousBuyerMarket.infinitelyElastic
     (100.0);
-    market.start(schedule);
+    market.start(schedule,null); //model reference not needed
 
     DummyTrader buyer = new DummyTrader();
     market.buyers.add(buyer);
@@ -251,7 +251,7 @@ infinitelyElasticBuyer(){
     //create a q=p supply market
     ExogenousBuyerMarket market = new ExogenousBuyerMarket.infinitelyElastic
     (100.0);
-    market.start(schedule);
+    market.start(schedule,null); //model reference not needed
 
     DummyTrader buyer = new DummyTrader();
     market.buyers.add(buyer);
@@ -277,7 +277,7 @@ infinitelyElasticBuyer(){
     //create a q=p supply market
     ExogenousBuyerMarket market = new ExogenousBuyerMarket.infinitelyElastic
     (100.0);
-    market.start(schedule);
+    market.start(schedule,null); //model reference not needed
 
 
     DummyTrader buyer1 = new DummyTrader();
@@ -313,7 +313,7 @@ infinitelyElasticBuyer(){
     //create a q=p supply market
     ExogenousBuyerMarket market = new ExogenousBuyerMarket.infinitelyElastic
     (100.0);
-    market.start(schedule);
+    market.start(schedule,null); //model reference not needed
 
 
     DummyTrader buyer1 = new DummyTrader();
@@ -353,7 +353,7 @@ infinitelyElasticBuyer(){
     //create a q=p supply market
     ExogenousBuyerMarket market = new ExogenousBuyerMarket.infinitelyElastic
     (100.0);
-    market.start(schedule);
+    market.start(schedule,null); //model reference not needed
 
     DummyTrader buyer = new MockDummyTrader();
     market.buyers.add(buyer);
@@ -381,7 +381,7 @@ sellerTests() {
     //create a q=101-p demand market
     ExogenousSellerMarket market = new ExogenousSellerMarket.linear(intercept:100.0,
     slope:-1.0);
-    market.start(schedule);
+    market.start(schedule,null); //model reference not needed
 
     DummyTrader seller = new DummyTrader();
     market.sellers.add(seller);
@@ -406,7 +406,7 @@ sellerTests() {
     //create a q=101-p demand market
     ExogenousSellerMarket market = new ExogenousSellerMarket.linear(intercept:100.0,
     slope:-1.0);
-    market.start(schedule);
+    market.start(schedule,null); //model reference not needed
 
     DummyTrader seller = new DummyTrader();
     market.sellers.add(seller);
@@ -432,7 +432,7 @@ sellerTests() {
 
     //create a q=101-p demand market
     ExogenousSellerMarket market = new ExogenousSellerMarket.linear(intercept:100.0, slope:-1.0);
-    market.start(schedule);
+    market.start(schedule,null); //model reference not needed
 
     DummyTrader seller = new DummyTrader();
     market.sellers.add(seller);
@@ -455,7 +455,7 @@ sellerTests() {
 
     //create a q=200-p demand market
     ExogenousSellerMarket market = new ExogenousSellerMarket.linear(intercept:200.0, slope:-1.0);
-    market.start(schedule);
+    market.start(schedule,null); //model reference not needed
 
     DummyTrader seller1 = new DummyTrader();
     DummyTrader seller2 = new DummyTrader();
@@ -488,7 +488,7 @@ sellerTests() {
 
     //create a q=200-p demand market
     ExogenousSellerMarket market = new ExogenousSellerMarket.linear(intercept:200.0, slope:-1.0);
-    market.start(schedule);
+    market.start(schedule,null); //model reference not needed
 
     DummyTrader seller1 = new DummyTrader();
     DummyTrader seller2 = new DummyTrader();
@@ -526,7 +526,7 @@ sellerTests() {
     //create a q=101-p demand market
     ExogenousSellerMarket market = new ExogenousSellerMarket.linear(intercept:100.0,
     slope:-1.0);
-    market.start(schedule);
+    market.start(schedule,null); //model reference not needed
     var seller = new MockDummyTrader();
     market.sellers.add(seller);
 
@@ -625,7 +625,7 @@ budgetTestsEmbedded()
     //create a q=101-p demand market
     ExogenousSellerMarket market = new ExogenousSellerMarket.
     linkedToWagesFromData(laborData);
-    market.start(schedule);
+    market.start(schedule,null); //model reference not needed
 
     DummyTrader seller = new DummyTrader();
     market.sellers.add(seller);
@@ -669,7 +669,7 @@ budgetTestsEmbedded()
     //create a q=101-p demand market
     ExogenousSellerMarket market = new ExogenousSellerMarket.
     linkedToWagesFromData(laborData);
-    market.start(schedule);
+    market.start(schedule,null); //model reference not needed
 
 
     DummyTrader seller = new DummyTrader();
@@ -705,7 +705,7 @@ budgetTestsEmbedded()
     //create a q=101-p demand market
     ExogenousSellerMarket market = new ExogenousSellerMarket.
     linkedToWagesFromData(laborData);
-    market.start(schedule);
+    market.start(schedule,null); //model reference not needed
 
 
     DummyTrader seller = new DummyTrader();
@@ -741,7 +741,7 @@ budgetTestsEmbedded()
     //create a q=101-p demand market
     ExogenousSellerMarket market = new ExogenousSellerMarket.
     linkedToWagesFromData(laborData);
-    market.start(schedule);
+    market.start(schedule,null); //model reference not needed
 
 
     DummyTrader seller1 = new DummyTrader();
@@ -784,7 +784,7 @@ budgetTestsEmbedded()
     //create a q=101-p demand market
     ExogenousSellerMarket market = new ExogenousSellerMarket.
     linkedToWagesFromData(laborData);
-    market.start(schedule);
+    market.start(schedule,null); //model reference not needed
 
 
     DummyTrader seller1 = new DummyTrader();
@@ -829,7 +829,7 @@ budgetTestsEmbedded()
     //create a q=101-p demand market
     ExogenousSellerMarket market = new ExogenousSellerMarket.
     linkedToWagesFromData(laborData);
-    market.start(schedule);
+    market.start(schedule,null); //model reference not needed
 
 
     DummyTrader seller = new MockDummyTrader();

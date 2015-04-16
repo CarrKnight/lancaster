@@ -82,7 +82,7 @@ main(){
     //setup copy pasted from: "Best Offer wins"
     Schedule schedule = new Schedule();
     ExogenousSellerMarket market = new ExogenousSellerMarket.linear(intercept:200.0, slope:-1.0);
-    market.start(schedule);
+    market.start(schedule,null); //model reference not needed
     market.tradeStream.listen(tradeListener);
     market.asksStream.listen(quotesListener);
 

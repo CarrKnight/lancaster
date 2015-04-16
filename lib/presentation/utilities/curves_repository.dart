@@ -25,6 +25,12 @@ class CurveRepository
     _names[path]=name;
   }
 
+  void addCurvePath(CurvePath path, String name)
+  {
+    _curves[name]=path;
+    _names[path]=name;
+  }
+
 
   void addDynamicHLine(DataGatherer yGetter, String name)
   {

@@ -110,7 +110,7 @@ class SimpleSellerScenario extends Scenario
     initializer = (Model model) {
       ExogenousSellerMarket market = new ExogenousSellerMarket.linear(intercept:intercept,
                                                                       slope:slope);
-      market.start(model.schedule);
+      market.start(model.schedule,model);
 
       Random random = new Random(seed);
       model.markets["gas"] = market;
@@ -146,7 +146,7 @@ class SimpleSellerScenario extends Scenario
     initializer = (Model model) {
       ExogenousSellerMarket market = new ExogenousSellerMarket.linear(intercept:intercept,
                                                                       slope:slope);
-      market.start(model.schedule);
+      market.start(model.schedule,model);
 
       Random random = new Random(seed);
       model.markets["gas"] = market;
@@ -217,7 +217,7 @@ class ExogenousSellerScenario extends Scenario
     toReturn.market = new ExogenousSellerMarket.linear(intercept:intercept,slope:slope);
 
     toReturn.initializer = (Model model) {
-      toReturn.market.start(model.schedule);
+      toReturn.market.start(model.schedule,model);
 
       model.markets["gas"] = toReturn.market;
 
@@ -265,7 +265,7 @@ class ExogenousSellerScenario extends Scenario
     toReturn.initializer = (Model model)
     {
 
-      toReturn.market.start(model.schedule);
+      toReturn.market.start(model.schedule,model);
 
       model.markets["gas"] = toReturn.market;
       //initial price 0
@@ -334,7 +334,7 @@ class SimpleScenario extends Scenario{
   this((Model model){
     ExogenousBuyerMarket market = new ExogenousBuyerMarket.linear(intercept:intercept,
                                                                   slope:slope);
-    market.start(model.schedule);
+    market.start(model.schedule,model);
     model.markets["gas"]=market;
     //initial price 0
     Random random = new Random(seed);
@@ -393,7 +393,7 @@ class SimpleFirmScenario extends Scenario
     //build labor market
     laborMarket = new ExogenousBuyerMarket.linear
     (intercept:supplyIntercept, slope:supplySlope,goodType : "labor");
-    laborMarket.start(model.schedule);
+    laborMarket.start(model.schedule,model);
     model.markets["labor"]=laborMarket;
 
     //build hr
@@ -409,7 +409,7 @@ class SimpleFirmScenario extends Scenario
     //build sales market
     goodmarket = new ExogenousSellerMarket.linear
     (intercept:demandIntercept, slope:demandSlope);
-    goodmarket.start(model.schedule);
+    goodmarket.start(model.schedule,model);
     model.markets["gas"]=goodmarket;
 
     //build sales

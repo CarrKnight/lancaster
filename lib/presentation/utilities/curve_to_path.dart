@@ -17,6 +17,8 @@ abstract class CurvePath
 }
 
 
+
+
 class LinearCurvePath implements CurvePath
 {
 
@@ -71,12 +73,13 @@ class FixedBudgetPath implements CurvePath
   List<List<double>> toPath(num minY, num maxY, num minX,
                             num maxX) {
 
-    if(curve.budget == lastBudget)
+    if(curve.initialBudget == lastBudget)
       return lastData;
 
-    lastBudget = curve.budget;
+    lastBudget = curve.initialBudget;
     lastData = [];
-    for(num i =0.0; i<= 1.0; i+=.05)
+    //small increments of y
+    for(num i =0.00; i<= 1; i+=.01)
     {
       num y = minY*(i)+maxY*(1.0-i);
       if(y != 0)
@@ -84,7 +87,10 @@ class FixedBudgetPath implements CurvePath
 
     }
 
-    //easy slope
+
+
+    print("fixedBudget: ${curve.budget} Lastdata: $lastData");
+
     return lastData;
   }
 
@@ -142,6 +148,76 @@ class DynamicVerticalPath implements CurvePath
     num x = xGetter();
     return [[x, minY],[x,maxY]];
 
+  }
+
+}
+
+
+
+typedef double DoubleGetter();
+/**
+ * basically this production function:
+ *          b
+    a  *  L  - c
+ * into MC curve/supply chain
+ */
+class ExponentialMarginalCostPath implements CurvePath
+{
+  double a = double.NAN;
+  double b = double.NAN;
+  double c = double.NAN;
+  double wage = double.NAN;
+
+  final DoubleGetter wageGetter;
+  final ExponentialProductionFunction production;
+
+
+  ExponentialMarginalCostPath(this.wageGetter,this.production);
+
+  List<List<double>> oldPath;
+
+  List<List<double>> toPath(num minY, num maxY, num minX,
+                            num maxX)
+  {
+    if(oldPath != null)
+    {
+      assert(a.isFinite); assert(b.isFinite); assert(c.isFinite); assert(wage.isFinite);
+      //if anything has changed
+      if(wage!=wageGetter() || a != production.multiplier || b !=production.exponent || c != -production.freebie )
+      {
+        oldPath = null;
+        return toPath(minY,maxY,minX,maxX); //start over
+      }
+      else
+      {
+        return oldPath; //nothing has changed return the old stuff
+      }
+    }
+    /* the MC is just:
+        /c + q\1 / b
+        |-----|
+        \  a  /
+        -------------
+          b c + b q
+     */
+    //there is no old path
+    a= production.multiplier; b=production.exponent; c = -production.freebie; wage = wageGetter();
+    assert(oldPath == null);
+    //now draw
+    oldPath = [];
+    for(double quantity = minX; quantity<maxX; quantity+=(maxX-minX)/100)
+    {
+      oldPath.add([quantity,_marginal(quantity) ]);
+    }
+
+    return oldPath;
+
+  }
+
+
+  double _marginal(double quantity)
+  {
+    return pow((c+quantity)/a,1.0/b) / (b * c + b * quantity);
   }
 
 }

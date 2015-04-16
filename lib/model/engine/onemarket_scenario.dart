@@ -85,10 +85,10 @@ class OneMarketCompetition extends Scenario
 
 
   static HrStrategyInitialization STICKY_STOCKOUT_QUOTA_BUYER = (SISOPlant plant, Firm firm,
-                                                          Random r,
-                                                          ZeroKnowledgeTrader seller,
-                                                          ParameterDatabase db,
-                                                          String containerPath)
+                                                                 Random r,
+                                                                 ZeroKnowledgeTrader seller,
+                                                                 ParameterDatabase db,
+                                                                 String containerPath)
   {
 
     PIDAdaptive pricing = new PIDAdaptive.
@@ -339,17 +339,17 @@ class OneMarketCompetition extends Scenario
 
     if (laborMarket == null)//not overriden?
       laborMarket = model.parameters.getAsInstance("$DB_ADDRESS.laborMarket",
-                                                    "${ExogenousBuyerMarket.DB_ADDRESS}");
+                                                   "${ExogenousBuyerMarket.DB_ADDRESS}");
 
 
-    laborMarket.start(model.schedule);
+    laborMarket.start(model.schedule,model);
     model.markets["labor"] = laborMarket;
 
     //build sales market
     if (goodMarket == null)//not overriden?
       goodMarket = model.parameters.getAsInstance("$DB_ADDRESS.goodMarket",
-                                                   "${ExogenousSellerMarket.DB_ADDRESS}");
-    goodMarket.start(model.schedule);
+                                                  "${ExogenousSellerMarket.DB_ADDRESS}");
+    goodMarket.start(model.schedule,model);
     model.markets["gas"] = goodMarket;
 
     //if it hasn't been overridden
@@ -412,7 +412,6 @@ class OneMarketCompetition extends Scenario
 
 
 }
-
 
 
 

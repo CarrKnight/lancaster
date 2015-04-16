@@ -81,7 +81,8 @@ abstract class BeveridgePlot<E extends PresentationEvent>{
   final HTML.DivElement _chartLocation;
 
   BeveridgePlot(this._chartLocation, this._presentation,
-                this.dailyDataExtractor, this.dataInitializer, {resizeScale : 1.0})
+                this.dailyDataExtractor, this.dataInitializer,
+                {resizeScale : 1.0})
   {
     this._resizeScale = resizeScale;
     _recomputeMetrics();
@@ -106,18 +107,30 @@ abstract class BeveridgePlot<E extends PresentationEvent>{
   SvgAxis yAxis;
   Selection yAxisContainer;
   Selection xAxisContainer;
+  num _maxX = 100.0; num get maxX=>_maxX;
+  num _maxY = 100.0; num get maxY=>_maxY;
+  set maxX(num newMax)
+  {
+    _maxX = newMax;
+  //  _reset();
+  }
+  set maxY(num newMax)
+  {
+    _maxY = newMax;
+  //  _reset();
+  }
 
 
   void _buildAxesAndScale(Selection axisGroup)
   {
     //create the scales so we can easily translate coordinates to pixels
     xScale = new LinearScale()
-      ..domain = [0,100]
+      ..domain = [0,_maxX]
       ..range = [padding,width-padding];
 
 
     yScale = new LinearScale()
-      ..domain = [0,100]
+      ..domain = [0,_maxY]
       ..range = [height-padding,padding];
 
 
@@ -234,8 +247,8 @@ abstract class BeveridgePlot<E extends PresentationEvent>{
 
       print("name $name");
       path.setAttribute("d", generatePathFromXYObs(curve.toPath(0.0,
-                                                                100.0, 0.0,
-                                                                100.0)
+                                                                _maxY, 0.0,
+                                                                _maxX)
                                                    , xScale, yScale));
 
     }
@@ -456,6 +469,7 @@ abstract class BeveridgePlot<E extends PresentationEvent>{
 
       BeveridgeDatum newObservation = dailyDataExtractor(event);
       if(newObservation != null) {
+        print("new observation $newObservation");
         //delete oldest, add new
         _deleteOldestDatum();
         _addDatum(newObservation);
@@ -514,6 +528,7 @@ abstract class BeveridgePlot<E extends PresentationEvent>{
     liner=null;
     dataToolTip.clear();
     drawnCurves.clear();
+
   }
 
 

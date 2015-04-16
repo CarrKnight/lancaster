@@ -27,7 +27,7 @@ abstract class Market{
   Data data;
 
 
-  void start(Schedule s){
+  void start(Schedule s, Model m){
     _tradeStreamer.start(s);
     data = new Data.MarketData(this);
     data.start(s);
@@ -205,18 +205,16 @@ class ExogenousSellerMarket extends SellerMarket with OneSideMarketClearer{
 
 
   factory ExogenousSellerMarket.linkedToWagesFromModelFromDB(
-      Model model,
-      String laborType,
       ParameterDatabase db,
       String containerPath
       )
-  => new ExogenousSellerMarket.linkedToWagesFromModel(model,
+  => new ExogenousSellerMarket.linkedToWagesFromModel(
                                      db.getAsString("$containerPath.laborType","$DB_ADDRESS.laborType"),
                                      intercept : db.getAsNumber("$containerPath.intercept","$DB_ADDRESS.intercept"),
                                      moneyType : db.getAsString("$containerPath.moneyType","$DB_ADDRESS.moneyType"));
 
 
-  factory ExogenousSellerMarket.linkedToWagesFromModel( Model model,
+  factory ExogenousSellerMarket.linkedToWagesFromModel(
                                                         String laborType,
                                                         {
                                                         String goodType : "gas",
@@ -224,9 +222,11 @@ class ExogenousSellerMarket extends SellerMarket with OneSideMarketClearer{
                                                         num intercept : 0.0,
                                                         String moneyType: "money"})
   {
-    var fixedBudget = linkedToWageDemand(model, laborType, intercept);
-    return new ExogenousSellerMarket(fixedBudget,
-                                     goodType:goodType, moneyType:moneyType);
+    ExogenousSellerMarket toReturn = new ExogenousSellerMarket(null,
+                                                               goodType:goodType, moneyType:moneyType);
+    toReturn._startables.add((s,m)=>toReturn.demand = linkedToWageDemand(m,laborType,intercept));
+
+    return toReturn;
 
   }
 
@@ -252,8 +252,9 @@ class ExogenousSellerMarket extends SellerMarket with OneSideMarketClearer{
   , String moneyType: "money"}):
   this.goodType = goodType, this.moneyType = moneyType;
 
-  void start(Schedule s){
-    super.start(s);
+  void start(Schedule s, Model m){
+    _startables.forEach((e)=>e(s,m));
+    super.start(s,m);
     startAsks(s);
     s.scheduleRepeating(Phase.DAWN,_resetMarket);
     s.scheduleRepeating(Phase.CLEAR_MARKETS,_clearMarket);
@@ -288,9 +289,11 @@ class ExogenousSellerMarket extends SellerMarket with OneSideMarketClearer{
   num get sellersInflow =>
   sellers.fold(0.0,(prev,e)=>prev+e.currentInflow);
 
-
+  List<Startable> _startables = new List();
 
 }
+
+typedef void Startable(Schedule s, Model m);
 
 /**
  * a market where the buying is "done" by a fixed demand curve while the
@@ -351,8 +354,8 @@ class ExogenousBuyerMarket extends BuyerMarket with OneSideMarketClearer{
       this.pricePolicy = pricePolicy;
   }
 
-  void start(Schedule s){
-    super.start(s);
+  void start(Schedule s, Model m){
+    super.start(s,m);
     startBids(s);
     s.scheduleRepeating(Phase.DAWN,_resetMarket);
     s.scheduleRepeating(Phase.CLEAR_MARKETS,_clearMarket);

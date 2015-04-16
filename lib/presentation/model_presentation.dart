@@ -291,6 +291,42 @@ class MarshallianMicroPresentation extends ModelPresentation
 }
 
 
+class OneMarketFixedWagesPresentation extends ModelPresentation
+{
+
+  ZKPresentation sales;
+  SISOProductionFunction production;
+  final OneMarketCompetition scenario;
+  ExogenousCurve demand;
+
+  OneMarketFixedWagesPresentation(Model model, this.scenario)
+  :super(model)
+  {
+    production = scenario.productionFunction;
+    //acts as competitor
+    //todo this stuff needs to go to the JSON
+    scenario.hrIntializer = (ZeroKnowledgeTrader sales) {
+      sales.predictor = new
+      LastPricePredictor();
+    };
+    scenario.salesInitializer = (ZeroKnowledgeTrader sales) {
+      sales.predictor = new
+      LastPricePredictor();
+    };
+
+    ZeroKnowledgeTrader salesDepartment = scenario.firms.first
+    .salesDepartments["gas"];
+    sales = new ZKPresentation(salesDepartment);
+    sales.start(model.schedule);
+
+    demand = scenario.goodMarket.demand;
+
+  }
+
+
+}
+
+
 /**
  * this uses the exogenous seller scenario to show the problem of the
  */
@@ -405,3 +441,7 @@ class StepEvent extends PresentationEvent
 
 
 }
+
+
+
+

@@ -53,9 +53,20 @@ main(){
 
 
 
+
+
   //keynesianExample
 
   //keynesianMacro
 
   //marshallianMacro
+
+  path = 'marsh_macro.json';
+  HttpRequest.getString(path)
+  .then((String fileContents) {
+    print(fileContents);
+    new SupplyAndDemandGUI(fileContents,"#marshallianMacro");
+  });
+
+
 }

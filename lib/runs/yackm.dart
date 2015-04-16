@@ -298,7 +298,7 @@ Data fixedWageMacro(
   var model = initializeOneMarketModel(pathToJsonFromProjectRoot, jsonFileName, additionalJSonFiles, burnInventories,seed);
 
   //demand = total wages yesterday, that's what makes it macro
-  ExogenousSellerMarket goodMarket = new ExogenousSellerMarket.linkedToWagesFromModel (model, "labor");
+  ExogenousSellerMarket goodMarket = new ExogenousSellerMarket.linkedToWagesFromModel ("labor");
   OneMarketCompetition scenario = model.scenario;
   scenario.goodMarket = goodMarket;
   model.start();

@@ -104,6 +104,11 @@ class FixedBudget implements ExogenousCurve
 
   num budget = 0.0;
 
+  /**
+   * total budget available, ignoring what has already been spent!
+   */
+  num initialBudget = 0.0;
+
   num intercept = 0.0;
 
   num recordTrade(num quantity, num price) {
@@ -128,6 +133,7 @@ class FixedBudget implements ExogenousCurve
     if(!cumulative)
       budget = 0.0;
     num newBudget = computeBudget();
+    initialBudget = newBudget;
     if(newBudget.isFinite)
       budget += newBudget;
   }
