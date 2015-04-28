@@ -73,13 +73,13 @@
               "max": 0.2
             },
             "d": 0,
-            "averagePIDPeriod": 20,
+            "averagePIDPeriod": 50,
             "PIMultiplier": 100,
             "sigmoidCenter": 1,
             "currentTarget": {
               "type": "uniform",
-              "min": 10,
-              "max": 30
+              "min": 30,
+              "max": 40
             }
           }
         }

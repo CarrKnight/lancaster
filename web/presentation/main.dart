@@ -30,8 +30,8 @@ main(){
   var path = 'fixed_target.json';
   HttpRequest.getString(path)
   .then((String fileContents) {
-    print(fileContents);
-    new ProductionDemoGUI.DoubleBeveridge(fileContents,"#fixed_target");
+    
+    new ProductionDemoGUI.DoubleBeveridge(fileContents,"#fixed_target",false,true);
     new ProductionDemoGUI.ExogenousProduction(fileContents,"#profitslider");
 
   })
@@ -44,7 +44,7 @@ main(){
   path = 'profit_target.json';
   HttpRequest.getString(path)
   .then((String fileContents) {
-    print(fileContents);
+    
     new ProductionDemoGUI.DoubleBeveridge(fileContents,"#profit_target");
   })
   .catchError((Error error) {
@@ -57,15 +57,35 @@ main(){
 
   //keynesianExample
 
+  path = 'keynesian_micro.json';
+  HttpRequest.getString(path)
+  .then((String fileContents) {
+    
+    new SupplyAndDemandGUI(fileContents,"#keynesianExample",100,100,true,false);
+  });
+
+  //marshallianExample
+
+  path = 'marsh_micro.json';
+  HttpRequest.getString(path)
+  .then((String fileContents) {
+
+    new SupplyAndDemandGUI(fileContents,"#marshallianExample",100,100,false,true  );
+  });
   //keynesianMacro
+  path = 'keynesian_macro.json';
+  HttpRequest.getString(path)
+  .then((String fileContents) {
+    new SupplyAndDemandGUI(fileContents,"#keynesianMacro",5,30,true,false);
+  });
+
 
   //marshallianMacro
 
   path = 'marsh_macro.json';
   HttpRequest.getString(path)
   .then((String fileContents) {
-    print(fileContents);
-    new SupplyAndDemandGUI(fileContents,"#marshallianMacro");
+    new SupplyAndDemandGUI(fileContents,"#marshallianMacro",5,30,false,true);
   });
 
 

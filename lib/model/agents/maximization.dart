@@ -323,7 +323,7 @@ class PIDMaximizer implements Extractor
     lastCosts = marginalCosts(buyer, production,input,delta);
 
 
-//    print("last cost $lastCosts, ratio ${lastBenefits/lastCosts}");
+    print("last benefits $lastBenefits last cost $lastCosts, ratio ${lastBenefits/lastCosts}");
 
     if(lastCosts==0 || !lastCosts.isFinite || !lastBenefits.isFinite || !ratioTransformer
     (lastBenefits/lastCosts).isFinite )
@@ -331,8 +331,8 @@ class PIDMaximizer implements Extractor
 
 
     lastEfficiency = ratioTransformer(lastBenefits/lastCosts);
-//    print("last efficiency $lastEfficiency");
-    //   print("---------------------------------------------");
+    print("last efficiency $lastEfficiency");
+    print("---------------------------------------------");
 
     pid.adjust(lastEfficiency,ratioTransformer(1.0));
     lastActivated = pid.adjustedLast;

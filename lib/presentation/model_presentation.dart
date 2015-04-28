@@ -144,7 +144,6 @@ class MarshallianMicroPresentation extends ModelPresentation
     //empty/useless setters
     hrTargetGetter = ()=> hr== null? double.NAN : hr.trader.data
    .getLatestObservation("pricer_target");
-    targetSetter = (num value){}; //doesn't set a thing
   }
 
   /**
@@ -288,6 +287,11 @@ class MarshallianMicroPresentation extends ModelPresentation
 
   num get hrTarget => hrTargetGetter();
   set hrTarget(num value)=>targetSetter(value);
+
+  void forceTarget(double newTarget)
+  {
+
+  }
 }
 
 

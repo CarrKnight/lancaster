@@ -37,7 +37,6 @@ class Tooltip {
   }
 
   void _createTemplate(HTML.MouseEvent event) {
-    print("tooltip!");
     assert(message != null);
 
     tooltipElem = new HTML.DivElement();
@@ -68,7 +67,6 @@ class Tooltip {
       ..top = "${event.page.y - 10}px"
       ..left = "${event.page.x + 10}px";
 
-    print("pos y: ${event.page.y} x:  ${event.page.x} ");
 
 
     // Add the tooltip to the document body. We add it here because we need to position it

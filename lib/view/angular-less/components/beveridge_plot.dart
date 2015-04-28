@@ -144,8 +144,7 @@ class SupplyAndDemandPlot extends BeveridgePlot<ZKEvent>
     demandAndSupply.addCurvePath(new ExponentialMarginalCostPath(()=>1.0,production), "Supply");
     SupplyAndDemandPlot plot = new SupplyAndDemandPlot._internal(container,presentation,resizeScale:resizeScale);
     //todo you only need one of these two, figure out which!
-  //  plot.curveRepository = demandAndSupply;
-    print("curves ${demandAndSupply.curves}");
+    plot.curveRepository = demandAndSupply;
     plot.repositoryGetter = (presentation)=>demandAndSupply;
     assert(plot.curveRepository == demandAndSupply);
 

@@ -112,12 +112,12 @@ abstract class BeveridgePlot<E extends PresentationEvent>{
   set maxX(num newMax)
   {
     _maxX = newMax;
-  //  _reset();
+    resize();
   }
   set maxY(num newMax)
   {
     _maxY = newMax;
-  //  _reset();
+    resize();
   }
 
 
@@ -220,7 +220,6 @@ abstract class BeveridgePlot<E extends PresentationEvent>{
    */
   PathElement _createPathElement(String name)
   {
-    print("creating a line");
     PathElement line = new PathElement();
     curves.append(line);
     line.classes = ["selectable", "line"];
@@ -245,7 +244,6 @@ abstract class BeveridgePlot<E extends PresentationEvent>{
       (name));
 
 
-      print("name $name");
       path.setAttribute("d", generatePathFromXYObs(curve.toPath(0.0,
                                                                 _maxY, 0.0,
                                                                 _maxX)
@@ -469,7 +467,6 @@ abstract class BeveridgePlot<E extends PresentationEvent>{
 
       BeveridgeDatum newObservation = dailyDataExtractor(event);
       if(newObservation != null) {
-        print("new observation $newObservation");
         //delete oldest, add new
         _deleteOldestDatum();
         _addDatum(newObservation);
@@ -496,7 +493,6 @@ abstract class BeveridgePlot<E extends PresentationEvent>{
 
   resize()
   {
-    print("resize!");
     //you need to redraw everything!
     _recomputeMetrics();
 
@@ -585,7 +581,6 @@ String generatePathFromXYObs(List<List<double>> obs, Scale xScale,
     segments.add("M ${points.map((pt) => '${pt.x},${pt.y} ').join('L')}");
   }
 
-  print("segments: $segments");
   return segments.join();
 
 

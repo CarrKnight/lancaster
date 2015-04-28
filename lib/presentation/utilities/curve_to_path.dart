@@ -163,10 +163,10 @@ typedef double DoubleGetter();
  */
 class ExponentialMarginalCostPath implements CurvePath
 {
-  double a = double.NAN;
-  double b = double.NAN;
-  double c = double.NAN;
-  double wage = double.NAN;
+  num a = double.NAN;
+  num b = double.NAN;
+  num c = double.NAN;
+  num wage = double.NAN;
 
   final DoubleGetter wageGetter;
   final ExponentialProductionFunction production;

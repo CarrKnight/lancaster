@@ -166,7 +166,6 @@ abstract class BaseTimeSeriesChart<E extends PresentationEvent>{
    * utility method creates an svg path node and adds a tooltip to it
    */
   PathElement createPathNode(String name) {
-    print("creating a line");
     PathElement line = new PathElement();
     svgNode.append(line);
     line.classes = ["selectable", "line"];
@@ -309,7 +308,6 @@ abstract class BaseTimeSeriesChart<E extends PresentationEvent>{
 
   void resize()
   {
-    print("resize!");
     //you need to redraw everything!
     recomputeMetrics();
 

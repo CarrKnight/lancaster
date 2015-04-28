@@ -42,7 +42,6 @@ class SliderDemoBase
 
     _root = root;
 
-    print(_root.tagName);
 
     HTML.DivElement container = new HTML.DivElement();
     _root.append(container);
@@ -117,7 +116,6 @@ class SliderDemoBase
 
 
 
-    print(presentation.day);
 
   }
 
@@ -153,7 +151,7 @@ class SliderDemoGUI extends SliderDemoBase
     //whenever you set a new value also step!
     //this is a relatively silly way not to deal with mouse event listeners
     // for release
-   super.price = value;
+    super.price = value;
 
     presentation.step();
   }
@@ -352,7 +350,7 @@ class ProductionDemoGUI
   }
 
 
-  factory ProductionDemoGUI.DoubleBeveridge(String json,String selector, [bool macro=false])
+  factory ProductionDemoGUI.DoubleBeveridge(String json,String selector, [bool macro=false,bool slider=false])
   {
     ProductionDemoGUI base = new ProductionDemoGUI._internal(json,macro);
 
@@ -364,12 +362,29 @@ class ProductionDemoGUI
     //you need a control bar
     HTML.DivElement controlBar = new HTML.DivElement();
     root.append(controlBar);
-    ControlBar bar = new ControlBar(controlBar,base.presentation,"DoubleBeveridge",
-                                        ()=>new ProductionDemoGUI.DoubleBeveridge(json,selector,macro),speed:150);
+    ControlBar bar = new ControlBar(controlBar,
+                                    base.presentation,"DoubleBeveridge",
+                                        ()=>new ProductionDemoGUI.DoubleBeveridge(json,selector,macro,slider),
+                                    speed:150);
+
+    if(slider)
+    {
+      HTML.DivElement container = new HTML.DivElement();
+      root.append(container);
+      container.style.zoom = ".6";
+      controlBar.style.zoom = ".6";
+
+      new Slider(container, "Target",
+                     (newTarget) => base.presentation.hrTarget = newTarget, min:1.0, max:100.0,
+                 initialValue:base.presentation.hrTarget.toDouble(),
+                 by:1.0);
+    }
+
     //you also need a double beveridge
     HTML.DivElement parent = new HTML.DivElement();
     root.append(parent);
     DoubleBeveridge beveridge = new DoubleBeveridge(parent,base.hr,base.sales);
+
 
 
 
@@ -422,6 +437,7 @@ class ProductionDemoGUI
 
 
 
+
   bool get ready => price.isFinite;
   bool get correct => price == wage;
   String get equality => correct ? "=" : price > wage ? ">" : "<";
@@ -444,7 +460,7 @@ class SupplyAndDemandGUI
 
   HTML.Element  root;
 
-  SupplyAndDemandGUI(String json, String selector) {
+  SupplyAndDemandGUI(String json, String selector, num maxX, num maxY, bool priceLine, bool laborLine) {
 
 
 
@@ -466,15 +482,20 @@ class SupplyAndDemandGUI
     HTML.DivElement controlBar = new HTML.DivElement();
     root.append(controlBar);
     ControlBar bar = new ControlBar(controlBar,presentation,"Supply And Demand",
-                                        ()=>new SupplyAndDemandGUI(json,selector),speed:80);
+                                        ()=>new SupplyAndDemandGUI(json,selector,maxX,maxY,priceLine,laborLine),speed:80);
     //you also need a double beveridge
     HTML.DivElement parent = new HTML.DivElement();
     root.append(parent);
     plot = new SupplyAndDemandPlot.PresentationCase(parent,presentation.sales,
                                                     presentation.production,presentation.demand,
                                                     resizeScale : 0.5);
-    plot.maxX = 20;
-  //  plot.maxY = 20;
+    plot.maxX = maxX;
+    plot.maxY = maxY;
+
+    if(laborLine)
+      plot.curveRepository.addDynamicVLine(()=>presentation.sales.dailyObservations["inflow"].last,"Production");
+    if(priceLine)
+      plot.curveRepository.addDynamicHLine(()=>presentation.sales.dailyObservations["offeredPrice"].last,"Production");
 
 
 
