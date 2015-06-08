@@ -47,8 +47,8 @@
             "d": 0,
             "offset": {
               "type": "uniform",
-              "min": 10,
-              "max": 30
+              "min": 1,
+              "max": 10
             },
             "columnName": "pricer"
           }

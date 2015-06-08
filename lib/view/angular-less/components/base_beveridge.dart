@@ -142,6 +142,14 @@ abstract class BeveridgePlot<E extends PresentationEvent>{
       ..attr("class","axis");
     xAxis.draw(xAxisContainer);
 
+    //add label
+    axisGroup.append("text")
+      ..attr("class","axislabel")
+      ..attr("text-anchor","end")
+      ..attr("x",width-40)
+      ..attr("y",height-35)
+      ..text("Quantity");
+
     yAxis = new SvgAxis(ORIENTATION_LEFT)
       ..scale = yScale;
 
@@ -149,6 +157,17 @@ abstract class BeveridgePlot<E extends PresentationEvent>{
       ..attr('transform', "translate(${padding},0)")
       ..attr("class","axis");
     yAxis.draw(yAxisContainer);
+
+
+    //add label
+    axisGroup.append("text")
+      ..attr("class","axislabel")
+      ..attr("text-anchor","end")
+      ..attr("dy",".75em")
+      ..attr("y",35)
+      ..attr("transform","rotate(-90)")
+      ..text("Price");
+
   }
 
   /***

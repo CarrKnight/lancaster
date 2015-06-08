@@ -154,6 +154,10 @@ input[type=range]:focus::-ms-fill-upper {
     font-size: 11px;
 }
 
+.axislabel{
+ font-family: sans-serif;
+    font-size: 14px;
+}
 
 
 

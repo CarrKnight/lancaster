@@ -92,6 +92,14 @@ abstract class BaseTimeSeriesChart<E extends PresentationEvent>{
       ..attr('transform', "translate(0,${height - padding})")
       ..attr("class", "axis");
     xAxis.draw(xAxisContainer);
+
+    //add label
+    axisGroup.append("text")
+    ..attr("class","axislabel")
+    ..attr("text-anchor","end")
+    ..attr("x",width-40)
+    ..attr("y",height-35)
+    ..text("Time");
   }
 
   drawYAxis() {
@@ -100,6 +108,14 @@ abstract class BaseTimeSeriesChart<E extends PresentationEvent>{
       ..attr('transform', "translate(${padding},0)")
       ..attr("class", "axis");
     yAxis.draw(yAxisContainer);
+
+    axisGroup.append("text")
+      ..attr("class","axislabel")
+      ..attr("text-anchor","end")
+      ..attr("dy",".75em")
+      ..attr("y",35)
+      ..attr("transform","rotate(-90)")
+      ..text("Value");
   }
 
   void _buildAxesAndScale(Selection axisGroup) {
