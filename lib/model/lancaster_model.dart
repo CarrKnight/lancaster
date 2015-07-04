@@ -40,6 +40,7 @@ part 'agents/prediction.dart';
 part 'agents/quotas.dart';
 part 'agents/maximization.dart';
 part 'agents/firm.dart';
+part 'agents/geography';
 /***
  *     _  _   __   ____  __ _  ____  ____  ____
  *    ( \/ ) / _\ (  _ \(  / )(  __)(_  _)/ ___)

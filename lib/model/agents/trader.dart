@@ -87,15 +87,15 @@ class DummyTrader implements Trader
   num stockouts = double.NAN;
 
 
-  DummyTrader([String goodType= "gas"])
+  DummyTrader([String goodType= "gas", String moneyType = "money"])
   {
     var totalInventory = new Inventory(); //its own inventory
     _inventory=(totalInventory).getSection(goodType);
-    _money=totalInventory.getSection("money");
+    _money=totalInventory.getSection(moneyType);
   }
 
   DummyTrader.fromMarket(Market market):
-  this(market.goodType);
+  this(market.goodType,market.moneyType);
 
 
   void notifyOfTrade(num quantity, num price, num stockouts) {
@@ -281,19 +281,29 @@ class ZeroKnowledgeTrader implements Trader
   /**
    * seller or sales-department targeting inflow=outflow+stockouts
    */
-  factory ZeroKnowledgeTrader.PIDSeller(SellerMarket market,
+  factory ZeroKnowledgeTrader.PIDSeller(Market market,
                                         {num initialPrice:100.0,
-                                        Inventory givenInventory : null})
+                                        Inventory givenInventory : null,
+                                        Location location : null})
   {
     //if no total inventory given, this is an independent trader
     Inventory inventory = givenInventory;
     if(givenInventory == null)
       inventory = new Inventory();
 
+
+    TradingStrategy tradingStrategy;
+    //if you are not given a location, assume you aren't geographical
+    if(location == null)
+      tradingStrategy = new SimpleSellerTrading();
+    else
+      tradingStrategy = new GeographicalSellerTrading(location);
+
+
     ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader(market,
                                                          new PIDAdaptive.DefaultSeller(offset:initialPrice),
                                                          new AllOwned(),
-                                                         new SimpleSellerTrading(), inventory);
+                                                         tradingStrategy, inventory);
 
     //independent trader needs to reset its own counters
     if(givenInventory==null)
@@ -304,21 +314,28 @@ class ZeroKnowledgeTrader implements Trader
   /**
    * seller or sales-department targeting inflow=outflow+stockouts
    */
-  factory ZeroKnowledgeTrader.PIDSellerFromDB(SellerMarket market,
+  factory ZeroKnowledgeTrader.PIDSellerFromDB(Market market,
                                               ParameterDatabase db,
                                               String containerPath,
-                                              {Inventory givenInventory : null})
+                                              {Inventory givenInventory : null,
+                                              Location location : null})
   {
     //if no total inventory given, this is an independent trader
     Inventory inventory = givenInventory;
     if(givenInventory == null)
       inventory = new Inventory();
 
+    TradingStrategy tradingStrategy;
+    if(location == null)
+      tradingStrategy = new SimpleSellerTrading();
+    else
+      tradingStrategy = new GeographicalSellerTrading(location);
+
     ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader(market,
                                                          //todo add default path when vararg comes
                                                          new PIDAdaptive.DefaultSellerFromDB(db,"$containerPath.pidSellerPricing"),
                                                          new AllOwned(),
-                                                         new SimpleSellerTrading(), inventory);
+                                                         tradingStrategy, inventory);
 
     //independent trader needs to reset its own counters
     if(givenInventory==null)
@@ -328,21 +345,31 @@ class ZeroKnowledgeTrader implements Trader
 
 
 
-  factory ZeroKnowledgeTrader.PIDBuyerFromDB(BuyerMarket market,
+  factory ZeroKnowledgeTrader.PIDBuyerFromDB(Market market,
                                              ParameterDatabase db,
                                              String containerPath,
-                                             {Inventory givenInventory : null})
+                                             {Inventory givenInventory : null,
+                                             Location location : null})
   {
 
     Inventory inventory = givenInventory;
     if(givenInventory == null)
       inventory = new Inventory();
 
+
+    //depending on whether you were given a location you act geographically or not
+    TradingStrategy tradingStrategy;
+    if(location == null)
+      tradingStrategy = new SimpleBuyerTrading();
+    else
+      tradingStrategy = new GeographicalBuyerTrading(location);
+
+
     ZeroKnowledgeTrader buyer =
     new ZeroKnowledgeTrader(market,
                             new PIDAdaptive.FixedInflowBuyerFromDB(db,"$containerPath.pidBuyerPricing"),
                             new FixedValue(),
-                            new SimpleBuyerTrading(),inventory);
+                            tradingStrategy,inventory);
 
     //independent trader needs to reset its own counters
     if(givenInventory==null)
@@ -353,24 +380,32 @@ class ZeroKnowledgeTrader implements Trader
   }
 
 
-  factory ZeroKnowledgeTrader.PIDBuyer(BuyerMarket market,
+  factory ZeroKnowledgeTrader.PIDBuyer(Market market,
                                        {num flowTarget:10.0,
                                        num initialPrice:0.0,
                                        num p: PIDController.DEFAULT_PROPORTIONAL_PARAMETER,
                                        num i: PIDController.DEFAULT_INTEGRAL_PARAMETER,
                                        num d: PIDController.DEFAULT_DERIVATIVE_PARAMETER,
-                                       Inventory givenInventory : null})
+                                       Inventory givenInventory : null,
+                                       Location location: null})
   {
     //if no total inventory given, this is an independent trader
     Inventory inventory = givenInventory;
     if(givenInventory == null)
       inventory = new Inventory();
 
+    //depending on whether you were given a location you act geographically or not
+    TradingStrategy tradingStrategy;
+    if(location == null)
+      tradingStrategy = new SimpleBuyerTrading();
+    else
+      tradingStrategy = new GeographicalBuyerTrading(location);
+
     ZeroKnowledgeTrader buyer = new ZeroKnowledgeTrader(market,
                                                         new PIDAdaptive.FixedInflowBuyer(flowTarget:flowTarget,
                                                                                          initialPrice:initialPrice,p:p,i:i,d:d),
                                                         new FixedValue(),
-                                                        new SimpleBuyerTrading(),inventory);
+                                                        tradingStrategy,inventory);
 
     //independent trader needs to reset its own counters
     if(givenInventory==null)
@@ -380,21 +415,28 @@ class ZeroKnowledgeTrader implements Trader
   }
 
 
-  factory ZeroKnowledgeTrader.PIDBufferSellerFromDB(SellerMarket market,
+  factory ZeroKnowledgeTrader.PIDBufferSellerFromDB(Market market,
                                                     ParameterDatabase db,
                                                     String containerPath,
-                                                    {Inventory givenInventory:null})
+                                                    {Inventory givenInventory:null,
+                                                    Location location: null})
   {
     Inventory inventory = givenInventory;
     if(givenInventory == null)
       inventory = new Inventory();
+
+    TradingStrategy tradingStrategy;
+    if(location == null)
+      tradingStrategy = new SimpleSellerTrading();
+    else
+      tradingStrategy = new GeographicalSellerTrading(location);
 
     ZeroKnowledgeTrader seller =
     new ZeroKnowledgeTrader(market,
                             new BufferInventoryAdaptive.SimpleSellerFromDB(db,
                                                                            "$containerPath.pidBufferSeller"),
                             new AllOwned(),
-                            new SimpleSellerTrading(), inventory);
+                            tradingStrategy, inventory);
 
     //independent trader needs to reset its own counters
     if(givenInventory==null)
@@ -405,7 +447,7 @@ class ZeroKnowledgeTrader implements Trader
   /**
    * seller or sales-department targeting inflow=outflow with buffer inventory
    */
-  factory ZeroKnowledgeTrader.PIDBufferSeller(SellerMarket market,
+  factory ZeroKnowledgeTrader.PIDBufferSeller(Market market,
                                               {
                                               num initialPrice:100.0,
                                               num optimalInventory:100.0,
@@ -416,17 +458,24 @@ class ZeroKnowledgeTrader implements Trader
                                               PIDController.DEFAULT_INTEGRAL_PARAMETER,
                                               num d:
                                               PIDController.DEFAULT_DERIVATIVE_PARAMETER,
-                                              Inventory givenInventory:null})
+                                              Inventory givenInventory:null,
+                                              Location location: null})
   {
     Inventory inventory = givenInventory;
     if(givenInventory == null)
       inventory = new Inventory();
 
+    TradingStrategy tradingStrategy;
+    if(location == null)
+      tradingStrategy = new SimpleSellerTrading();
+    else
+      tradingStrategy = new GeographicalSellerTrading(location);
+
     ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader(market,
                                                          new BufferInventoryAdaptive.simpleSeller(optimalInventory:optimalInventory,
                                                                                                   criticalInventory:criticalInventory,offset:initialPrice,p:p,d:d,i:i),
                                                          new AllOwned(),
-                                                         new SimpleSellerTrading(), inventory);
+                                                         tradingStrategy, inventory);
 
     //independent trader needs to reset its own counters
     if(givenInventory==null)
@@ -449,14 +498,16 @@ class ZeroKnowledgeTrader implements Trader
    * PIDSeller with exogenous fixed inflow
    */
   factory ZeroKnowledgeTrader.PIDSellerFixedInflow(num dailyInflow,
-                                                   SellerMarket market,
+                                                   Market market,
                                                    {num depreciationRate:0.0,
                                                    num initialPrice:100.0,
-                                                   Inventory givenInventory:null})
+                                                   Inventory givenInventory:null,
+                                                   Location location : null})
   {
     ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader.PIDSeller(market,
                                                                    initialPrice:initialPrice,
-                                                                   givenInventory:givenInventory);
+                                                                   givenInventory:givenInventory,
+                                                                   location: location);
     //add events
     addDailyInflowAndDepreciation(seller, dailyInflow, depreciationRate);
     return seller;
@@ -466,13 +517,15 @@ class ZeroKnowledgeTrader implements Trader
     /**
      * PIDSeller with exogenous fixed inflow
      */
-    factory ZeroKnowledgeTrader.PIDSellerFixedInflowFromDB(SellerMarket market,
+    factory ZeroKnowledgeTrader.PIDSellerFixedInflowFromDB(Market market,
                                                            ParameterDatabase db,
                                                            String containerPath,
-                                                     {Inventory givenInventory:null})
+                                                     {Inventory givenInventory:null,
+                                                           Location location : null})
   {
     ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader.PIDSellerFromDB(market,
-                                                                   db,containerPath,givenInventory:givenInventory);
+                                                                   db,containerPath,givenInventory:givenInventory,
+                                                                         location:location);
     //add events
     addDailyInflowAndDepreciation(seller,
                                   db.getAsNumber("$containerPath.dailyInflow","$DB_ADDRESS.dailyInflow"),
@@ -483,7 +536,7 @@ class ZeroKnowledgeTrader implements Trader
    * PIDSeller with exogenous fixed inflow
    */
   factory ZeroKnowledgeTrader.PIDBufferSellerFixedInflow(num dailyInflow,
-                                                         SellerMarket market,
+                                                         Market market,
                                                          {num depreciationRate:0.0,
                                                          num initialPrice:100.0,
                                                          num optimalInventory:100.0,
@@ -494,12 +547,14 @@ class ZeroKnowledgeTrader implements Trader
                                                          PIDController.DEFAULT_INTEGRAL_PARAMETER,
                                                          num d:
                                                          PIDController.DEFAULT_DERIVATIVE_PARAMETER,
-                                                         Inventory givenInventory : null})
+                                                         Inventory givenInventory : null,
+                                                         Location location: null})
   {
     ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader.PIDBufferSeller(market,
                                                                          initialPrice:initialPrice,givenInventory:givenInventory,
                                                                          optimalInventory:optimalInventory, criticalInventory:criticalInventory,
-                                                                         d:d,i:i,p:p);
+                                                                         d:d,i:i,p:p,
+                                                                         location: location);
     //add events
     addDailyInflowAndDepreciation(seller, dailyInflow, depreciationRate);
     return seller;
@@ -568,6 +623,58 @@ class SimpleSellerTrading extends TradingStrategy<SellerMarket>
 
 }
 
+class GeographicalSellerTrading extends TradingStrategy<GeographicalMarket>
+{
+
+  /**
+   * location variable, can be changed
+   */
+  Location _location;
+
+
+
+  /**
+   * stored after start to change locations
+   */
+  GeographicalSellerTrading(this._location);
+
+  GeographicalMarket _market;
+
+  /**
+   * reference to trader, stored at start, useful for changing locations
+   */
+  Trader _trader;
+
+  void start(Schedule s, Trader trader, GeographicalMarket market, Data data, AdaptiveStrategy pricing,
+             AdaptiveStrategy quota)
+  {
+    assert(!market.sellers.contains(trader));
+    market.sellers.add(trader);
+    market.locations[trader]=  location;
+    assert(market.sellers.contains(trader));
+  }
+
+  void step(Trader trader, GeographicalMarket market, Data data, AdaptiveStrategy pricing, AdaptiveStrategy quota) {
+    pricing.adapt(trader,data);
+    quota.adapt(trader,data);
+    num quoteSize = quota.value;
+    trader.lastOfferedPrice = pricing.value;
+    if(quoteSize> 0) //if you have anything to sell
+      market.placeSaleQuote(trader,quoteSize,trader.lastOfferedPrice);
+  }
+
+  Location get location => _location;
+
+  void set location(Location _newLocation)
+  {
+    _location = _newLocation;
+    if(_market != null) //if we have started
+      //update location
+      _market.locations[_trader] = _location;
+  }
+
+}
+
 
 /**
  * standard zero-knowledge buyer. Updates the price,
@@ -590,12 +697,67 @@ class SimpleBuyerTrading extends TradingStrategy<BuyerMarket>
             AdaptiveStrategy pricing, AdaptiveStrategy quota) {
     pricing.adapt(trader,data);
     quota.adapt(trader,data);
-    num quoteSize = quota.value;
-    if(quoteSize > 0)
-      market.placeBuyerQuote(trader,quota.value,pricing.value);
+    num quotaToBuy = quota.value;
+    if(quotaToBuy > 0)
+      market.placeBuyerQuote(trader,quotaToBuy,pricing.value);
     trader.lastOfferedPrice = pricing.value;
   }
 
+
+}
+
+class GeographicalBuyerTrading extends TradingStrategy<GeographicalMarket>
+{
+
+  /**
+   * location variable, can be changed
+   */
+  Location _location;
+
+  /**
+   * stored after start to change locations
+   */
+  GeographicalMarket _market;
+
+  /**
+   * reference to trader, stored at start, useful for changing locations
+   */
+  Trader _trader;
+
+
+  GeographicalBuyerTrading(this._location);
+
+  void start(Schedule s, Trader trader, GeographicalMarket market, Data data, AdaptiveStrategy pricing,
+             AdaptiveStrategy quota)
+  {
+    market.buyers.add(trader);
+    market.locations[trader] = _location;
+    //store links for changing location on the spot
+    _market = market;
+    _trader = trader;
+  }
+
+  void step(Trader trader, GeographicalMarket market, Data data,
+            AdaptiveStrategy pricing, AdaptiveStrategy quota)
+  {
+    //ugly code replication from the other buyer, but it's really what we need to do
+    pricing.adapt(trader,data);
+    quota.adapt(trader,data);
+    num quotaToBuy = quota.value;
+    if(quotaToBuy > 0)
+      market.placeBuyerQuote(trader,quotaToBuy,pricing.value);
+    trader.lastOfferedPrice = pricing.value;
+  }
+
+  Location get location => _location;
+
+  void set location(Location _newLocation)
+  {
+    _location = _newLocation;
+    if(_market != null) //if we have started
+      //update location
+      _market.locations[_trader] = _location;
+  }
 
 }
 

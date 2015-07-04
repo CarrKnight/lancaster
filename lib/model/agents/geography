@@ -1,0 +1,164 @@
+/*
+ * Copyright (c) 2015 to Ernesto Carrella.
+ * This is open source on MIT license. Isn't this jolly?
+ */
+
+part of lancaster.model;
+
+class Location{
+
+  List<num> coordinates;
+
+
+  Location(this.coordinates);
+
+  factory Location.TwoD(num x, num y)
+  {
+    List<num> coords = new List(2);
+    coords[0]=x;
+    coords[1]=y;
+    return new Location(coords);
+  }
+
+  get dimension => coordinates.length;
+}
+
+
+typedef num Distance(Location x, Location y);
+
+Distance CartesianDistance = (Location x, Location y)
+{
+  assert(x.dimension == y.dimension);
+  double sum = 0.0;
+  for(int i=0; i<x.dimension; i++)
+      sum += pow(x.coordinates[i]-y.coordinates[i],2);
+  return pow(sum,1/x.dimension);
+};
+
+
+/**
+ * like a normal market but each buyer and seller is also required to set his own
+ * location in the locations map so that the distance between any buyer and seller can be found
+ */
+class GeographicalMarket extends Market with AsksOrderBook,BidsOrderBook
+{
+
+  final String goodType;
+  final String moneyType;
+
+
+  /**
+   * a map holding the location of each trader
+   */
+  final Map<Trader,Location> locations = new HashMap();
+
+  /**
+   * The distance function with which buyers judge sellers
+   */
+  final Distance distanceFunction;
+
+
+  GeographicalMarket(this.distanceFunction , {this.goodType : "gas", this.moneyType: "money"});
+
+  num _moneyExchaged = 0;
+
+  num _quantityTraded = 0;
+
+
+  num get averageClosingPrice => _moneyExchaged/quantityTraded;
+
+  num get quantityTraded => _quantityTraded;
+
+  /**
+   * basically count the inflow of the registered sellers (a proxy for total
+   * production)
+   */
+  num get sellersInflow =>   sellers.fold(0.0,(prev,s)=>prev+s.currentInflow);
+
+  /**
+   * basically count the inflow of the registered sellers (a proxy for total
+   * consumption)
+   */
+  num get buyersOutflow =>   buyers.fold(0.0,(prev,b)=>prev+b.currentOutflow);
+
+
+
+  void start(Schedule s, Model m) {
+    super.start(s,m);
+    startBids(s);
+    startAsks(s);
+    s.scheduleRepeating(Phase.DAWN,_resetMarket);
+    s.scheduleRepeating(Phase.CLEAR_MARKETS,_clearMarket);
+  }
+
+  void _resetMarket(Schedule s)
+  {
+    _asks.clear();
+    _bids.clear();
+    _moneyExchaged = 0;
+    _quantityTraded = 0;
+  }
+
+  num _clearMarket(Schedule s)
+  {
+
+    //sort order books
+    sortBids();
+
+    //for each buyer
+    for(_TradeQuote bid in _bids )
+    {
+
+      num amountLeft = bid._amount;
+      var buyer = bid._owner;
+      Location buyerLocation = locations[buyer];
+
+      //we need to sort asks by price + distance
+      List<_TradeQuote> sortedOffers = new List();
+      sortedOffers.addAll(_asks);
+      sortedOffers.sort((_TradeQuote a,_TradeQuote b){
+        return (a._pricePerUnit + distanceFunction(locations[a._owner],buyerLocation)).compareTo(
+            b._pricePerUnit + distanceFunction(locations[b._owner],buyerLocation));
+      });
+
+      //as long as this buyer has something to buy
+      while(amountLeft > 0 && sortedOffers.length > 0)
+      {
+        _TradeQuote bestOffer = sortedOffers.removeLast();
+        //is the ask + distance costs <= bid ?
+        var seller = bestOffer._owner;
+        if(bestOffer._pricePerUnit +distanceFunction(locations[seller],buyerLocation) <=
+        bid._pricePerUnit)
+        {
+          //distance ought not to be negative, man
+          assert(bestOffer._pricePerUnit <= bid._pricePerUnit);
+
+          //if so, let's trade!
+          num quantityTraded = min(amountLeft,bestOffer._amount);
+          tradeBetweenTwoAgents(buyer, seller,quantityTraded,bestOffer._pricePerUnit);
+          _tradeStreamer.log(seller, buyer,quantityTraded,bestOffer._pricePerUnit);
+
+          _quantityTraded += quantityTraded;
+          _moneyExchaged +=  quantityTraded * bestOffer._pricePerUnit;
+          //lower offers
+          bestOffer._amount -= quantityTraded;
+          assert(bestOffer._amount>=0); //can't have gone negative
+          if(bestOffer._amount == 0) //if this ask is completely tapped out, remove it from the market
+            _asks.remove(bestOffer);
+          amountLeft -= quantityTraded;
+          assert(amountLeft>=0); //can't have gone negative!
+          assert(! (amountLeft > 0 && bestOffer._amount > 0)); //they can't be both still positive!
+        }
+      }
+
+
+
+    }
+
+
+  }
+
+
+}
+
+
