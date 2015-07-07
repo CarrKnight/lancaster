@@ -13,8 +13,9 @@ import 'dart:math' as MATH;
 import 'dart:async';
 import 'dart:collection';
 import 'dart:svg';
+import 'package:stagexl/stagexl.dart';
 
-import 'package:charted/charted.dart' ;
+import 'package:charted/charted.dart' as CHARTED ;
 import 'package:charted/svg/axis.dart' ;
 import 'package:charted/core/scales.dart' ;
 import 'package:charted/selection/selection.dart';
@@ -29,3 +30,4 @@ part 'angular-less/components/tooltip.dart';
 part 'angular-less/components/base_timeseries.dart';
 part 'angular-less/components/price_chart.dart';
 part 'angular-less/containers/zk_charts.dart';
+part 'geographical/canvas.dart';

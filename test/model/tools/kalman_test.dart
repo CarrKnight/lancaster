@@ -4,7 +4,7 @@
  */
 
 library kalman.test;
-import 'package:unittest/unittest.dart';
+import 'package:test/test.dart';
 import 'package:lancaster/model/lancaster_model.dart';
 import 'dart:io';
 

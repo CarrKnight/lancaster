@@ -4,11 +4,15 @@ packages:
   analyzer:
     description: analyzer
     source: hosted
-    version: "0.24.3"
+    version: "0.25.0+1"
   args:
     description: args
     source: hosted
-    version: "0.12.2+6"
+    version: "0.13.2"
+  async:
+    description: async
+    source: hosted
+    version: "1.2.0"
   barback:
     description: barback
     source: hosted
@@ -20,23 +24,39 @@ packages:
   charted:
     description: charted
     source: hosted
-    version: "0.2.0"
+    version: "0.2.5"
   cli_util:
     description: cli_util
     source: hosted
-    version: "0.0.1+1"
+    version: "0.0.1+2"
   code_transformers:
     description: code_transformers
     source: hosted
-    version: "0.2.7+2"
+    version: "0.2.9"
   collection:
     description: collection
     source: hosted
-    version: "1.1.0"
+    version: "1.1.1"
+  crypto:
+    description: crypto
+    source: hosted
+    version: "0.9.0"
+  glob:
+    description: glob
+    source: hosted
+    version: "1.0.4"
+  http_multi_server:
+    description: http_multi_server
+    source: hosted
+    version: "1.3.2"
+  http_parser:
+    description: http_parser
+    source: hosted
+    version: "0.0.2+7"
   intl:
     description: intl
     source: hosted
-    version: "0.12.2"
+    version: "0.12.4"
   json_object:
     description: json_object
     source: hosted
@@ -44,22 +64,26 @@ packages:
   logging:
     description: logging
     source: hosted
-    version: "0.9.3"
+    version: "0.11.1"
   matcher:
     description: matcher
     source: hosted
-    version: "0.11.4+4"
+    version: "0.12.0+1"
+  mime:
+    description: mime
+    source: hosted
+    version: "0.9.3"
   mockito:
     description:
       ref: null
-      resolved-ref: "5821472ca8e69541b00fc6c833b0e303b3c9f76e"
+      resolved-ref: ded3f8144bba37c755d495f147471a5eb334f2ed
       url: "https://github.com/fibulwinter/dart-mockito.git"
     source: git
-    version: "0.8.2"
+    version: "0.10.1"
   observe:
     description: observe
     source: hosted
-    version: "0.13.0+2"
+    version: "0.13.1+1"
   path:
     description: path
     source: hosted
@@ -67,23 +91,43 @@ packages:
   petitparser:
     description: petitparser
     source: hosted
-    version: "1.3.7"
+    version: "1.4.3"
   pool:
     description: pool
     source: hosted
-    version: "1.0.1"
+    version: "1.1.0"
+  pub_semver:
+    description: pub_semver
+    source: hosted
+    version: "1.2.1"
   quiver:
     description: quiver
     source: hosted
-    version: "0.21.3"
+    version: "0.21.4"
+  shelf:
+    description: shelf
+    source: hosted
+    version: "0.6.1+2"
+  shelf_static:
+    description: shelf_static
+    source: hosted
+    version: "0.2.2"
+  shelf_web_socket:
+    description: shelf_web_socket
+    source: hosted
+    version: "0.0.1+2"
   smoke:
     description: smoke
     source: hosted
-    version: "0.3.2"
+    version: "0.3.3+1"
+  source_map_stack_trace:
+    description: source_map_stack_trace
+    source: hosted
+    version: "1.0.4"
   source_maps:
     description: source_maps
     source: hosted
-    version: "0.10.0+2"
+    version: "0.10.1"
   source_span:
     description: source_span
     source: hosted
@@ -91,11 +135,19 @@ packages:
   stack_trace:
     description: stack_trace
     source: hosted
-    version: "1.2.4"
-  unittest:
-    description: unittest
+    version: "1.3.4"
+  stagexl:
+    description: stagexl
     source: hosted
-    version: "0.11.5+4"
+    version: "0.12.0"
+  string_scanner:
+    description: string_scanner
+    source: hosted
+    version: "0.1.3+1"
+  test:
+    description: test
+    source: hosted
+    version: "0.12.3+4"
   utf:
     description: utf
     source: hosted
@@ -103,7 +155,7 @@ packages:
   watcher:
     description: watcher
     source: hosted
-    version: "0.9.5"
+    version: "0.9.6"
   when:
     description: when
     source: hosted
@@ -112,3 +164,7 @@ packages:
     description: which
     source: hosted
     version: "0.1.3"
+  yaml:
+    description: yaml
+    source: hosted
+    version: "2.1.3"

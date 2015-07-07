@@ -3,7 +3,7 @@
  * This is open source on MIT license. Isn't this jolly?
  */
 library model.test;
-import 'package:unittest/unittest.dart';
+import 'package:test/test.dart';
 import 'package:lancaster/model/lancaster_model.dart';
 import 'dart:math';
 

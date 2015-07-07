@@ -1,5 +1,5 @@
 library database.test;
-import 'package:unittest/unittest.dart';
+import 'package:test/test.dart';
 import 'dart:math';
 import 'package:lancaster/model/lancaster_model.dart';
 import 'package:json_object/json_object.dart';

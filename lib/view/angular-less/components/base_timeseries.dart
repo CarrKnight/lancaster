@@ -131,13 +131,12 @@ abstract class BaseTimeSeriesChart<E extends PresentationEvent>{
       ..range = [height - padding, padding];
 
 
-    xAxis = new SvgAxis(ORIENTATION_BOTTOM)
-      ..scale = xScale;
-
+    xAxis = new SvgAxis(orientation:CHARTED.ORIENTATION_BOTTOM,
+                        scale:xScale );
     drawXAxis();
 
-    yAxis = new SvgAxis(ORIENTATION_LEFT)
-      ..scale = yScale;
+    yAxis = new SvgAxis(orientation:CHARTED.ORIENTATION_LEFT,
+                        scale: yScale);
     drawYAxis();
   }
 
@@ -170,7 +169,7 @@ abstract class BaseTimeSeriesChart<E extends PresentationEvent>{
   /**
    * utility class to draw svg lines
    */
-  SvgLine line ;
+  CHARTED.SvgLine line ;
 
   /**
    * for each curve, the html element containing the path

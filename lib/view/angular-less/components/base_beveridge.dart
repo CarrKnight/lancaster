@@ -134,8 +134,8 @@ abstract class BeveridgePlot<E extends PresentationEvent>{
       ..range = [height-padding,padding];
 
 
-    xAxis = new SvgAxis(ORIENTATION_BOTTOM)
-      ..scale = xScale;
+    xAxis = new SvgAxis(orientation: CHARTED.ORIENTATION_BOTTOM,
+                        scale: xScale);
 
     xAxisContainer = axisGroup.append("g")
       ..attr('transform', "translate(0,${height - padding})")
@@ -150,8 +150,7 @@ abstract class BeveridgePlot<E extends PresentationEvent>{
       ..attr("y",height-35)
       ..text("Quantity");
 
-    yAxis = new SvgAxis(ORIENTATION_LEFT)
-      ..scale = yScale;
+    yAxis = new SvgAxis(orientation:CHARTED.ORIENTATION_LEFT,scale:yScale);
 
     yAxisContainer = axisGroup.append("g")
       ..attr('transform', "translate(${padding},0)")
@@ -179,7 +178,7 @@ abstract class BeveridgePlot<E extends PresentationEvent>{
 
   Selection clipPath;
   Selection areaMask;
-  SvgLine liner;
+  CHARTED.SvgLine liner;
 
   static const CLIP_PATH_ID = "clippath";
 

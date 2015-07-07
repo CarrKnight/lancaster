@@ -5,7 +5,7 @@
 
 library pricingtest;
 import 'package:mockito/mockito.dart';
-import 'package:unittest/unittest.dart';
+import 'package:test/test.dart';
 import 'package:lancaster/model/lancaster_model.dart';
 
 

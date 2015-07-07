@@ -6,7 +6,8 @@ dependencies:
   browser: any
   charted: any
   json_object: any
+  stagexl : any
 dev_dependencies:
   mockito:
     git: https://github.com/fibulwinter/dart-mockito.git
-  unittest: any
+  test: any

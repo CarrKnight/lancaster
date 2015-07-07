@@ -3,7 +3,7 @@
  * This is open source on MIT license. Isn't this jolly?
  */
 
-import 'package:unittest/unittest.dart';
+import 'package:test/test.dart';
 import 'package:lancaster/model/lancaster_model.dart';
 
 
@@ -11,7 +11,7 @@ import 'package:lancaster/model/lancaster_model.dart';
 
 main(){
 
- nonGeographical();
+  nonGeographical();
 
   //demand 100 people from 0 to 100 each buying one unit of stuff, all at location 0,0 and a seller
   //at location 0,0 trying to sell 40 units of goods: should discover the price is 60
@@ -29,8 +29,8 @@ main(){
     {
       //each buyer buys 1 unit every day at the same price, if possible
       ZeroKnowledgeTrader buyer = new ZeroKnowledgeTrader(market, new FixedValue(i), new FixedValue(1),
-                                             new GeographicalBuyerTrading(new Location([0,0])),
-                                             new Inventory());
+                                                          new GeographicalBuyerTrading(new Location([0,0])),
+                                                          new Inventory());
       buyer.dawnEvents.add(BurnInventories());
       buyer.start(schedule);
     }
@@ -49,6 +49,46 @@ main(){
 
   });
 
+
+  //demand 2 people, one willing to pay 100 but distance is 200, the other willing to pay 10 but very close
+  //seller has 1 unit of good to sell, will sell to second buyer
+  test("Close poor beat rich but far",(){
+    GeographicalMarket market = new GeographicalMarket(CartesianDistance);
+    //initial price 100
+    ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader.PIDBufferSellerFixedInflow(1.0,
+                                                                                    market,initialPrice:100.0,
+                                                                                    location: new Location([0,0]));
+    Schedule schedule = new Schedule();
+    market.start(schedule,null); //model reference not needed
+
+
+
+    //each buyer buys 1 unit every day at the same price, if possible
+    ZeroKnowledgeTrader buyer1 = new ZeroKnowledgeTrader(market, new FixedValue(100), new FixedValue(1),
+                                                         new GeographicalBuyerTrading(new Location([100,100])),
+                                                         new Inventory());
+    buyer1.dawnEvents.add(BurnInventories());
+    buyer1.start(schedule);
+
+    ZeroKnowledgeTrader buyer2 = new ZeroKnowledgeTrader(market, new FixedValue(10), new FixedValue(1),
+                                                         new GeographicalBuyerTrading(new Location([0,0])),
+                                                         new Inventory());
+    buyer2.dawnEvents.add(BurnInventories());
+    buyer2.start(schedule);
+
+
+    seller.start(schedule);
+
+    for(int i=0; i<2000; i++)
+    {
+      schedule.simulateDay();
+      print("price ${seller.lastOfferedPrice} and quantity ${seller.currentOutflow}");
+    }
+    //should be correct by now
+    expect(1,seller.currentOutflow);
+    expect(10,seller.lastOfferedPrice);
+
+  });
 
 }
 
