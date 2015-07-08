@@ -623,7 +623,7 @@ class SimpleSellerTrading extends TradingStrategy<SellerMarket>
 
 }
 
-class GeographicalSellerTrading extends TradingStrategy<GeographicalMarket>
+class GeographicalSellerTrading extends TradingStrategy<GeographicalMarket> with HasLocation
 {
 
   /**
@@ -706,7 +706,14 @@ class SimpleBuyerTrading extends TradingStrategy<BuyerMarket>
 
 }
 
-class GeographicalBuyerTrading extends TradingStrategy<GeographicalMarket>
+abstract class HasLocation{
+  Location get location;
+
+  void set location(Location _newLocation);
+
+}
+
+class GeographicalBuyerTrading extends TradingStrategy<GeographicalMarket> with HasLocation
 {
 
   /**

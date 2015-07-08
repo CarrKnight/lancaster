@@ -21,7 +21,11 @@ class DrawnTrader extends Sprite
 
   Bitmap image;
 
-  DrawnTrader(this.bitmapData) {
+  final Trader drawn;
+
+  final HasLocation location;
+
+  DrawnTrader(this.drawn,this.location,this.bitmapData) {
     var bitmap = new Bitmap(bitmapData);
     bitmap.pivotX = 0;
     bitmap.pivotY = 0;
@@ -80,6 +84,8 @@ class TraderStage extends Stage
   bool _isDragging = false;
   bool _canDrag = false;
 
+  final StreamController<Trader> _selectionStream = new StreamController();
+
   TraderStage(HTML.CanvasElement canvas,
               HTML.ImageElement this.sellerImage,
               this.buyerBitmap, this.random,
@@ -96,6 +102,9 @@ class TraderStage extends Stage
     assert(_selected == sprite);
     sprite.deselect();
     _selected = null;
+    if(_selectionStream.hasListener)
+      _selectionStream.add(null);
+
   }
 
   selectTrader(DrawnTrader sprite) {
@@ -107,6 +116,8 @@ class TraderStage extends Stage
     assert(_selected == null);
     sprite.select();
     _selected = sprite;
+    if(_selectionStream.hasListener)
+      _selectionStream.add(_selected.drawn);
   }
 
   makeInteractive(DrawnTrader sprite) {
@@ -169,10 +180,10 @@ class TraderStage extends Stage
     });
   }
 
-  addTrader(int x, int y)
+  addTrader(int x, int y, HasLocation location, Trader trader)
   {
 
-    var sprite = new DrawnTrader(new BitmapData.fromImageElement(sellerImage));
+    var sprite = new DrawnTrader(trader,location,new BitmapData.fromImageElement(sellerImage));
     sprite.x =x;
     sprite.y = y;
     sprite.addTo(this);
@@ -184,6 +195,8 @@ class TraderStage extends Stage
 
 
   List<DrawnTrader> get traders => _traders;
+
+  Stream<Trader> get selectionStream => _selectionStream.stream;
 
 }
 
@@ -218,11 +231,14 @@ buildStage() async
  // var bitmap = new Bitmap();
 
 
-  stage.addTrader(300,300);
-  stage.addTrader(400,400);
+  stage.addTrader(300,300,null,new DummyTrader());
+  stage.addTrader(400,400,null,new DummyTrader());
 
   stage.traders[1].changeColor(0,255,0);
 
+  stage.selectionStream.listen((e){
+    print(e);
+  });
 
 
 
