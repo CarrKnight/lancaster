@@ -11,6 +11,8 @@ import 'dart:async';
 import 'dart:mirrors';
 import 'package:json_object/json_object.dart';
 import 'dart:convert';
+import 'package:observe/src/to_observable.dart';
+import 'package:observe/src/observable_map.dart';
 
 
 /***

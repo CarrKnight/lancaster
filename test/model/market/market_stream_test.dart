@@ -46,7 +46,6 @@ main(){
 
     //whenever a new trade occurs, put it in the list
     Function listener = (TradeEvent e){
-      print("called now!");
       events.add(e);
     };
     listener = expectAsync(listener,count:2); //i want this to be called
@@ -68,13 +67,11 @@ main(){
 
     //expect one trade
     Function tradeListener = (TradeEvent e){
-      print("trade happened!");
     };
     tradeListener = expectAsync(tradeListener,count:1); //i want this to be called once
 
     //expect two quotes
     Function quotesListener = (QuoteEvent e){
-      print("quotes happened!");
     };
     quotesListener = expectAsync(quotesListener,count:2); //i want this to be called twice
 

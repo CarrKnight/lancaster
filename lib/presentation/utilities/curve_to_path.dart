@@ -34,7 +34,6 @@ class LinearCurvePath implements CurvePath
     num quantity2 =   (curve.intercept + curve.slope * maxY );
 
 
-    print("$quantity1 + $quantity2  ----- ${curve.intercept}, ${curve.slope}");
     return [[quantity1,minY],[quantity2,maxY]];
   }
 
@@ -89,7 +88,6 @@ class FixedBudgetPath implements CurvePath
 
 
 
-    print("fixedBudget: ${curve.budget} Lastdata: $lastData");
 
     return lastData;
   }

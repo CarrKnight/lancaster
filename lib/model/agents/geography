@@ -7,7 +7,7 @@ part of lancaster.model;
 
 class Location{
 
-  List<num> coordinates;
+  final List<num> coordinates;
 
 
   Location(this.coordinates);
@@ -21,6 +21,12 @@ class Location{
   }
 
   get dimension => coordinates.length;
+
+  String toString() {
+    return coordinates.toString();
+  }
+
+
 }
 
 
@@ -48,9 +54,57 @@ class GeographicalMarket extends Market with AsksOrderBook,BidsOrderBook
 
 
   /**
-   * a map holding the location of each trader
+   * a map holding the locator of each trader. Notice it's a map trader-->Locator rather than trader--->Location. This is
+   * a bit convoluted but it allows easily to stream movement changes and it helps the gui making sure the trader
+   * knows it has been moved
    */
-  final Map<Trader,Location> locations = new HashMap();
+  final Map<Trader,Locator> _locators = new Map();
+
+  /**
+   * the controller unifying and streaming all the movement events!
+   */
+  final StreamController<MovementEvent> movementStreamer = new StreamController();
+
+  /**
+   * the movement stream which is just the sum of all the individual locator events
+   */
+  Stream<MovementEvent> get movementStream => movementStreamer.stream;
+
+  /**
+   * Each trader has a listener that listen to its locator and reports back to the movement streamer. We store
+   * the listener here so it can be removed
+   */
+  final Map<Trader,StreamSubscription<MovementEvent>> listeners = new HashMap();
+
+  void registerLocator(Trader trader, Locator locator)
+  {
+    assert(!_locators.containsKey(trader)); //shouldn't be in already
+    //merge the stream, so that we stream this guy's events together with all the others
+    StreamSubscription<MovementEvent> subscription = locator._locationStream.listen((event) {
+      movementStreamer.add(event);
+    });
+    listeners[trader] = subscription;
+    //register the trader
+    _locators[trader] = locator;
+
+    //finally emit a signal to tell listeners a new trader has arrived
+    movementStreamer.add(new MovementEvent(trader,null,locator._location));
+  }
+
+  /**
+   * basically tell the market the trader is leaving. It will stop listening and rebroadcasting its events.
+   */
+  void deregisterLocator(Trader trader)
+  {
+    //get its locator
+    Locator locator = _locators.remove(trader);
+    assert(locator!=null); //it should have been registered before!
+    //stop listening
+    listeners.remove(trader).cancel();
+    //broadcast a movement to null event
+    //finally emit a signal to tell listeners a new trader has arrived
+    movementStreamer.add(new MovementEvent(trader,locator._location,null));
+  }
 
   /**
    * The distance function with which buyers judge sellers
@@ -111,14 +165,14 @@ class GeographicalMarket extends Market with AsksOrderBook,BidsOrderBook
 
       num amountLeft = bid._amount;
       var buyer = bid._owner;
-      Location buyerLocation = locations[buyer];
+      Location buyerLocation = _locators[buyer].location;
 
       //we need to sort asks by price + distance
       List<_TradeQuote> sortedOffers = new List();
       sortedOffers.addAll(_asks);
       sortedOffers.sort((_TradeQuote a,_TradeQuote b){
-        return (a._pricePerUnit + distanceFunction(locations[a._owner],buyerLocation)).compareTo(
-            b._pricePerUnit + distanceFunction(locations[b._owner],buyerLocation));
+        return (a._pricePerUnit + distanceFunction(_locators[a._owner].location,buyerLocation)).compareTo(
+            b._pricePerUnit + distanceFunction(_locators[b._owner].location,buyerLocation));
       });
 
       //as long as this buyer has something to buy
@@ -127,7 +181,7 @@ class GeographicalMarket extends Market with AsksOrderBook,BidsOrderBook
         _TradeQuote bestOffer = sortedOffers.removeLast();
         //is the ask + distance costs <= bid ?
         var seller = bestOffer._owner;
-        if(bestOffer._pricePerUnit +distanceFunction(locations[seller],buyerLocation) <=
+        if(bestOffer._pricePerUnit +distanceFunction(_locators[seller].location,buyerLocation) <=
         bid._pricePerUnit)
         {
           //distance ought not to be negative, man
@@ -159,6 +213,89 @@ class GeographicalMarket extends Market with AsksOrderBook,BidsOrderBook
   }
 
 
+  Locator getLocator(Trader trader)
+  {
+   return _locators[trader];
+  }
+
+}
+
+
+/**
+ * class that holds a location and streams out all changes
+ */
+class Locator{
+
+  /**
+   * the agent whose location we track
+   */
+  final Trader _trader;
+
+
+  Locator(this._trader, this._location);
+
+  Location _location;
+
+  Location get location => _location;
+
+  void set location(Location _newLocation)
+  {
+    Location oldLocation = _location;
+    _location = _newLocation;
+    _locationStreamer.add(new MovementEvent(_trader,oldLocation,_newLocation));
+  }
+
+  StreamController<MovementEvent> _locationStreamer = new StreamController.broadcast();
+
+  Stream<MovementEvent> get _locationStream => _locationStreamer.stream;
+
+
+
+}
+
+
+/**
+ * events representing movement of an agent from point A to point B. If point A is null, that's a new agent. If point B
+ * is null, then the agent is gone
+ */
+class MovementEvent
+{
+
+
+  final Location _previousLocation;
+
+  final Location _newLocation;
+
+
+  final Trader _mover;
+
+  MovementEvent(this._mover,this._previousLocation,this._newLocation);
+
+  Trader get mover => _mover;
+
+
+  Location get newLocation => _newLocation;
+
+  Location get previousLocation => _previousLocation;
+
+}
+
+/**
+ * listens to a stream, sends all its events to another controller
+ */
+class MovementPercolator
+{
+  final StreamController<MovementEvent> percolateTo;
+
+  final Stream<MovementEvent> listenedTo;
+
+
+  MovementPercolator(this.percolateTo, this.listenedTo);
+
+  void onData(MovementEvent event)
+  {
+    percolateTo.add(event);
+  }
 }
 
 

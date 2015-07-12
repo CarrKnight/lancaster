@@ -122,6 +122,7 @@ class BidsOrderBook{
 
   void startBids(Schedule s){
     _bidStreamer.start(s);
+
   }
 
   void sortAsks(){

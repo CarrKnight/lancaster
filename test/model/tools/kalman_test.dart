@@ -35,7 +35,6 @@ main(){
     //y = 5x
     feedRegressionToFilter( "regression.csv", filter);
 
-    print(filter.beta);
     //check coefficients
     expect(filter.beta[0],closeTo(0,.5));
     expect(filter.beta[1],closeTo(5,.1));
@@ -53,14 +52,12 @@ main(){
     //y=5x
     feedRegressionToFilter( "regression.csv", filter);
 
-    print(filter.beta);
     //check coefficients
     expect(filter.beta[1],closeTo(5,.1));
 
     //second regression
     feedRegressionToFilter("regression2.csv", filter);
 
-    print(filter.beta);
     //check coefficients
     expect(filter.beta[1],closeTo(1.5,.1));
   });

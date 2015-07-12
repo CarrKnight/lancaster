@@ -54,7 +54,6 @@ main(){
       when(buyer.predictPrice(0.0)).thenReturn(currentX);
       when(buyer.predictPrice(-.5)).thenReturn(currentX-.5);
     }
-    print("current $currentX");
     //maximum is at 25
     expect(currentX,25.0);
 
@@ -100,7 +99,6 @@ main(){
       when(buyer.predictPrice(0.0)).thenReturn(currentX);
       when(buyer.predictPrice(-.5)).thenReturn(currentX-.5);
     }
-    print("current $currentX");
 
     //maximum is at 25
     expect(currentX,25.0);
@@ -145,10 +143,8 @@ main(){
       when(buyer.predictPrice(1.0)).thenReturn(currentX+1.0);
       when(buyer.predictPrice(0.0)).thenReturn(currentX);
       when(buyer.predictPrice(-1.0)).thenReturn(currentX-1.0);
-      print("current $currentX");
 
     }
-    print("current $currentX");
     //maximum is at 25
     expect(currentX,25.0);
 

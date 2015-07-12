@@ -63,8 +63,7 @@ main(){
     y.add(0.0);
     learner.learn(x,y);
     expect(learner.delegate.slope,closeTo(0,.1));
-    print(learner.delegate.slope);
-    print(learner.delegate.slope);
+
 
   });
 
@@ -94,8 +93,7 @@ main(){
 
     expect(learner.delegate.slope,closeTo(2,.1));
     expect(learner.predictPrice(t,5.0),closeTo(110,.1));
-    print(learner.delegate.slope);
-    print(learner.delegate.slope);
+
 
   });
 }

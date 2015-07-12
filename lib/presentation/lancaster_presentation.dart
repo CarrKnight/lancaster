@@ -15,6 +15,8 @@ import 'dart:async';
 import 'package:lancaster/model/lancaster_model.dart';
 import 'dart:collection';
 import 'dart:math';
+import 'package:observe/src/to_observable.dart';
+import 'package:observe/src/change_record.dart';
 
 part 'market_presentation.dart';
 part 'model_presentation.dart';

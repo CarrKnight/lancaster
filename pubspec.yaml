@@ -3,11 +3,13 @@ version: 0.0.1
 author: Ernesto Carrella <ernesto.carrella@gmail.com>
 description: A monopolistic competition model that would hopefully run straight into the paper. Supposedly inspired by the Lancaster models of competition.
 dependencies:
-  browser: any
-  charted: any
-  json_object: any
-  stagexl : any
+    browser: any
+    charted: any
+    json_object: any
+    stagexl : any
+    observe : any
+    color: any
 dev_dependencies:
-  mockito:
-    git: https://github.com/fibulwinter/dart-mockito.git
-  test: any
+    mockito:
+        git: https://github.com/fibulwinter/dart-mockito.git
+    test: any

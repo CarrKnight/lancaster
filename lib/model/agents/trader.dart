@@ -514,17 +514,17 @@ class ZeroKnowledgeTrader implements Trader
   }
 
 
-    /**
-     * PIDSeller with exogenous fixed inflow
-     */
-    factory ZeroKnowledgeTrader.PIDSellerFixedInflowFromDB(Market market,
-                                                           ParameterDatabase db,
-                                                           String containerPath,
-                                                     {Inventory givenInventory:null,
-                                                           Location location : null})
+  /**
+   * PIDSeller with exogenous fixed inflow
+   */
+  factory ZeroKnowledgeTrader.PIDSellerFixedInflowFromDB(Market market,
+                                                         ParameterDatabase db,
+                                                         String containerPath,
+                                                         {Inventory givenInventory:null,
+                                                         Location location : null})
   {
     ZeroKnowledgeTrader seller = new ZeroKnowledgeTrader.PIDSellerFromDB(market,
-                                                                   db,containerPath,givenInventory:givenInventory,
+                                                                         db,containerPath,givenInventory:givenInventory,
                                                                          location:location);
     //add events
     addDailyInflowAndDepreciation(seller,
@@ -623,13 +623,18 @@ class SimpleSellerTrading extends TradingStrategy<SellerMarket>
 
 }
 
-class GeographicalSellerTrading extends TradingStrategy<GeographicalMarket> with HasLocation
+class GeographicalSellerTrading extends TradingStrategy<GeographicalMarket>
 {
 
   /**
-   * location variable, can be changed
+   * location variable, stored only until start, then never used again. Changes should be applied to locator
    */
-  Location _location;
+  final Location _location;
+
+  /**
+   * the locator, managing the location of the agent and streaming its updates
+   */
+  Locator _locator;
 
 
 
@@ -650,7 +655,10 @@ class GeographicalSellerTrading extends TradingStrategy<GeographicalMarket> with
   {
     assert(!market.sellers.contains(trader));
     market.sellers.add(trader);
-    market.locations[trader]=  location;
+
+    _locator = new Locator(trader,_location);
+
+    market.registerLocator(trader,_locator);
     assert(market.sellers.contains(trader));
   }
 
@@ -663,15 +671,9 @@ class GeographicalSellerTrading extends TradingStrategy<GeographicalMarket> with
       market.placeSaleQuote(trader,quoteSize,trader.lastOfferedPrice);
   }
 
-  Location get location => _location;
+  Location get location => _locator.location;
 
-  void set location(Location _newLocation)
-  {
-    _location = _newLocation;
-    if(_market != null) //if we have started
-      //update location
-      _market.locations[_trader] = _location;
-  }
+  Locator get locator => _locator;
 
 }
 
@@ -706,20 +708,22 @@ class SimpleBuyerTrading extends TradingStrategy<BuyerMarket>
 
 }
 
-abstract class HasLocation{
-  Location get location;
 
-  void set location(Location _newLocation);
 
-}
-
-class GeographicalBuyerTrading extends TradingStrategy<GeographicalMarket> with HasLocation
+class GeographicalBuyerTrading extends TradingStrategy<GeographicalMarket>
 {
 
   /**
-   * location variable, can be changed
+   * temporary location variable. holds the location with which the trader is initialized but after that
+   * location is held by the locator
    */
-  Location _location;
+  final Location _location;
+
+
+  /**
+   * the locator manages the location of the trader and its streaming
+   */
+  Locator _locator;
 
   /**
    * stored after start to change locations
@@ -738,8 +742,9 @@ class GeographicalBuyerTrading extends TradingStrategy<GeographicalMarket> with 
              AdaptiveStrategy quota)
   {
     market.buyers.add(trader);
-    market.locations[trader] = _location;
-    //store links for changing location on the spot
+
+    _locator = new Locator(trader,_location);
+    market.registerLocator(trader,_locator);
     _market = market;
     _trader = trader;
   }
@@ -756,15 +761,10 @@ class GeographicalBuyerTrading extends TradingStrategy<GeographicalMarket> with 
     trader.lastOfferedPrice = pricing.value;
   }
 
-  Location get location => _location;
+  Location get location => _locator.location;
 
-  void set location(Location _newLocation)
-  {
-    _location = _newLocation;
-    if(_market != null) //if we have started
-      //update location
-      _market.locations[_trader] = _location;
-  }
+  Locator get locator => _locator;
+
 
 }
 

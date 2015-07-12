@@ -120,6 +120,37 @@ class SimpleMarketPresentation extends Presentation<MarketEvent>{
 
 }
 
+
+/**
+ * adds a stream link to both bids and sales
+ */
+class GeographicalMarketPresentation extends SimpleMarketPresentation
+{
+  GeographicalMarket _market;
+
+  GeographicalMarketPresentation(GeographicalMarket _market,[additionalDataGatherers=null]):
+  super(_market,additionalDataGatherers){
+    this._market = _market;
+  }
+
+
+  /**
+   * callable by the gui to move a trader to a new location. It will echo the movement in the stream.
+   */
+  void move(Trader trader, Location location)
+  {
+    _market.getLocator(trader).location = location;
+    print(_market.getLocator(trader).location);
+  }
+
+  Stream<QuoteEvent> get askStream =>  _market.asksStream;
+  Stream<QuoteEvent> get bidStream =>  _market.bidStream;
+
+  Stream<MovementEvent> get movementStream => _market.movementStream;
+
+}
+
+
 class MarketEvent extends PresentationEvent{
 
   final num price;

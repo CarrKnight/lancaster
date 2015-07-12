@@ -44,16 +44,10 @@ KeynesianInfiniteElasticity(bool marketDayOnly) {
 
   for (int i = 0; i < 8000; i++) {
     model.schedule.simulateDay();
-    print('''gas price: ${gas.averageClosingPrice} workers' wages: ${labor
-    .averageClosingPrice}''');
-    print('''gas quantity: ${gas.quantityTraded} workers : ${labor
-    .quantityTraded}''');
+
 
   }
-  print('''gas price: ${gas.averageClosingPrice} workers' wages: ${labor
-  .averageClosingPrice}''');
-  print('''gas quantity: ${gas.quantityTraded} workers : ${labor
-  .quantityTraded}''');
+
 
   //should have throttled production more
   if(marketDayOnly) {
@@ -275,10 +269,7 @@ squareRootProductionFixedWage(bool keynesian)
 
   for (int i = 0; i < 10000; i++) {
     model.schedule.simulateDay();
-    print('''gas : ${gas.quantityTraded} workers' : ${labor
-    .quantityTraded}''');
-    print('''gas price: ${gas.averageClosingPrice} workers' wages: ${labor
-    .averageClosingPrice}''');
+
   }
 
 
@@ -363,9 +354,7 @@ oneMarketTest(bool learned, bool pidMaximizer, [int competitors=1])
   double averageWage= 0.0; wage.forEach((e)=>averageWage+=e);averageWage/=500;
   double salesSlope = scenario.firms[0].salesDepartments["gas"].predictedSlope;
   double hrSlope = scenario.firms[0].purchasesDepartments["labor"].predictedSlope;
-  print('''gas price: ${gasMarket.averageClosingPrice} workers' wages: ${laborMarket
-  .averageClosingPrice}\n''');
-  print("sales slope: $salesSlope hr slope: $hrSlope\n");
+
 
   //expect monopolist making money
   if(competitors==1) {

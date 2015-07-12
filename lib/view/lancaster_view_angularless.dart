@@ -19,6 +19,7 @@ import 'package:charted/charted.dart' as CHARTED ;
 import 'package:charted/svg/axis.dart' ;
 import 'package:charted/core/scales.dart' ;
 import 'package:charted/selection/selection.dart';
+import 'package:color/color.dart';
 
 
 part 'angular-less/scenario/sliderdemo.dart';

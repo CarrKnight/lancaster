@@ -41,7 +41,6 @@ main(){
     for(int i=0; i<200; i++)
     {
       schedule.simulateDay();
-      print("price ${seller.lastOfferedPrice} and quantity ${seller.currentOutflow}");
     }
     //should be correct by now
     expect(40,seller.currentOutflow);
@@ -82,7 +81,6 @@ main(){
     for(int i=0; i<2000; i++)
     {
       schedule.simulateDay();
-      print("price ${seller.lastOfferedPrice} and quantity ${seller.currentOutflow}");
     }
     //should be correct by now
     expect(1,seller.currentOutflow);
@@ -111,7 +109,6 @@ void nonGeographical(){
     for(int i=0; i<200; i++)
     {
       schedule.simulateDay();
-      print("price ${seller.lastOfferedPrice} and quantity ${seller.currentOutflow}");
     }
     //should be correct by now
     expect(40,seller.currentOutflow);
@@ -136,9 +133,6 @@ void nonGeographical(){
     for(int i=0; i<200; i++)
     {
       schedule.simulateDay();
-      print(
-          "price ${seller.lastOfferedPrice} and quantity ${seller.currentOutflow}"
-          );
     }
     //should be correct by now
     expect(40,seller.currentOutflow);
