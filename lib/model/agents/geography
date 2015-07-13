@@ -37,7 +37,7 @@ Distance CartesianDistance = (Location x, Location y)
   assert(x.dimension == y.dimension);
   double sum = 0.0;
   for(int i=0; i<x.dimension; i++)
-      sum += pow(x.coordinates[i]-y.coordinates[i],2);
+    sum += pow(x.coordinates[i]-y.coordinates[i],2);
   return pow(sum,1/x.dimension);
 };
 
@@ -182,7 +182,7 @@ class GeographicalMarket extends Market with AsksOrderBook,BidsOrderBook
         //is the ask + distance costs <= bid ?
         var seller = bestOffer._owner;
         if(bestOffer._pricePerUnit +distanceFunction(_locators[seller].location,buyerLocation) <=
-        bid._pricePerUnit)
+           bid._pricePerUnit)
         {
           //distance ought not to be negative, man
           assert(bestOffer._pricePerUnit <= bid._pricePerUnit);
@@ -215,7 +215,7 @@ class GeographicalMarket extends Market with AsksOrderBook,BidsOrderBook
 
   Locator getLocator(Trader trader)
   {
-   return _locators[trader];
+    return _locators[trader];
   }
 
 }
@@ -298,4 +298,35 @@ class MovementPercolator
   }
 }
 
+/**
+ * a class that generates new buyers and sets them in the appropriate Geographical Market
+ */
+abstract  class GeoBuyerGenerator
+{
+
+  void generateBuyer(Schedule schedule,Random random, GeographicalMarket market, Location location);
+
+}
+
+/**
+ * generates a buyer that automatically tries to get one unit of good a day at a fixed random price
+ */
+class GeoBuyerFixedPriceGenerator extends GeoBuyerGenerator
+{
+
+  double minimumPrice = 1.0;
+  double maximumPrice = 100.0;
+
+
+  void generateBuyer(Schedule schedule, Random random, GeographicalMarket market, Location location) {
+    double randomPrice = random.nextDouble()*(maximumPrice-minimumPrice)+minimumPrice;
+    ZeroKnowledgeTrader trader = new ZeroKnowledgeTrader(market,
+                                                         new FixedValue(randomPrice), new FixedValue(1),
+                                                         new GeographicalBuyerTrading(location),
+                                                         new Inventory());
+    trader.dawnEvents.add(BurnInventories());
+    trader.start(schedule);
+
+  }
+}
 

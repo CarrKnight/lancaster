@@ -122,6 +122,18 @@ class TraderStage extends Stage
     renderLoop.addStage(this);
     _presentation.movementStream.listen(reactToMovement);
 
+
+
+    this.doubleClickEnabled = true;
+
+    this.onMouseDoubleClick.listen((e)  {
+         _presentation.createNewBuyer(
+          converter.ViewToLocation(e.localX, e.localY)
+          );
+
+      print("created?");
+    }
+                             );
   }
 
 
@@ -214,8 +226,6 @@ class TraderStage extends Stage
     //sprite.onTouchEnd.listen(stopDrag);
     //sprite.onTouchBegin.listen(startDrag);
 
-
-    this.onMouseClick.listen((e) => print("click!"));
     sprite.onMouseClick.listen((e) {
       if (!_isDragging)
       {
@@ -234,7 +244,7 @@ class TraderStage extends Stage
     });
   }
 
-  addTrader(int x, int y,  Trader trader, RgbColor color)
+  addTrader(num x, num y,  Trader trader, RgbColor color)
   {
 
     var sprite = new DrawnTrader(trader,new BitmapData.fromImageElement(sellerImage), color);
@@ -311,8 +321,11 @@ buildStage() async
 
 
   //model
+  Model model = new Model(0);
   GeographicalMarket market = new GeographicalMarket(CartesianDistance);
-  GeographicalMarketPresentation presentation = new GeographicalMarketPresentation(market);
+  market.start(model.schedule,model);
+  GeographicalMarketPresentation presentation = new GeographicalMarketPresentation(market,model,
+                                                                                   new GeoBuyerFixedPriceGenerator());
 
 
   var resourceManager = new ResourceManager();

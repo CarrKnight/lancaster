@@ -128,7 +128,16 @@ class GeographicalMarketPresentation extends SimpleMarketPresentation
 {
   GeographicalMarket _market;
 
-  GeographicalMarketPresentation(GeographicalMarket _market,[additionalDataGatherers=null]):
+  /**
+   * we need access to the model to generate and schedule more traders
+   */
+  final Model _model;
+
+  final GeoBuyerGenerator buyerGenerator;
+
+  GeographicalMarketPresentation(GeographicalMarket _market,this._model,
+                                 this.buyerGenerator,
+                                 [additionalDataGatherers=null]):
   super(_market,additionalDataGatherers){
     this._market = _market;
   }
@@ -141,6 +150,12 @@ class GeographicalMarketPresentation extends SimpleMarketPresentation
   {
     _market.getLocator(trader).location = location;
     print(_market.getLocator(trader).location);
+  }
+
+
+  void createNewBuyer(Location location)
+  {
+    buyerGenerator.generateBuyer(_model.schedule,_model.random,_market,location);
   }
 
   Stream<QuoteEvent> get askStream =>  _market.asksStream;
