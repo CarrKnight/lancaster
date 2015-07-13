@@ -158,6 +158,19 @@ class GeographicalMarketPresentation extends SimpleMarketPresentation
     buyerGenerator.generateBuyer(_model.schedule,_model.random,_market,location);
   }
 
+
+  /**
+   * tells whether a trader is registered as a seller or not.It assumes that if it isn't,
+   * it is registered as a buyer
+   */
+  bool isSeller(Trader trader)
+  {
+    bool contained = _market.sellers.contains(trader);
+    //either or
+    assert(_market.buyers.contains(trader) != contained);
+    return contained;
+  }
+
   Stream<QuoteEvent> get askStream =>  _market.asksStream;
   Stream<QuoteEvent> get bidStream =>  _market.bidStream;
 

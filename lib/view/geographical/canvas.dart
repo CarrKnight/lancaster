@@ -74,9 +74,9 @@ class DrawnTrader extends Sprite
   {
     _color = defaultColor;
     _bitmapData.colorTransform(new Rectangle(0,0,width,height),new ColorTransform(0.0,0.0,0.0,1,
-                                                                                 defaultColor.r,
-                                                                                 defaultColor.g,
-                                                                                 defaultColor.b));
+                                                                                  defaultColor.r,
+                                                                                  defaultColor.g,
+                                                                                  defaultColor.b));
   }
 
 
@@ -92,7 +92,7 @@ class TraderStage extends Stage
 {
 
   final HTML.ImageElement sellerImage;
-  final BitmapData buyerBitmap;
+  final HTML.ImageElement buyerImage;
   final MATH.Random random;
 
   static final  RgbColor defaultColor = new HexColor("#000000").toRgbColor();
@@ -112,7 +112,8 @@ class TraderStage extends Stage
 
   TraderStage(HTML.CanvasElement canvas,
               HTML.ImageElement this.sellerImage,
-              this.buyerBitmap, this.random,
+              HTML.ImageElement this.buyerImage,
+              this.random,
               this._presentation,
               {int width, int height, StageOptions options}):
   super(canvas,width:width,height:height,options:options)
@@ -126,14 +127,21 @@ class TraderStage extends Stage
 
     this.doubleClickEnabled = true;
 
+
+    this.onMouseClick.listen((e){
+      if(_selected!=null)
+        deselectTrader(_selected);
+
+    });
+
     this.onMouseDoubleClick.listen((e)  {
-         _presentation.createNewBuyer(
+      _presentation.createNewBuyer(
           converter.ViewToLocation(e.localX, e.localY)
           );
 
       print("created?");
     }
-                             );
+                                   );
   }
 
 
@@ -247,7 +255,12 @@ class TraderStage extends Stage
   addTrader(num x, num y,  Trader trader, RgbColor color)
   {
 
-    var sprite = new DrawnTrader(trader,new BitmapData.fromImageElement(sellerImage), color);
+
+
+    var traderBitmap = _presentation.isSeller(trader) ?
+                       new BitmapData.fromImageElement(sellerImage) :
+                       new BitmapData.fromImageElement(buyerImage);
+    var sprite = new DrawnTrader(trader, traderBitmap, color);
     sprite.x =x;
     sprite.y = y;
     sprite.addTo(this);
@@ -333,22 +346,25 @@ buildStage() async
   await resourceManager.load();
 
   HTML.ImageElement image = new HTML.ImageElement(src: "factory.png");
+  HTML.ImageElement buyerImage = new HTML.ImageElement(src: "user.png");
   await image.onLoad.first;
 
   var random = new MATH.Random();
 
   var canvas = HTML.querySelector('#stage');
-  var stage = new TraderStage(canvas,image,resourceManager.getBitmapData("factory"),
+  var stage = new TraderStage(canvas,image,buyerImage,
                               random,presentation,
-                              width: 600, height: 600);
+                              width: 1024, height: 800);
 
- // var bitmap = new Bitmap();
+  // var bitmap = new Bitmap();
 
   Trader t1 = new DummyTrader();
   Locator l1 = new Locator(t1,new Location([300,300]));
   Trader t2 = new DummyTrader();
   Locator l2 = new Locator(t2,new Location([400,400]));
 
+  market.sellers.add(t1);
+  market.sellers.add(t2);
   market.registerLocator(t1,l1);
   market.registerLocator(t2,l2);
 
