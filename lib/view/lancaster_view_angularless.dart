@@ -20,6 +20,7 @@ import 'package:charted/svg/axis.dart' ;
 import 'package:charted/core/scales.dart' ;
 import 'package:charted/selection/selection.dart';
 import 'package:color/color.dart';
+import 'dart:math';
 
 
 part 'angular-less/scenario/sliderdemo.dart';

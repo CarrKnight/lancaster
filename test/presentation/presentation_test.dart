@@ -82,7 +82,9 @@ main()
   test("geographical presentation streams location changes",() async{
 
     GeographicalMarket market = new GeographicalMarket( CartesianDistance);
-    GeographicalMarketPresentation presentation = new GeographicalMarketPresentation(market);
+    GeographicalMarketPresentation presentation = new GeographicalMarketPresentation(market,
+                                                                                     new Model(0),
+                                                                                     new GeoBuyerFixedPriceGenerator());
 
     //we should be able to fill this by just copying whatever comes out of the stream
     Map<Trader,Location> filledByStream = new HashMap();

@@ -143,6 +143,8 @@ class GeographicalMarketPresentation extends SimpleMarketPresentation
   }
 
 
+  Random get random => _model.random;
+
   /**
    * callable by the gui to move a trader to a new location. It will echo the movement in the stream.
    */

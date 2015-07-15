@@ -103,6 +103,12 @@ class TraderStage extends Stage
 
   Map<Trader,DrawnTrader> _traders = new HashMap();
 
+  /**
+   * here we store the colors for each seller. Supposedly sellers have each their own unique color
+   * while buyer all come in defaultColor and then change them to represent whatever buyer they buy from.
+   */
+  Map<Trader,RgbColor> sellerColor = new HashMap();
+
   bool _isDragging = false;
   bool _canDrag = false;
 
@@ -153,7 +159,7 @@ class TraderStage extends Stage
     //if the previous location is null, then it's a new trader!
     if(e.previousLocation == null)
       addTrader(converter.LocationToX(e.newLocation),
-                converter.LocationToY(e.newLocation),e.mover,defaultColor
+                converter.LocationToY(e.newLocation),e.mover
                 );
     //if the new location is null, then remove it
     if(e.newLocation==null)
@@ -252,14 +258,26 @@ class TraderStage extends Stage
     });
   }
 
-  addTrader(num x, num y,  Trader trader, RgbColor color)
+  addTrader(num x, num y,  Trader trader)
   {
 
 
 
-    var traderBitmap = _presentation.isSeller(trader) ?
+    var isSeller = _presentation.isSeller(trader);
+    var traderBitmap = isSeller ?
                        new BitmapData.fromImageElement(sellerImage) :
                        new BitmapData.fromImageElement(buyerImage);
+
+    Random random = _presentation.random;
+
+
+    RgbColor color = isSeller ?  new RgbColor(random.nextInt(255),
+                                              random.nextInt(255),
+                                              random.nextInt(255)) :
+                     defaultColor;
+    if(isSeller)
+      sellerColor[trader] = color;
+
     var sprite = new DrawnTrader(trader, traderBitmap, color);
     sprite.x =x;
     sprite.y = y;
@@ -281,7 +299,7 @@ class TraderStage extends Stage
   Map<Trader,DrawnTrader> get traders => _traders;
 
   Stream<Trader> get selectionStream => _selectionStream.stream;
-
+  
 }
 
 
@@ -296,7 +314,7 @@ abstract class LocationConverter
   num LocationToX(Location location);
 
   num LocationToY(Location location);
-
+  
 }
 
 /**
@@ -318,8 +336,8 @@ class IdentityLocationConverter extends LocationConverter
     return location.coordinates[1];
 
   }
-
-
+  
+  
 }
 
 buildStage() async
@@ -385,11 +403,11 @@ buildStage() async
   new Timer(new Duration(seconds:2),(){
     l2.location = new Location([0,0]);
   });
-
-
-
-
-
+  
+  
+  
+  
+  
 }
 
 
