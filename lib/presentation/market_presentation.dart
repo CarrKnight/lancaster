@@ -140,10 +140,13 @@ class GeographicalMarketPresentation extends SimpleMarketPresentation
                                  [additionalDataGatherers=null]):
   super(_market,additionalDataGatherers){
     this._market = _market;
+
   }
 
 
   Random get random => _model.random;
+
+  Map<Trader, Locator> get traders => _market.locators;
 
   /**
    * callable by the gui to move a trader to a new location. It will echo the movement in the stream.

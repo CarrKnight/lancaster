@@ -218,6 +218,10 @@ class GeographicalMarket extends Market with AsksOrderBook,BidsOrderBook
     return _locators[trader];
   }
 
+  Map<Trader, Locator> get locators => _locators;
+
+
+
 }
 
 

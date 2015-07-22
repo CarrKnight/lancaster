@@ -474,7 +474,7 @@ class TradeEvent{
  */
 class QuoteEvent{
 
-  final Trader seller;
+  final Trader trader;
 
   final num amount;
 
@@ -482,7 +482,7 @@ class QuoteEvent{
 
   final int day;
 
-  QuoteEvent(this.seller, this.amount, this.unitPrice,
+  QuoteEvent(this.trader, this.amount, this.unitPrice,
              this.day);
 
 

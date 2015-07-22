@@ -29,15 +29,32 @@ class DrawnTrader extends Sprite
   RgbColor _color;
 
 
+  TextField _priceLabel;
+  TextFormat _format;
 
-  DrawnTrader(this.drawn,this._bitmapData,this.defaultColor) {
+
+  DrawnTrader(this.drawn,this._bitmapData,this.defaultColor)
+  {
     var bitmap = new Bitmap(_bitmapData);
     bitmap.pivotX = 0;
     bitmap.pivotY = 0;
 
-
     this.addChild(bitmap);
+
+    //add text label
+    _format = new TextFormat('Helvetica,Arial', 30, int.parse(defaultColor.toHexColor().toString(),radix:16))
+      ..align = "center";
+    _priceLabel = new TextField(" --- ",_format);
+    _priceLabel..x = 0
+      ..y = this.height+10
+      ..width = this.width;
+    //   ..height = 15
+    ;
     changeColor(defaultColor);
+    this.addChild(_priceLabel);
+
+
+
 
 
   }
@@ -68,20 +85,26 @@ class DrawnTrader extends Sprite
   {
     _color = color;
     _bitmapData.colorTransform(new Rectangle(0,0,width,height),new ColorTransform(0.0,0.0,0.0,1,color.r,color.g,color.b));
+
+    _priceLabel.textColor = int.parse(color.toHexColor().toString(),radix:16);
   }
 
   void resetColor()
   {
-    _color = defaultColor;
-    _bitmapData.colorTransform(new Rectangle(0,0,width,height),new ColorTransform(0.0,0.0,0.0,1,
-                                                                                  defaultColor.r,
-                                                                                  defaultColor.g,
-                                                                                  defaultColor.b));
+    changeColor(defaultColor);
+    _priceLabel.text = " --- ";
   }
 
 
+  void updatePriceLabel( num price)
+  {
+    _priceLabel.text = "$price";
+  }
+
 
   RgbColor get color => _color;
+  void set color(RgbColor color) => changeColor(color);
+
 }
 
 
@@ -91,29 +114,65 @@ class DrawnTrader extends Sprite
 class TraderStage extends Stage
 {
 
+  /**
+   * the picture representing the seller
+   */
   final HTML.ImageElement sellerImage;
+
+  /**
+   * the picture representing the buyer
+   */
   final HTML.ImageElement buyerImage;
+
+  /**
+   * randomizer
+   */
   final MATH.Random random;
 
+  /**
+   * default buyer color when having no supplier
+   */
   static final  RgbColor defaultColor = new HexColor("#000000").toRgbColor();
 
+  /**
+   * model link
+   */
   final GeographicalMarketPresentation _presentation;
 
+  /**
+   * sprite selected
+   */
   DrawnTrader _selected;
 
+  /**
+   * map of trader--->sprite
+   */
   Map<Trader,DrawnTrader> _traders = new HashMap();
 
   /**
-   * here we store the colors for each seller. Supposedly sellers have each their own unique color
+   * here we store the colors for each seller. Sellers have each their own unique color
    * while buyer all come in defaultColor and then change them to represent whatever buyer they buy from.
    */
   Map<Trader,RgbColor> sellerColor = new HashMap();
 
+  /**
+   * an element is being dragged
+   */
   bool _isDragging = false;
+
+  /**
+   * elements can be currently dragged
+   */
   bool _canDrag = false;
 
+  /**
+   * streaming whatever trader is currently selected
+   */
   final StreamController<Trader> _selectionStream = new StreamController();
 
+  /**
+   * converts between model location and gui location
+   */
   final LocationConverter converter = new IdentityLocationConverter();
 
   TraderStage(HTML.CanvasElement canvas,
@@ -127,7 +186,42 @@ class TraderStage extends Stage
 
     var renderLoop = new RenderLoop();
     renderLoop.addStage(this);
+    //add pre-existing agents
+    Map<Trader,Locator> locators = _presentation.traders;
+    locators.forEach( (k,v){
+      Location location = v.location;
+      addTrader(converter.LocationToX(location),
+                converter.LocationToY(location),
+                k);
+    });
+
+
+    //listen to movements
     _presentation.movementStream.listen(reactToMovement);
+
+    //whenever a new day occurs, reset all colors
+    _presentation.stream.listen((e){
+      resetAllTradersColors();
+    });
+
+    //set the price labels of the buyers and sellers as they interact with the order book
+    _presentation.askStream.listen((e)
+                                   {
+                                     traders[e.trader].updatePriceLabel(e.unitPrice);
+                                   });
+
+    _presentation.bidStream.listen((e)
+                                   {
+                                     traders[e.trader].updatePriceLabel(e.unitPrice);
+                                   });
+
+    //set the buyer color to be equal to the seller color when they buy from it
+    _presentation.tradeStream.listen((e)
+                                     {
+                                       DrawnTrader seller = traders[e.seller];
+                                       DrawnTrader buyer = traders[e.buyer];
+                                       buyer.changeColor(seller.color);
+                                     });
 
 
 
@@ -150,6 +244,16 @@ class TraderStage extends Stage
                                    );
   }
 
+  /**
+   * tell all buyers to reset their sprite color to black
+   */
+  void resetAllTradersColors()
+  {
+    for(DrawnTrader t in traders.values)
+      t.resetColor();
+
+
+  }
 
   /**
    * what gets called whenever there is a movement event in the presentation stream
@@ -340,14 +444,31 @@ class IdentityLocationConverter extends LocationConverter
   
 }
 
-buildStage() async
+Future<TraderStage> buildDefaultStage(GeographicalMarketPresentation presentation,
+                              HTML.CanvasElement canvas,
+                              int width, int height) async
+{
+  HTML.ImageElement image = new HTML.ImageElement(src: "factory.png");
+  HTML.ImageElement buyerImage = new HTML.ImageElement(src: "user.png");
+  await image.onLoad.first;
+  await buyerImage.onLoad.first;
+
+  var random = new MATH.Random();
+
+  var stage = new TraderStage(canvas,image,buyerImage,
+                              random,presentation,
+                              width: width, height: height);
+  return stage;
+}
+
+BuildTestStage() async
 {
 
   StageXL.stageOptions.renderEngine = RenderEngine.Canvas2D;
   StageXL.stageOptions.stageScaleMode = StageScaleMode.SHOW_ALL;
   StageXL.stageOptions.stageAlign = StageAlign.NONE;
   StageXL.stageOptions.inputEventMode = InputEventMode.MouseAndTouch;
-  //StageXL.stageOptions.backgroundColor = Color.White;
+  StageXL.stageOptions.backgroundColor = 0xFFE0FFFF;
 
 
 
@@ -366,6 +487,7 @@ buildStage() async
   HTML.ImageElement image = new HTML.ImageElement(src: "factory.png");
   HTML.ImageElement buyerImage = new HTML.ImageElement(src: "user.png");
   await image.onLoad.first;
+  await buyerImage.onLoad.first;
 
   var random = new MATH.Random();
 

@@ -8,7 +8,7 @@ dependencies:
     json_object: any
     stagexl : any
     observe : any
-    color: any
+    color: "^2.0.0"
 dev_dependencies:
     mockito:
         git: https://github.com/fibulwinter/dart-mockito.git
