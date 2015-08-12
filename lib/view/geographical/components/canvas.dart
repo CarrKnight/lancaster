@@ -98,7 +98,7 @@ class DrawnTrader extends Sprite
 
   void updatePriceLabel( num price)
   {
-    _priceLabel.text = "$price";
+    _priceLabel.text = "${price.toStringAsFixed(2)}";
   }
 
 
@@ -200,7 +200,7 @@ class TraderStage extends Stage
     _presentation.movementStream.listen(reactToMovement);
 
     //whenever a new day occurs, reset all colors
-    _presentation.stream.listen((e){
+    _presentation.dawnStream.listen((e){
       resetAllTradersColors();
     });
 
@@ -239,7 +239,6 @@ class TraderStage extends Stage
           converter.ViewToLocation(e.localX, e.localY)
           );
 
-      print("created?");
     }
                                    );
   }
@@ -249,6 +248,7 @@ class TraderStage extends Stage
    */
   void resetAllTradersColors()
   {
+  //  print("resetting all colors now!");
     for(DrawnTrader t in traders.values)
       t.resetColor();
 
@@ -448,6 +448,13 @@ Future<TraderStage> buildDefaultStage(GeographicalMarketPresentation presentatio
                               HTML.CanvasElement canvas,
                               int width, int height) async
 {
+
+  StageXL.stageOptions.renderEngine = RenderEngine.Canvas2D;
+  StageXL.stageOptions.stageScaleMode = StageScaleMode.SHOW_ALL;
+  StageXL.stageOptions.stageAlign = StageAlign.NONE;
+  StageXL.stageOptions.inputEventMode = InputEventMode.MouseAndTouch;
+  StageXL.stageOptions.backgroundColor = 0xFFE0FFFF;
+
   HTML.ImageElement image = new HTML.ImageElement(src: "factory.png");
   HTML.ImageElement buyerImage = new HTML.ImageElement(src: "user.png");
   await image.onLoad.first;

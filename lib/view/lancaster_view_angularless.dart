@@ -32,4 +32,5 @@ part 'angular-less/components/tooltip.dart';
 part 'angular-less/components/base_timeseries.dart';
 part 'angular-less/components/price_chart.dart';
 part 'angular-less/containers/zk_charts.dart';
-part 'geographical/canvas.dart';
+part 'geographical/components/canvas.dart';
+part 'geographical/scenario/lancaster_demo.dart';

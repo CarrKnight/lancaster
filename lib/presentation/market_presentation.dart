@@ -85,7 +85,6 @@ class SimpleMarketPresentation extends Presentation<MarketEvent>{
    */
   _broadcastMarketStatus(Schedule schedule){
 
-
     //fill observation
     //price first
     List<double> column = dailyObservations.putIfAbsent("Price", ()=>[]);
@@ -135,6 +134,8 @@ class GeographicalMarketPresentation extends SimpleMarketPresentation
 
   final GeoBuyerGenerator buyerGenerator;
 
+  final StreamController<int> _dawnStream = new StreamController.broadcast();
+
   GeographicalMarketPresentation(GeographicalMarket _market,this._model,
                                  this.buyerGenerator,
                                  [additionalDataGatherers=null]):
@@ -143,6 +144,15 @@ class GeographicalMarketPresentation extends SimpleMarketPresentation
 
   }
 
+
+  start(Schedule schedule) {
+    super.start(schedule);
+    schedule.scheduleRepeating(Phase.DAWN,(s)
+    {
+      if(_dawnStream.hasListener)
+        _dawnStream.add(schedule.day);
+    });
+  }
 
   Random get random => _model.random;
 
@@ -153,8 +163,10 @@ class GeographicalMarketPresentation extends SimpleMarketPresentation
    */
   void move(Trader trader, Location location)
   {
+    print("Previous model location : ${_market.getLocator(trader).location}");
+
     _market.getLocator(trader).location = location;
-    print(_market.getLocator(trader).location);
+    print("Current model location : ${_market.getLocator(trader).location}");
   }
 
 
@@ -178,6 +190,7 @@ class GeographicalMarketPresentation extends SimpleMarketPresentation
 
   Stream<QuoteEvent> get askStream =>  _market.asksStream;
   Stream<QuoteEvent> get bidStream =>  _market.bidStream;
+  Stream<int> get dawnStream => _dawnStream.stream;
 
   Stream<MovementEvent> get movementStream => _market.movementStream;
 

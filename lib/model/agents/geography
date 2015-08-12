@@ -330,6 +330,9 @@ class GeoBuyerFixedPriceGenerator extends GeoBuyerGenerator
                                                          new Inventory());
     trader.dawnEvents.add(BurnInventories());
     trader.start(schedule);
+    print(randomPrice);
+    print(market.buyers.contains(trader));
+    print(market.locators.containsKey(trader));
 
   }
 }
